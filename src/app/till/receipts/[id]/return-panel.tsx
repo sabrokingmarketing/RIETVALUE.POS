@@ -1,4 +1,5 @@
 "use client";
+import { uuid } from "@/lib/uuid";
 import { useMemo, useState } from "react";
 import { Alert, Button, Card, Field, cx, inputClass } from "@/components/ui";
 import { formatRand } from "@/lib/money";
@@ -18,7 +19,7 @@ export function ReturnPanel({ receipt, isOwner }: { receipt: Receipt; isOwner: b
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<{ returnId: number; returnNo: string; totalCents: number } | null>(null);
-  const [key] = useState(() => crypto.randomUUID());
+  const [key] = useState(() => uuid());
 
   const total = useMemo(() => receipt.lines.reduce((s, l) => s + (rows[l.id]?.qty ?? 0) * l.unit_price_cents, 0), [rows, receipt.lines]);
 

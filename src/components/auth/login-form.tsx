@@ -8,7 +8,9 @@ export function LoginForm({ next }: { next: string }) {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   return (
+    // method="post" so a submit before the page finishes loading never puts the password in the URL
     <form
+      method="post"
       onSubmit={async (e) => {
         e.preventDefault();
         const f = new FormData(e.currentTarget);

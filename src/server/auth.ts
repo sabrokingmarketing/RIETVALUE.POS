@@ -11,7 +11,17 @@ export const auth = betterAuth({
   baseURL: appUrl,
   secret: process.env.BETTER_AUTH_SECRET,
   database: getPool(),
-  trustedOrigins: [appUrl],
+  // Trust APP_URL, plus the origin the request was actually addressed to (same-origin
+  // through a reverse proxy or preview host). Cross-site origins are still refused.
+  trustedOrigins: (request?: Request) => {
+    const out = [appUrl];
+    const host = request?.headers.get("x-forwarded-host") ?? request?.headers.get("host");
+    const origin = request?.headers.get("origin");
+    if (host && origin) {
+      try { if (new URL(origin).host === host.split(",")[0].trim()) out.push(origin); } catch { /* ignore */ }
+    }
+    return out;
+  },
   telemetry: { enabled: false },
   // Brute-force protection on sign-in/reset. Only the automated browser tests switch it off.
   rateLimit: { enabled: process.env.AUTH_RATE_LIMIT !== "off" && process.env.NODE_ENV === "production", window: 60, max: 30 },

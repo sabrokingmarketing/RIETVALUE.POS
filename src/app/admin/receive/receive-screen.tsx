@@ -1,4 +1,5 @@
 "use client";
+import { uuid } from "@/lib/uuid";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Search, Trash2, Tags, PackageCheck } from "lucide-react";
@@ -12,7 +13,7 @@ type Saved = { deliveryId: number; deliveryNo: string; replayed: boolean; lines:
 
 export function ReceiveScreen({ categories, defaultPresetId }: { categories: Category[]; defaultPresetId?: number }) {
   const router = useRouter();
-  const [key, setKey] = useState(() => crypto.randomUUID());
+  const [key, setKey] = useState(() => uuid());
   const [lines, setLines] = useState<Line[]>([]);
   const [supplier, setSupplier] = useState("");
   const [note, setNote] = useState("");
@@ -94,7 +95,7 @@ export function ReceiveScreen({ categories, defaultPresetId }: { categories: Cat
     else setError(res && !res.ok ? res.error : "Could not prepare labels. Your stock is saved — try Print labels again.");
   };
 
-  const reset = () => { setKey(crypto.randomUUID()); setLines([]); setSupplier(""); setNote(""); setSaved(null); setError(null); };
+  const reset = () => { setKey(uuid()); setLines([]); setSupplier(""); setNote(""); setSaved(null); setError(null); };
 
   if (saved) {
     return (

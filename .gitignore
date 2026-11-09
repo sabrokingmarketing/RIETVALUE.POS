@@ -13,3 +13,4 @@ backups
 AGENTS.md
 .next-e2e
 public/pdf.worker.min.mjs
+.next-prod

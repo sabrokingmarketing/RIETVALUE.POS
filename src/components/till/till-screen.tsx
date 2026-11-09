@@ -1,4 +1,5 @@
 "use client";
+import { uuid } from "@/lib/uuid";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { Banknote, CreditCard, Minus, Plus, Printer, ScanBarcode, Search, Trash2, Volume2, VolumeX, WifiOff, RotateCcw } from "lucide-react";
@@ -247,7 +248,7 @@ export function TillScreen({ tillOpen, staffName }: { tillOpen: boolean; staffNa
       if (!r.ok) { handleApiFailure(r.status, r.error); return; }
       if (!r.data.ok) { applyIssues(r.data.issues); return; }
       setLineIssues({});
-      setCheckoutKey((k) => k ?? crypto.randomUUID());
+      setCheckoutKey((k) => k ?? uuid());
       setPayError(null); setTendered(""); setCardRef(""); setMethod("cash");
       setPayOpen(true);
     } catch { setOnline(false); setMsg({ tone: "error", text: "No connection. Payment cannot be taken while offline." }); }

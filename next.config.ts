@@ -12,6 +12,9 @@ const config: NextConfig = {
   poweredByHeader: false,
   agentRules: false,
   serverExternalPackages: ["pg", "bwip-js", "pdf-lib", "@pdf-lib/fontkit"],
+  // Development only: allow the dev server to be opened through a preview/proxy host
+  // (e.g. a cloud workspace preview). Has no effect on `next start`.
+  allowedDevOrigins: process.env.DEV_ALLOWED_ORIGINS?.split(",").map((s) => s.trim()) ?? ["**.*"],
   experimental: { serverActions: { bodySizeLimit: "6mb" } },
   async headers() {
     return [

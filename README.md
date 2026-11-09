@@ -69,10 +69,14 @@ npm run db:migrate
 npm run db:seed
 ```
 
-**6. Run the app:**
+**6. Run the app.** Either the live-reloading dev server, or a production build (more robust when opened through a proxy, a cloud preview or another device on the network):
 
 ```bash
 npm run dev
+```
+
+```bash
+npm run local
 ```
 
 Open http://localhost:3000. With demo data, sign in as `owner@demo.test` / `demo-owner-pass` or `cashier@demo.test` / `demo-cashier-pass`. Without demo data, open `/setup` and create the owner with your `SETUP_TOKEN`.
