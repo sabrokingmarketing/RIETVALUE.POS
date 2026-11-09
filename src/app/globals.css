@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --color-surface: #ffffff;   /* work surfaces */
+  --color-leaf: #eaf5e7;      /* selected rows, highlights */
+  --color-leaf-strong: #cfe8c8;
+  --color-forest: #215c39;    /* primary actions */
+  --color-forest-dark: #184a2d;
+  --color-mist: #f4f6f4;      /* workspace background */
+  --color-ink: #203028;       /* text */
+  --color-muted: #4f5f56;     /* secondary text, 6.6:1 on white */
+  --color-line: #d5ddd7;      /* restrained borders */
+  --color-danger: #b42318;    /* errors and destructive actions only */
+  --color-danger-bg: #fdecea;
+  --color-warn: #8a5a00;
+  --color-warn-bg: #fff4dc;
+}
+
+html { color: var(--color-ink); background: var(--color-mist); -webkit-text-size-adjust: 100%; }
+body { font-family: var(--font-sans); background: var(--color-mist); color: var(--color-ink); }
+
+/* Visible keyboard focus everywhere */
+:focus-visible { outline: 3px solid var(--color-forest); outline-offset: 2px; border-radius: 6px; }
+.on-dark :focus-visible, .btn-primary:focus-visible { outline-color: var(--color-ink); }
+
+/* Numbers line up on the till */
+.tabular { font-variant-numeric: tabular-nums; }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff; }
+}

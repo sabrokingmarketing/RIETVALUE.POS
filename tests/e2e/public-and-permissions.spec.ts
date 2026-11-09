@@ -1,0 +1,89 @@
+import { test, expect, devices } from "@playwright/test";
+import { signIn, sql } from "./fixtures";
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const { defaultBrowserType, ...phone } = devices["Pixel 7"];
+
+test.describe("public website on a phone", () => {
+  test.use(phone);
+
+  test("home, plants, plant detail, about and visit render without horizontal scroll", async ({ page }) => {
+    for (const path of ["/", "/plants", "/plants/lavender", "/about", "/visit"]) {
+      const res = await page.goto(path);
+      expect(res?.status(), path).toBe(200);
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow, `${path} scrolls sideways`).toBeLessThanOrEqual(0);
+    }
+    await page.goto("/plants/lavender");
+    await expect(page.getByRole("heading", { level: 1, name: "Lavender" })).toBeVisible();
+    await expect(page.getByText("R89.90")).toBeVisible();
+    const wa = page.getByRole("link", { name: /Ask about this plant/ });
+    await expect(wa).toHaveAttribute("href", /^https:\/\/wa\.me\/27000000000\?text=.*Lavender.*15%20cm%20pot/);
+    await page.getByRole("button", { name: "Menu" }).or(page.locator("summary[aria-label=Menu]")).first().click();
+    await expect(page.getByRole("link", { name: "Visit & contact" }).first()).toBeVisible();
+  });
+
+  test("owner workspace is usable on a phone", async ({ page }) => {
+    await signIn(page, "owner", "/admin");
+    for (const path of ["/admin", "/admin/products", "/admin/receive", "/admin/stock", "/admin/reports", "/admin/settings"]) {
+      await page.goto(path);
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      expect(overflow, `${path} scrolls sideways`).toBeLessThanOrEqual(0);
+    }
+  });
+});
+
+test("public pages never expose stock counts, SKUs, barcodes or staff", async ({ page }) => {
+  const [v] = await sql<{ sku: string; barcode: string; on_hand: number }>(`SELECT sku, barcode, on_hand FROM variants WHERE sku = 'LAV-15'`);
+  for (const path of ["/", "/plants", "/plants/lavender", "/visit"]) {
+    await page.goto(path);
+    const html = await page.content();
+    expect(html).not.toContain(v.sku);
+    expect(html).not.toContain(v.barcode);
+    expect(html).not.toContain("owner@e2e.test");
+    expect(html).not.toContain("Olivia Owner");
+    expect(html).not.toMatch(/\b11 in stock\b/);
+  }
+});
+
+test("anonymous requests to private data are refused", async ({ request }) => {
+  for (const url of ["/api/till/search?q=lav", "/api/till/lookup?code=21000001", "/api/reports/day?date=2026-01-01", "/api/labels/1"]) {
+    const r = await request.get(url);
+    expect(r.status(), url).toBe(401);
+  }
+  const page = await request.get("/admin/stock", { maxRedirects: 0 });
+  expect(page.status()).toBe(307);
+  expect(page.headers()["location"]).toContain("/login");
+});
+
+test("cashier cannot open owner pages, edit prices or read reports", async ({ page }) => {
+  await signIn(page, "cashier");
+  const [p] = await sql<{ product_id: number }>(`SELECT product_id FROM variants WHERE sku = 'LAV-15'`);
+  await page.goto(`/admin/products/${p.product_id}`);
+  await expect(page).toHaveURL(/\/forbidden/);
+  await expect(page.getByRole("heading", { name: "Owner access only" })).toBeVisible();
+  const r = await page.request.get("/api/reports/day?date=2026-01-01");
+  expect(r.status()).toBe(403);
+  // The till offers no price editing, and the price is unchanged
+  await page.goto("/till");
+  await expect(page.getByText("Owner workspace")).toHaveCount(0);
+  const [{ price_cents }] = await sql<{ price_cents: number }>(`SELECT price_cents FROM variants WHERE sku = 'LAV-15'`);
+  expect(price_cents).toBe(8990);
+});
+
+test("deactivated cashier is signed out and cannot sign in", async ({ page, browser }) => {
+  await signIn(page, "cashier");
+  const owner = await (await browser.newContext()).newPage();
+  await signIn(owner, "owner", "/admin/staff");
+  owner.on("dialog", (d) => d.accept());
+  await owner.getByRole("button", { name: "Deactivate" }).click();
+  await expect(owner.getByText("Deactivated and signed out everywhere.")).toBeVisible();
+  await page.goto("/till");
+  await expect(page).toHaveURL(/\/login/);
+  await page.getByLabel("E-mail").fill("cashier@e2e.test");
+  await page.getByLabel("Password").fill("cashier-password-1");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.getByText(/Sign-in failed/)).toBeVisible();
+  await owner.getByRole("button", { name: "Reactivate" }).click();
+  await expect(owner.getByText("Reactivated.")).toBeVisible();
+});

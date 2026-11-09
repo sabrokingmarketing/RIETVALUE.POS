@@ -13,6 +13,8 @@ export const auth = betterAuth({
   database: getPool(),
   trustedOrigins: [appUrl],
   telemetry: { enabled: false },
+  // Brute-force protection on sign-in/reset. Only the automated browser tests switch it off.
+  rateLimit: { enabled: process.env.AUTH_RATE_LIMIT !== "off" && process.env.NODE_ENV === "production", window: 60, max: 30 },
   emailAndPassword: {
     enabled: true,
     // Accounts are created only by the owner (or initial setup) — never self-service.
@@ -41,7 +43,6 @@ export const auth = betterAuth({
   },
   advanced: {
     useSecureCookies: appUrl.startsWith("https://"),
-    database: { generateId: "uuid" },
   },
   databaseHooks: {
     session: {
