@@ -1,4 +1,4 @@
-<title>Nursery Till</title>
+<title>Rietvalei POS</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
@@ -188,11 +188,66 @@ body::before{background:#fff}
 .drop.over{border-color:var(--forest);background:var(--leaf)}
 .bar{height:14px;border-radius:999px;background:var(--leaf);overflow:hidden}.bar>div{height:100%;background:var(--forest);border-radius:999px;transition:width .3s}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* v3: category tiles, modern pop-ups, label studio */
+#brand{display:flex;flex-direction:column;line-height:1.2;min-width:0}#brand .biz{font-size:.72rem;font-weight:400;opacity:.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cats{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(136px,1fr))}
+@media(max-width:639px){.cats{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;margin:0 -16px;padding:2px 16px 6px}.cats::-webkit-scrollbar{display:none}.cat{width:128px;flex-shrink:0;scroll-snap-align:start}}
+.cat{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:12px;border-radius:18px;border:1px solid var(--line);background:#fff;box-shadow:var(--shadow);text-align:left;cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s}
+.cat:hover{transform:translateY(-2px);border-color:rgba(54,83,20,.3);box-shadow:0 6px 20px rgb(23 33 27/.08)}
+.cat .ci{display:inline-flex;width:44px;height:44px;border-radius:14px;background:var(--leaf);color:var(--forest);align-items:center;justify-content:center}
+.cat strong{font-size:.9rem;line-height:1.25}.cat small{font-size:.75rem;color:var(--muted)}
+.cat[aria-pressed=true]{background:var(--forest);border-color:var(--forest);color:#fff;box-shadow:0 6px 20px rgb(54 83 20/.25)}
+.cat[aria-pressed=true] .ci{background:var(--primary);color:var(--ink)}.cat[aria-pressed=true] small{color:rgba(255,255,255,.82)}
+.cat[aria-pressed=true]::after{content:"";position:absolute;top:12px;right:12px;width:10px;height:10px;border-radius:99px;background:var(--primary)}
+.scrim{background:rgba(23,33,27,.45);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:fadein .16s ease-out}
+.dialog{border-radius:28px 28px 0 0;padding:0;display:flex;flex-direction:column;max-height:92vh;overflow:hidden;box-shadow:0 24px 64px rgb(23 33 27/.28);animation:sheetin .24s cubic-bezier(.2,.8,.2,1)}
+@media(min-width:640px){.dialog{border-radius:24px;animation:panelin .2s cubic-bezier(.2,.8,.2,1)}}
+.scrim.re,.scrim.re .dialog{animation:none}
+@keyframes fadein{from{opacity:0}}@keyframes panelin{from{opacity:0;transform:translateY(12px) scale(.98)}}@keyframes sheetin{from{transform:translateY(100%)}}
+.dlg-grab{width:40px;height:5px;border-radius:99px;background:var(--line);margin:10px auto 0}@media(min-width:640px){.dlg-grab{display:none}}
+.dlg-head{display:flex;align-items:flex-start;gap:12px;padding:18px 22px 10px}
+.dlg-ic{display:inline-flex;width:44px;height:44px;border-radius:16px;background:var(--leaf);color:var(--forest);align-items:center;justify-content:center;flex-shrink:0}
+.dlg-ic.warn{background:var(--warn-bg);color:var(--warn)}.dlg-ic.danger{background:var(--danger-bg);color:var(--danger)}
+.dlg-head h2{font-size:1.2rem;letter-spacing:-.01em}.dlg-sub{font-size:.85rem;color:var(--muted);margin-top:2px}
+.dlg-x{margin-left:auto;width:44px;height:44px;border-radius:99px;border:0;background:transparent;color:var(--muted);font-size:1.1rem;cursor:pointer;flex-shrink:0}.dlg-x:hover{background:var(--mist);color:var(--ink)}
+.dlg-body{padding:6px 22px 22px;overflow-y:auto;min-height:0}
+.dlg-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;border-top:1px solid var(--line);background:rgba(247,249,246,.7);padding:14px 22px;padding-bottom:max(14px,env(safe-area-inset-bottom,0px))}
+.opts{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(min(100%,140px),1fr))}
+.opt{position:relative;display:flex;flex-direction:column;gap:6px;padding:12px;border:1px solid var(--line);border-radius:16px;cursor:pointer;min-height:96px}
+.opt:has(input:checked){border-color:var(--forest);background:var(--leaf)}.opt:has(input:focus-visible){outline:3px solid var(--forest);outline-offset:2px}
+.opt input{position:absolute;opacity:0;pointer-events:none}.opt .oi{display:inline-flex;width:36px;height:36px;border-radius:12px;background:var(--mist);color:var(--forest);align-items:center;justify-content:center}
+.opt:has(input:checked) .oi{background:var(--forest);color:#fff}.opt strong{font-size:.9rem}.opt span.s{font-size:.75rem;color:var(--muted)}
+.stepper{display:flex;align-items:center;gap:8px}.stepper button{width:48px;height:48px;border-radius:14px;border:1px solid var(--field);background:#fff;font-size:1.4rem;cursor:pointer}.stepper button:hover{background:var(--leaf)}
+.stepper input{width:112px;height:48px;border-radius:14px;border:1px solid var(--field);text-align:center;font-size:1.5rem;font-weight:700}
+.delta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--mist);border-radius:16px;padding:12px 16px;margin-top:10px}.delta .chg{margin-left:auto;border-radius:99px;padding:2px 10px;font-weight:600;font-size:.85rem}
+.studio{display:grid;gap:20px;align-items:start}@media(min-width:1180px){.studio{grid-template-columns:minmax(0,1fr) 400px}.studio .printcol{position:sticky;top:80px}}
+.stepn{display:inline-flex;width:32px;height:32px;border-radius:99px;background:var(--forest);color:#fff;font-weight:700;font-size:.85rem;align-items:center;justify-content:center;flex-shrink:0}
+.stephd{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}.stephd p{font-size:.85rem;color:var(--muted)}
+.lsearch{position:relative}.lsearch input{width:100%;min-height:56px;border-radius:18px;border:1px solid var(--field);background:var(--mist);padding:0 16px 0 46px;font-size:1rem}
+.lsearch svg{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--forest)}
+.lres{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:20;background:#fff;border:1px solid var(--line);border-radius:18px;padding:6px;box-shadow:0 16px 40px rgb(23 33 27/.14);max-height:320px;overflow:auto}
+.lres button{display:flex;width:100%;align-items:center;gap:10px;min-height:48px;border:0;background:transparent;border-radius:12px;padding:0 12px;text-align:left;cursor:pointer}.lres button:hover{background:var(--leaf)}
+.litem{display:flex;align-items:center;gap:12px;flex-wrap:wrap;border:1px solid var(--line);border-radius:18px;padding:10px 12px}
+.litem .tg{display:inline-flex;width:40px;height:40px;border-radius:12px;background:var(--leaf);color:var(--forest);align-items:center;justify-content:center;flex-shrink:0}
+.mini{display:flex;align-items:center;border:1px solid var(--field);border-radius:14px;padding:2px}.mini button{width:40px;height:40px;border:0;border-radius:10px;background:transparent;font-size:1.2rem;cursor:pointer}.mini button:hover{background:var(--leaf)}
+.mini input{width:52px;height:40px;border:0;text-align:center;font-weight:700;font-size:1.05rem;background:transparent}
+.xbtn{width:40px;height:40px;border-radius:99px;border:0;background:transparent;color:var(--muted);cursor:pointer;font-size:1rem}.xbtn:hover{background:var(--danger-bg);color:var(--danger)}
+.papers{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr))}
+.paper{display:flex;flex-direction:column;gap:10px;border:2px solid var(--line);border-radius:18px;padding:14px;background:#fff;text-align:left;cursor:pointer}.paper[aria-checked=true]{border-color:var(--forest);background:rgba(236,252,203,.6)}
+.paper .tick{width:22px;height:22px;border-radius:99px;border:2px solid var(--field);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:.75rem}.paper[aria-checked=true] .tick{background:var(--forest);border-color:var(--forest)}
+.sheetmap{display:grid;gap:3px;background:var(--mist);border-radius:10px;padding:6px;border:1px solid var(--line)}
+.sheetmap span,.sheetmap button{height:12px;border-radius:3px;background:#fff;border:1px solid var(--line);padding:0}
+.sheetmap button{height:24px;cursor:pointer}.sheetmap .used{background:repeating-linear-gradient(135deg,#d5ddd7 0 2px,transparent 2px 5px)}.sheetmap .first{background:var(--forest);border-color:var(--forest)}
+.prev{border-radius:18px;padding:14px;border:1px solid var(--line);background:radial-gradient(circle at 1px 1px,#d5ddd7 1px,transparent 0) 0 0/14px 14px;display:flex;justify-content:center}
+.prev svg{width:100%;max-width:300px;height:auto;background:#fff;border-radius:6px;box-shadow:0 4px 16px rgb(23 33 27/.12)}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}.sum div{background:var(--mist);border-radius:12px;padding:8px}.sum dt{font-size:.72rem;color:var(--muted)}.sum dd{margin:0;font-weight:600;font-variant-numeric:tabular-nums}
+.banner{display:flex;gap:12px;align-items:center;flex-wrap:wrap;background:var(--warn-bg);border:1px solid rgba(138,90,0,.3);border-radius:18px;padding:14px}
+.banner .bi{display:inline-flex;width:44px;height:44px;border-radius:14px;background:#fff;color:var(--warn);align-items:center;justify-content:center;flex-shrink:0}
 </style>
 
 <div class="shell">
   <aside class="side on-dark" id="side" aria-label="Main navigation">
-    <div class="brand"><span class="logo" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg></span><span id="brand">Nursery Till</span></div>
+    <div class="brand"><span class="logo" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg></span><span id="brand">Rietvalei POS</span></div>
     <nav id="tabs"></nav>
     <div class="side-foot" id="who"></div>
   </aside>
@@ -326,6 +381,17 @@ const IC = {
   report: '<path d="M3 3v18h18"/><path d="M8 17v-5M13 17V8M18 17v-9"/>',
   data: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h8M12 11v8"/>',
   settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  grid: '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  flower: '<circle cx="12" cy="12" r="3"/><path d="M12 16.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 1 1 12 7.5a4.5 4.5 0 1 1 4.5 4.5 4.5 4.5 0 1 1-4.5 4.5"/><path d="M12 7.5V9M7.5 12H9M16.5 12H15M12 16.5V15"/>',
+  rose: '<path d="M12 5a3 3 0 1 1 3 3m-3-3a3 3 0 1 0-3 3m3-3v1M9 8a3 3 0 1 0 3 3M9 8h1m5 0a3 3 0 1 1-3 3m3-3h-1m-2 3v-1"/><circle cx="12" cy="8" r="2"/><path d="M12 10v12"/><path d="M12 22c4.2 0 7-1.7 7-5-4.2 0-7 1.7-7 5zM12 22c-4.2 0-7-1.7-7-5 4.2 0 7 1.7 7 5z"/>',
+  house: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .7-1.5l7-6a2 2 0 0 1 2.6 0l7 6a2 2 0 0 1 .7 1.5v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  tree: '<path d="M8 19a4 4 0 0 1-2.24-7.32A3.5 3.5 0 0 1 9 6.03V6a3 3 0 1 1 6 0v.04a3.5 3.5 0 0 1 3.24 5.65A4 4 0 0 1 16 19Z"/><path d="M12 19v3"/>',
+  pot: '<path d="M4 6h16v3H4z"/><path d="M5.5 9h13l-1.6 10.2a1 1 0 0 1-1 .8H8.1a1 1 0 0 1-1-.8z"/>',
+  shovel: '<path d="M2 22v-5l5-5 5 5-5 5z"/><path d="M9.5 14.5 16 8"/><path d="m17 2 5 5-.5.5a3.53 3.53 0 0 1-5 0s0 0 0 0a3.53 3.53 0 0 1 0-5L17 2"/>',
+  check: '<path d="M20 6 9 17l-5-5"/>', alert: '<path d="m21.7 18-8-14a2 2 0 0 0-3.5 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3"/><path d="M12 9v4M12 17h.01"/>',
+  snow: '<path d="M2 12h20M12 2v20m-8-6 4-4-4-4m16 8-4-4 4-4M9 4l3 3 3-3M9 20l3-3 3 3"/>', tag: '<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/>',
+  printer: '<path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/><rect x="6" y="14" width="12" height="8" rx="1"/>',
+  scan: '<path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M8 7v10M12 7v10M17 7v10"/>',
   leaf: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>',
 };
 const icon = (k, cls = "ico") => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
@@ -342,7 +408,7 @@ const initials = (n) => (n || "?").split(/\s+/).filter(Boolean).slice(0, 2).map(
 function render() {
   if (!S.db) return;
   const ready = S.loaded.catalog && S.loaded.stock && S.loaded.settings && S.loaded.till;
-  $("#brand").textContent = S.settings?.businessName || "Nursery Till";
+  $("#brand").innerHTML = `Rietvalei POS<span class="biz">${esc(S.settings?.businessName || "")}</span>`;
   $("#tillPill").hidden = !S.till?.open;
   const roleName = isOwner() ? "Owner" : S.role === "cashier" ? "Cashier" : "View only";
   $("#who").innerHTML = S.me?.name ? `<strong>${esc(S.me.name)}</strong><br><span style="opacity:.85">${roleName}</span>` : roleName;
@@ -381,6 +447,18 @@ document.addEventListener("submit", (e) => {
 
 // ---------------------------------------------------------------- TILL
 let posCat = null; let payPref = "cash";
+function catIcon(name) {
+  const n = name.toLowerCase();
+  if (/herb|lavender|veg|edible/.test(n)) return "products";
+  if (/succulent|aloe|cact|vygie/.test(n)) return "leaf";
+  if (/rose|flower|annual|perennial|bulb/.test(n)) return "rose";
+  if (/indigenous|fynbos|protea|native/.test(n)) return "flower";
+  if (/indoor|house|office/.test(n)) return "house";
+  if (/tree|shrub|hedge/.test(n)) return "tree";
+  if (/pot|planter|container/.test(n)) return "pot";
+  if (/suppl|soil|compost|tool|fertili|garden/.test(n)) return "shovel";
+  return "leaf";
+}
 function basketTotal() { return S.basket.reduce((s, l) => s + l.unitPrice * l.qty, 0); }
 function viewTill() {
   const total = basketTotal(); const items = S.basket.reduce((s, l) => s + l.qty, 0);
@@ -408,10 +486,9 @@ function viewTill() {
       <div aria-live="polite">${last ? `<div class="last"><div><p class="small muted" style="text-transform:uppercase;letter-spacing:.06em">Last item</p><p style="font-weight:600">${esc(last.name)} — ${esc(last.size)}</p></div><p style="text-align:right"><span class="small muted">Qty in order</span><br><span class="tab" style="font-size:1.6rem;font-weight:700">${last.qty}</span></p></div>` : ""}</div>
       ${S.msg ? `<div class="alert ${S.msg.tone === "error" ? "error" : S.msg.tone === "ok" ? "ok" : "warn"}" role="alert">${esc(S.msg.text)}</div>` : ""}
     </form>
-    <section class="stack" aria-labelledby="cat-h"><h2 id="cat-h">Category</h2>
-      <div class="chips" role="group" aria-label="Filter products by category">
-        <button class="chip" data-cat="" aria-pressed="${!posCat}"><span class="dot">${icon("leaf")}</span>All plants <span class="small muted">${all.length}</span></button>
-        ${cats.map(([c, n]) => `<button class="chip" data-cat="${esc(c)}" aria-pressed="${posCat === c}"><span class="dot">${icon("leaf")}</span>${esc(c)} <span class="small muted">${n}</span></button>`).join("")}
+    <section class="stack" aria-labelledby="cat-h"><div class="row" style="justify-content:space-between"><h2 id="cat-h">Categories</h2>${posCat ? `<button class="btn ghost" data-cat="">Showing ${esc(posCat)} · Show all</button>` : ""}</div>
+      <div class="cats" role="group" aria-label="Filter products by category">
+        ${[["", "All products", all.length, "grid"], ...cats.map(([c, n]) => [c, c, n, catIcon(c)])].map(([key, nm, n, ic]) => `<button class="cat" data-cat="${esc(key)}" aria-pressed="${(posCat || "") === key}"><span class="ci">${icon(ic)}</span><span><strong>${esc(nm)}</strong><br><small>${n} item${n === 1 ? "" : "s"}</small></span></button>`).join("")}
       </div></section>
     <section class="stack" aria-labelledby="prod-h">
       <div class="row" style="justify-content:space-between"><h2 id="prod-h">Products</h2><label class="sr" for="tsearch">Find by name or SKU</label><input id="tsearch" class="i" type="search" style="max-width:280px" placeholder="Find by name or SKU" value="${esc(S.search)}" autocomplete="off"></div>
@@ -514,7 +591,7 @@ function takePayment() {
 function openPriceReview(prices) {
   dialog("Prices have changed", `<p class="muted small">The owner changed these prices after they were scanned. Tell the customer, then accept the new prices.</p>
     <div class="tablewrap" style="margin-top:12px"><table><tbody>${prices.map((p) => `<tr><td>${esc(p.desc)}</td><td class="r tab"><s class="muted">${rand(p.was)}</s> → <strong>${rand(p.now)}</strong><br><span class="small" style="color:${p.now > p.was ? "var(--warn)" : "var(--forest)"}">${p.now > p.was ? "+" : "−"}${rand(Math.abs(p.now - p.was))} each</span></td></tr>`).join("")}</tbody></table></div>
-    <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn" data-close>Back to basket</button><button class="btn primary" data-act="acceptPrices" autofocus>Accept new prices</button></div>`);
+    <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn" data-close>Back to basket</button><button class="btn primary" data-act="acceptPrices" autofocus>Accept new prices</button></div>`, { icon: "alert", tone: "warn", sub: "Tell the customer before taking payment." });
   acceptPrices.list = prices;
 }
 function acceptPrices() { for (const p of acceptPrices.list || []) { const l = S.basket.find((x) => x.id === p.id); if (l) l.unitPrice = p.now; } saveLocal(); closeDialog(); S.msg = { tone: "ok", text: "New prices accepted. Check the total with the customer, then take payment." }; render(); }
@@ -537,7 +614,7 @@ function drawPay() {
     ${payState.err ? `<div class="alert error">${esc(payState.err)}</div>` : ""}
     <button class="btn primary xl" data-act="cardOk" ${!S.online || payState.busy ? "disabled" : ""}>${payState.busy ? "Saving…" : "Terminal shows APPROVED — complete sale"}</button>
     <button class="btn danger lg" data-act="cardDeclined" ${payState.busy ? "disabled" : ""}>Terminal declined</button></div>`}
-  ${!S.online ? `<div class="alert error" style="margin-top:10px">Offline — completing the sale is disabled.</div>` : ""}`, { locked: payState.busy, keepFocus: true });
+  ${!S.online ? `<div class="alert error" style="margin-top:10px">Offline — completing the sale is disabled.</div>` : ""}`, { locked: payState.busy, keepFocus: true, icon: "till", sub: `${S.basket.reduce((a, l) => a + l.qty, 0)} items · cash, or card on the terminal` });
 }
 
 async function commitSale(key, lines, payment) {
@@ -629,7 +706,7 @@ async function openReceipt(date, key) {
   dialog(`Receipt ${s.no}`, `${receiptHtml(s)}
     <div class="row" style="margin-top:12px"><button class="btn primary" data-pdf-receipt="${date}|${key}">Save receipt PDF (80 mm)</button>${returnable ? `<button class="btn" data-return="${date}|${key}">Return items</button>` : ""}<button class="btn ghost" data-close>Close</button></div>
     ${!isOwner() ? `<p class="small muted" style="margin-top:8px">Returns are recorded by the owner.</p>` : ""}
-    <p class="small muted" style="margin-top:8px">Showing or saving a receipt again never changes the sale or the stock.</p>`, { wide: true });
+    <p class="small muted" style="margin-top:8px">Showing or saving a receipt again never changes the sale or the stock.</p>`, { wide: true, icon: "receipts", sub: `${dt(s.at)} · ${rand(s.total)}` });
 }
 function receiptHtml(s) {
   const b = s.biz;
@@ -833,25 +910,37 @@ function labelSvg(v) {
   <text x="${p.lw - p.pad}" y="${p.pad + 9.3}" text-anchor="end" font-family="Poppins,Helvetica,Arial" font-weight="700" font-size="4.8" fill="#000">${rand(v.price)}</text>
   ${rects}<text x="${p.lw / 2}" y="${p.lh - p.pad}" text-anchor="middle" font-family="Helvetica,Arial" font-size="2.3" fill="#000">${v.barcode}</text></svg>`;
 }
+function paperArt(k) {
+  const x = PRESETS[k];
+  if (x.kind === "roll") return `<svg viewBox="0 0 120 54" width="100%" height="54" aria-hidden="true"><rect x="4" y="6" width="34" height="42" rx="17" fill="#ecfccb" stroke="#365314" stroke-width="1.5"/><circle cx="21" cy="27" r="7" fill="#fff" stroke="#365314" stroke-width="1.5"/><path d="M21 48h86v-36H38" fill="#fff" stroke="#879189" stroke-width="1.2"/><rect x="46" y="16" width="26" height="28" rx="3" fill="#fff" stroke="#365314" stroke-width="1.2"/><rect x="76" y="16" width="26" height="28" rx="3" fill="#fff" stroke="#365314" stroke-width="1.2"/><path d="M51 32v8M54 32v8M56 32v8M60 32v8M63 32v8M67 32v8M81 32v8M84 32v8M86 32v8M90 32v8M93 32v8M97 32v8" stroke="#17211b"/></svg>`;
+  return `<div class="sheetmap" style="grid-template-columns:repeat(${x.cols},1fr);max-width:120px">${Array.from({ length: x.cols * x.rows }, () => "<span></span>").join("")}</div>`;
+}
 function viewLabels() {
-  const res = lbl.term.trim().length >= 2 ? searchVariants(lbl.term) : null;
+  const res = lbl.term.trim().length >= 2 ? searchVariants(lbl.term).slice(0, 8) : null;
   const relabel = Object.values(S.catalog?.variants || {}).filter((v) => v.relabel && !v.archived);
-  const count = S.labelItems.reduce((a, x) => a + x.qty, 0); const p = PRESETS[lbl.preset];
-  return `<div class="page"><div><h1>Print labels</h1><p class="muted small">Labels show the plant name, size, current price and a Code 128 barcode. Printing never changes stock.</p></div>
-  <div class="grid2"><div class="stack">
-    <section class="card stack"><div class="fields"><label class="f" for="preset">Label stock<select id="preset" class="i">${Object.entries(PRESETS).map(([k, x]) => `<option value="${k}" ${lbl.preset === k ? "selected" : ""}>${x.name}</option>`).join("")}</select></label>
-      ${p.kind === "sheet" ? `<label class="f" for="lstart">Start at label position (1–${p.cols * p.rows})<input id="lstart" class="i" type="number" min="1" max="${p.cols * p.rows}" value="${lbl.start}"></label>` : ""}</div>
-      <label class="f" for="lfind">Add items<input id="lfind" class="i" value="${esc(lbl.term)}" placeholder="Name, SKU or barcode" autocomplete="off"></label>
-      ${res ? `<div class="stack">${res.map((v) => `<button class="result" data-ladd="${v.id}">${esc(label(v))} <span class="muted tab">${rand(v.price)}</span></button>`).join("") || `<p class="small muted">No match.</p>`}</div>` : ""}
-      ${S.labelItems.length ? `<div class="tablewrap"><table><tbody>${S.labelItems.map((it, i) => { const v = V(it.id); return `<tr><td>${esc(label(v))} <span class="small muted tab">${rand(v.price)}</span></td><td class="r" style="width:120px"><input class="i tab" data-lq="${i}" id="lq-${i}" type="number" min="1" max="1000" value="${it.qty}" aria-label="Labels for ${esc(label(v))}"></td><td class="r"><button class="btn ghost" style="color:var(--danger)" data-lrm="${i}">Remove</button></td></tr>`; }).join("")}</tbody></table></div>` : `<p class="small muted">No items yet. Search above, or come here from a saved delivery.</p>`}
-      ${lbl.err ? `<div class="alert error">${esc(lbl.err)}</div>` : ""}
-      <div class="row"><button class="btn primary" data-act="labelPdf" ${!count ? "disabled" : ""}>Save ${count} label${count === 1 ? "" : "s"} as PDF</button><button class="btn" data-act="labelTest" ${!count ? "disabled" : ""}>Save one test label</button></div></section>
-    <section class="card stack"><h2>Shelf labels to replace</h2><p class="small muted">These prices changed. Print new labels, stick them on, then mark them done.</p>
-      ${relabel.length ? `<div class="tablewrap"><table><tbody>${relabel.map((v) => `<tr><td>${esc(label(v))}</td><td class="r tab">${v.oldPrice ? `<s class="muted">${rand(v.oldPrice)}</s> → ` : ""}<strong>${rand(v.price)}</strong></td><td class="r"><button class="btn ghost" data-ladd="${v.id}">Add</button><button class="btn ghost" data-relabelled="${v.id}">Done</button></td></tr>`).join("")}</tbody></table></div>` : `<p class="small">Nothing to replace.</p>`}</section>
-  </div>
-  <div class="stack"><section class="card stack"><h2>Preview <span class="pill grey">${p.lw} × ${p.lh} mm</span></h2>
-    ${S.labelItems.length ? `<div class="labels">${S.labelItems.slice(0, 6).map((it) => labelSvg(V(it.id))).join("")}</div>${S.labelItems.length > 6 ? `<p class="small muted">Showing 6 of ${S.labelItems.length} items.</p>` : ""}` : `<p class="small muted">Choose items to see the labels.</p>`}</section>
-    <div class="alert ok"><strong>Print at actual size</strong><ol style="margin:6px 0 0;padding-left:20px" class="small"><li>Save the PDF and open it.</li><li>Print to the label printer${p.kind === "sheet" ? " (or office printer for A4)" : ""}.</li><li>Set <strong>Scale 100% / Actual size</strong>. Never “Fit to page”.</li><li>${p.kind === "roll" ? "Paper size in the driver: 50 × 30 mm." : "Paper: A4, no extra margins."}</li><li>Print one test label first and scan it at the till.</li></ol></div></div></div></div>`;
+  const count = S.labelItems.reduce((a, x) => a + x.qty, 0); const p = PRESETS[lbl.preset]; const per = p.cols * p.rows;
+  const sheets = p.kind === "sheet" ? Math.ceil((count + lbl.start - 1) / per) : 0;
+  const first = S.labelItems[0] ? V(S.labelItems[0].id) : null;
+  const banner = relabel.length ? `<section class="card" style="border-color:rgba(138,90,0,.35);background:var(--warn-bg)"><div class="row" style="justify-content:space-between;align-items:flex-start"><div class="row" style="align-items:flex-start;gap:12px;flex-wrap:nowrap"><span class="dlg-ic warn">${icon("tag")}</span><div><h2 style="font-size:1rem">${relabel.length} price change${relabel.length === 1 ? " needs" : "s need"} new labels</h2><p class="small muted">Print them, stick them on, then mark each one done.</p></div></div><button class="btn" data-laddall="1">Add all to print list</button></div>
+    <div class="stack" style="margin-top:12px;gap:6px">${relabel.map((v) => `<div class="row" style="justify-content:space-between;background:#fff;border-radius:14px;padding:6px 6px 6px 14px"><span>${esc(label(v))} <span class="small tab">${v.oldPrice ? `<s class="muted">${rand(v.oldPrice)}</s> → ` : ""}<strong>${rand(v.price)}</strong></span></span><span class="row" style="gap:4px"><button class="btn ghost" data-ladd="${v.id}">Add</button><button class="btn ghost" data-relabelled="${v.id}">Mark done</button></span></div>`).join("")}</div></section>` : "";
+  const step1 = `<section class="card"><div class="stephd"><span class="stepn">1</span><div><h2>What needs a label?</h2><p>Search by name, SKU or barcode — or scan an item.</p></div></div>
+    <div class="lsearch">${icon("scan")}<input id="lfind" value="${esc(lbl.term)}" placeholder="Type a plant name, SKU or scan" autocomplete="off" aria-label="Find an item to label">
+      ${res ? `<div class="lres" role="listbox">${res.map((v) => `<button data-ladd="${v.id}" role="option"><span class="tg" style="display:inline-flex;width:32px;height:32px;border-radius:10px;background:var(--leaf);color:var(--forest);align-items:center;justify-content:center">${icon(catIcon(v.category))}</span><span style="flex:1;min-width:0"><strong style="display:block;font-size:.9rem">${esc(v.name)}</strong><span class="small muted">${esc(v.size)} · ${v.barcode}</span></span><span class="tab" style="font-weight:600">${rand(v.price)}</span><span class="pill" style="margin-left:4px">+ Add</span></button>`).join("") || `<p class="small muted" style="padding:12px">No item matches “${esc(lbl.term)}”.</p>`}</div>` : ""}</div>
+    <div class="stack" style="margin-top:14px;gap:8px">${S.labelItems.length ? S.labelItems.map((it, i) => { const v = V(it.id); return `<div class="litem"><span class="tg">${icon(catIcon(v.category))}</span><div style="flex:1;min-width:140px"><strong style="font-size:.92rem">${esc(v.name)}</strong><div class="small muted">${esc(v.size)} · <span class="tab">${rand(v.price)}</span> · <span class="tab">${v.barcode}</span></div></div>
+      <div class="mini"><button type="button" data-lstep="${i}|-1" aria-label="One fewer label">−</button><input class="tab" data-lq="${i}" id="lq-${i}" type="number" min="1" max="1000" value="${it.qty}" aria-label="Labels for ${esc(label(v))}"><button type="button" data-lstep="${i}|1" aria-label="One more label">+</button></div><button class="xbtn" data-lrm="${i}" aria-label="Remove ${esc(label(v))}">✕</button></div>`; }).join("")
+      : `<div class="empty" style="padding:28px 16px"><span class="dlg-ic" style="margin:0 auto 8px">${icon("labels")}</span><p style="font-weight:600">Your print list is empty</p><p class="small muted">Search above, or press “Print labels” after receiving stock.</p></div>`}</div></section>`;
+  const step2 = `<section class="card"><div class="stephd"><span class="stepn">2</span><div><h2>Choose the paper</h2><p>Use the label roll for pots; use A4 sheets with an office printer.</p></div></div>
+    <div class="papers" role="radiogroup" aria-label="Label paper">${Object.entries(PRESETS).map(([k, x]) => `<button type="button" class="paper" role="radio" aria-checked="${lbl.preset === k}" data-lpreset="${k}"><span class="row" style="justify-content:space-between;width:100%"><strong>${x.kind === "roll" ? "Label roll" : "A4 sheet"}</strong><span class="tick">${lbl.preset === k ? "✓" : ""}</span></span>${paperArt(k)}<span class="small muted">${x.kind === "roll" ? "50 × 30 mm · thermal printer" : `${x.cols} × ${x.rows} labels · 63.5 × 33.9 mm`}</span></button>`).join("")}</div>
+    ${p.kind === "sheet" ? `<div style="margin-top:16px"><p style="font-weight:600;font-size:.9rem">Start on a part-used sheet?</p><p class="small muted">Tap the first empty label. Striped labels are skipped.</p><div class="sheetmap" style="grid-template-columns:repeat(${p.cols},1fr);max-width:260px;margin-top:8px">${Array.from({ length: per }, (_, i) => `<button type="button" data-lcell="${i + 1}" class="${i + 1 < lbl.start ? "used" : i + 1 === lbl.start ? "first" : ""}" aria-label="Start at label ${i + 1}" aria-pressed="${i + 1 === lbl.start}"></button>`).join("")}</div><p class="small muted" style="margin-top:6px">Starting at label ${lbl.start} of ${per}.</p></div>` : ""}</section>`;
+  const step3 = `<section class="card stack"><div class="stephd" style="margin:0"><span class="stepn">3</span><div><h2>Print</h2><p>Check the preview, then save the PDF.</p></div></div>
+    <div style="background:repeating-linear-gradient(45deg,#f7f9f6 0 10px,#eef1ed 10px 20px);border-radius:18px;padding:20px;display:flex;justify-content:center">${first ? `<div style="width:100%;max-width:300px;box-shadow:0 8px 24px rgb(23 33 27/.12);border-radius:6px;overflow:hidden;background:#fff">${labelSvg(first)}</div>` : `<p class="small muted" style="padding:30px 0">The label preview appears here.</p>`}</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">${[["Labels", count], [p.kind === "sheet" ? "Sheets" : "Items", p.kind === "sheet" ? sheets : S.labelItems.length], ["Size", `${p.lw}×${p.lh}`]].map(([k, v]) => `<div style="background:var(--mist);border-radius:14px;padding:10px 4px"><div class="tab" style="font-weight:700;font-size:1.15rem">${v}</div><div class="small muted">${k}</div></div>`).join("")}</div>
+    ${lbl.err ? `<div class="alert error">${esc(lbl.err)}</div>` : ""}
+    <button class="btn primary" style="min-height:56px;font-size:1rem;width:100%" data-act="labelPdf" ${!count ? "disabled" : ""}>${icon("printer")} Print ${count} label${count === 1 ? "" : "s"}</button>
+    <button class="btn" style="width:100%" data-act="labelTest" ${!count ? "disabled" : ""}>Print one test label first</button>
+    <details class="small"><summary style="cursor:pointer;font-weight:600;min-height:32px">How to print at actual size</summary><ol style="margin:6px 0 0;padding-left:20px"><li>Open the saved PDF.</li><li>Choose the ${p.kind === "sheet" ? "office printer, paper A4" : "label printer, paper 50 × 30 mm"}.</li><li>Set <strong>Scale 100% / Actual size</strong> — never “Fit to page”.</li><li>Scan the test label at the till before printing the rest.</li></ol><p class="muted" style="margin-top:6px">Printing never changes stock.</p></details></section>`;
+  return `<div class="page"><div><h1>Barcode labels</h1><p class="muted small">Name, size, price and a scannable barcode on every pot.</p></div>${banner}
+  <div class="studio"><div class="stack">${step1}${step2}</div><div class="printcol">${step3}</div></div></div>`;
 }
 let downloads = null;
 async function savePdf(filename, bytes) {
@@ -948,15 +1037,32 @@ function viewStock() {
   <h2>Today's stock movements</h2>
   ${mvs.length ? `<div class="tablewrap"><table><thead><tr><th>Time</th><th>Item</th><th>Reason</th><th class="r">Change</th><th class="r">Balance</th><th>By</th><th>Ref</th></tr></thead><tbody>${mvs.map((m) => { const v = V(m.variantId); return `<tr><td>${dt(m.at)}</td><td>${esc(v ? label(v) : m.variantId)}</td><td>${REASON[m.reason] || m.reason}${m.note ? `<br><span class="small muted">${esc(m.note)}</span>` : ""}</td><td class="r tab" style="font-weight:600">${m.qty > 0 ? "+" : ""}${m.qty}</td><td class="r tab">${m.balance ?? ""}</td><td>${esc(staff(m.by))}</td><td class="small">${esc(m.ref)}</td></tr>`; }).join("")}</tbody></table></div>` : `<p class="muted small">No movements yet today.</p>`}</div>`;
 }
+const ADJ = [["count_correction", "Count correction", "I counted the actual number", "check", "e.g. found 2 more behind the tunnel"], ["damage", "Damaged", "Broken pot, crushed plant", "alert", "e.g. pot cracked when moving the table"], ["plant_loss", "Plant loss", "Died, frost, pests", "snow", "e.g. frost damage overnight"]];
 function openAdjust(id) {
-  const v = V(id);
-  dialog("Adjust stock", `<p><strong>${esc(label(v))}</strong> · <span class="tab">${onHand(id)}</span> on record</p>
-  <form id="adjForm" data-id="${id}" class="stack" style="margin-top:12px"><label class="f" for="areason">Reason<select id="areason" class="i"><option value="count_correction">Count correction (I counted the actual number)</option><option value="damage">Damaged — remove from stock</option><option value="plant_loss">Plant loss (died, frost, pests)</option></select></label>
-  <label class="f" for="aqty"><span id="aqtyLabel">Actual number counted</span><input id="aqty" class="i tab" type="number" min="0" required></label>
-  <label class="f" for="anote">What happened<input id="anote" class="i" required minlength="3" maxlength="500"></label><div id="aerr"></div><button class="btn primary lg">Save adjustment</button></form>`);
+  const v = V(id); const n = onHand(id);
+  dialog("Adjust stock", `<form id="adjForm" data-id="${id}" data-onhand="${n}" class="stack">
+    <fieldset style="border:0;padding:0;margin:0"><legend style="font-weight:600;font-size:.9rem;margin-bottom:8px">Why are you adjusting?</legend><div class="opts">
+    ${ADJ.map(([k, t, s2, ic], i) => `<label class="opt"><input type="radio" name="areason" value="${k}" ${i === 0 ? "checked" : ""} ${k !== "count_correction" && n === 0 ? "disabled" : ""}><span class="oi">${icon(ic)}</span><strong>${t}</strong><span class="s">${s2}</span></label>`).join("")}</div></fieldset>
+    <div><label for="aqty" id="aqtyLabel" style="font-weight:600;font-size:.9rem">Actual number counted</label>
+      <div class="stepper" style="margin-top:8px"><button type="button" data-adjstep="-1" aria-label="One fewer">−</button><input id="aqty" class="tab" type="number" inputmode="numeric" min="0" value="${n}" required><button type="button" data-adjstep="1" aria-label="One more">+</button></div>
+      <div class="delta" id="adjDelta" aria-live="polite"></div></div>
+    <label class="f" for="anote" style="font-weight:600">What happened?<textarea id="anote" class="i" required minlength="3" maxlength="500" rows="2" placeholder="${ADJ[0][4]}"></textarea><span class="small muted" style="font-weight:400">Saved with your name and the time in the stock history.</span></label>
+    <div id="aerr"></div></form>`, { icon: "stock", sub: `<strong style="color:var(--ink)">${esc(label(v))}</strong> · <span class="tab">${n}</span> on record`,
+    foot: `<button class="btn" data-close>Cancel</button><button class="btn primary" type="submit" form="adjForm" id="adjSave">Save adjustment</button>` });
+  adjPreview();
+}
+function adjPreview() {
+  const f = $("#adjForm"); if (!f) return;
+  const n = +f.dataset.onhand; const reason = f.querySelector("input[name=areason]:checked").value; const q = Math.max(0, Math.floor(+$("#aqty").value || 0));
+  const after = reason === "count_correction" ? q : n - q; const d = after - n;
+  $("#aqtyLabel").textContent = reason === "count_correction" ? "Actual number counted" : "How many to remove";
+  $("#anote").placeholder = ADJ.find((x) => x[0] === reason)[4];
+  $("#adjDelta").innerHTML = `<span class="small muted">On record</span><strong class="tab">${n}</strong><span class="muted">→</span><span class="small muted">After saving</span><strong class="tab" style="${after < 0 ? "color:var(--danger)" : ""}">${after}</strong>
+    <span class="chg tab" style="background:${d > 0 ? "var(--leaf);color:var(--forest)" : d < 0 ? "var(--warn-bg);color:var(--warn)" : "#fff;color:var(--muted)"}">${d === 0 ? "No change" : (d > 0 ? "+" : "") + d}</span>`;
+  $("#adjSave").disabled = d === 0 || after < 0 || (reason !== "count_correction" && q < 1);
 }
 async function saveAdjust(form) {
-  const id = form.dataset.id, reason = $("#areason").value, q = Math.floor(+$("#aqty").value), note = $("#anote").value.trim();
+  const id = form.dataset.id, reason = form.querySelector("input[name=areason]:checked").value, q = Math.floor(+$("#aqty").value), note = $("#anote").value.trim();
   const err = (t) => ($("#aerr").innerHTML = `<div class="alert error">${esc(t)}</div>`);
   if (!Number.isFinite(q) || q < 0 || $("#aqty").value === "") return err("Enter a number.");
   if (note.length < 3) return err("Say what happened (at least 3 characters).");
@@ -1372,10 +1478,14 @@ async function saveSettings() {
 // ---------------------------------------------------------------- dialog
 let dialogOpts = {};
 function dialog(title, body, opts = {}) {
-  dialogOpts = opts; const prev = captureFocus();
-  $("#dlg").innerHTML = `<div class="scrim" data-scrim><div class="dialog ${opts.wide ? "wide" : ""}" role="dialog" aria-modal="true" aria-labelledby="dlgTitle"><div class="row" style="justify-content:space-between;margin-bottom:12px;flex-wrap:nowrap"><h2 id="dlgTitle">${esc(title)}</h2>${opts.locked ? "" : `<button class="btn ghost" data-close aria-label="Close">✕</button>`}</div>${body}</div></div>`;
+  dialogOpts = opts; const prev = captureFocus(); const again = !!$("#dlg").firstChild;
+  $("#dlg").innerHTML = `<div class="scrim ${again ? "re" : ""}" data-scrim><div class="dialog ${opts.wide ? "wide" : ""}" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+    <div class="dlg-grab" aria-hidden="true"></div>
+    <div class="dlg-head">${opts.icon ? `<span class="dlg-ic ${opts.tone || ""}" aria-hidden="true">${icon(opts.icon)}</span>` : ""}<div style="min-width:0"><h2 id="dlgTitle">${esc(title)}</h2>${opts.sub ? `<p class="dlg-sub">${opts.sub}</p>` : ""}</div>
+    ${opts.locked ? "" : `<button class="dlg-x" data-close aria-label="Close">✕</button>`}</div>
+    <div class="dlg-body">${body}</div>${opts.foot ? `<div class="dlg-foot">${opts.foot}</div>` : ""}</div></div>`;
   if (opts.keepFocus && prev && document.getElementById(prev.id)) restoreFocus(prev);
-  else ($("#dlg [autofocus]") || $("#dlg input:not([type=checkbox])") || $("#dlg button"))?.focus();
+  else ($("#dlg [autofocus]") || $("#dlg .dlg-body input:not([type=checkbox]):not([type=radio])") || $("#dlg .dlg-body button") || $("#dlg button"))?.focus();
 }
 function closeDialog() { $("#dlg").innerHTML = ""; dialogOpts = {}; }
 document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("#dlg").firstChild && !dialogOpts.locked) { closeDialog(); refocusScan(); } });
@@ -1405,6 +1515,11 @@ document.addEventListener("click", async (e) => {
   if (d.drm) { S.deliveryLines.splice(+d.drm, 1); render(); return; }
   if (d.ladd) { const it = S.labelItems.find((x) => x.id === d.ladd); if (it) it.qty++; else S.labelItems.push({ id: d.ladd, qty: 1 }); lbl.term = ""; render(); return; }
   if (d.lrm) { S.labelItems.splice(+d.lrm, 1); render(); return; }
+  if (d.lstep) { const [i, k] = d.lstep.split("|"); const it = S.labelItems[+i]; it.qty = Math.max(1, Math.min(1000, it.qty + +k)); render(); return; }
+  if (d.lpreset) { lbl.preset = d.lpreset; lbl.start = 1; render(); return; }
+  if (d.lcell) { lbl.start = +d.lcell; render(); return; }
+  if (d.laddall) { Object.values(S.catalog?.variants || {}).filter((v) => v.relabel && !v.archived).forEach((v) => { if (!S.labelItems.some((x) => x.id === v.id)) S.labelItems.push({ id: v.id, qty: 1 }); }); render(); return; }
+  if (d.adjstep) { const i = $("#aqty"); i.value = Math.max(0, Math.floor(+i.value || 0) + +d.adjstep); adjPreview(); return; }
   if (d.relabelled) { await withLock(async () => { const cat = await get(DOCS.catalog, null); cat.variants[d.relabelled].relabel = false; delete cat.variants[d.relabelled].oldPrice; await S.db.doc(DOCS.catalog).set(cat); }).catch(() => toast("Could not save.")); toast("Marked as relabelled."); return; }
   if (d.pedit) { prod.edit = d.pedit; prod.err = null; render(); return; }
   if (d.archive) { await withLock(async () => { const cat = await get(DOCS.catalog, null); cat.variants[d.archive].archived = !cat.variants[d.archive].archived; await S.db.doc(DOCS.catalog).set(cat); }).catch(() => toast("Could not save.")); prod.edit = null; return; }
@@ -1464,6 +1579,7 @@ document.addEventListener("input", (e) => {
   else if (t.dataset.lq) { S.labelItems[+t.dataset.lq].qty = Math.max(1, Math.min(1000, Math.floor(+t.value) || 1)); }
   else if (t.id === "pfind") { prod.term = t.value; render(); }
   else if (t.id === "sfind") { stk.term = t.value; render(); }
+  else if (t.id === "aqty") adjPreview();
 });
 document.addEventListener("change", (e) => {
   const t = e.target;
@@ -1479,7 +1595,7 @@ document.addEventListener("change", (e) => {
   else if (t.name === "impblank") { imp.opt.blanks = t.value; }
   else if (t.id === "impcat") { imp.opt.createCategories = t.checked; }
   else if (t.id === "impAck") { imp.ack = t.checked; render(); }
-  else if (t.id === "areason") $("#aqtyLabel").textContent = t.value === "count_correction" ? "Actual number counted" : "How many to remove";
+  else if (t.name === "areason") { $("#aqty").value = t.value === "count_correction" ? $("#adjForm").dataset.onhand : Math.min(1, +$("#adjForm").dataset.onhand); adjPreview(); }
   else if (t.dataset.lq) render();
 });
 

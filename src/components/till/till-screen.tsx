@@ -8,6 +8,7 @@ import { Dialog } from "@/components/dialog";
 import { formatRand, parseRandToCents, centsToInput } from "@/lib/money";
 import type { PosCategory, TillItem } from "@/lib/till-types";
 import { vatIncluded } from "@/lib/money";
+import { CategoryPicker } from "./category-picker";
 
 type Line = { variantId: number; name: string; size: string; sku: string; unitPriceCents: number; quantity: number; onHand: number; photo?: string | null };
 type Payment = { method: "cash"; tenderedCents: number } | { method: "card"; terminalApproved: true; reference: string };
@@ -430,22 +431,7 @@ export function TillScreen({ tillOpen, staffName, categories, vatRateBp, initial
           {msg && <Alert tone={msg.tone} className="mt-2">{msg.text}</Alert>}
         </form>
 
-        <section aria-labelledby="cat-h">
-          <h2 id="cat-h" className="mb-2 text-lg font-semibold">Category</h2>
-          <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filter products by category">
-            {[{ slug: null as string | null, name: "All plants", count: categories.reduce((a, c) => a + c.count, 0) }, ...categories].map((c) => {
-              const on = category === c.slug;
-              return (
-                <button key={c.slug ?? "all"} type="button" aria-pressed={on} onClick={() => setCategory(c.slug)}
-                  className={cx("inline-flex min-h-12 shrink-0 items-center gap-2 rounded-2xl border px-3 pr-4 text-sm font-medium transition-colors",
-                    on ? "border-primary bg-primary text-ink" : "border-line bg-surface hover:border-deep/40 hover:bg-soft")}>
-                  <span className={cx("inline-flex size-8 items-center justify-center rounded-xl", on ? "bg-white/60" : "bg-soft text-deep")} aria-hidden><Leaf className="size-4" /></span>
-                  {c.name}<span className={cx("tabular text-xs", on ? "text-ink/70" : "text-muted")}>{c.count}</span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
+        <CategoryPicker categories={categories} value={category} onChange={(c) => { setCategory(c); refocusScan(); }} />
 
         <section aria-labelledby="prod-h" className="flex flex-col gap-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
@@ -591,7 +577,7 @@ export function TillScreen({ tillOpen, staffName, categories, vatRateBp, initial
       </aside>
 
       {/* Price change review — must be accepted before tender */}
-      <Dialog open={!!priceReview} onClose={() => setPriceReview(null)} title="Prices have changed">
+      <Dialog open={!!priceReview} onClose={() => setPriceReview(null)} title="Prices have changed" tone="warn" icon={<RotateCcw className="size-5" />} description="Tell the customer the new price before taking payment.">
         <p className="text-sm text-muted">The owner changed these prices after they were added. Tell the customer and accept the new prices to continue.</p>
         <ul className="mt-4 divide-y divide-line rounded-lg border border-line">
           {priceReview?.map((i) => {
@@ -614,7 +600,7 @@ export function TillScreen({ tillOpen, staffName, categories, vatRateBp, initial
       </Dialog>
 
       {/* Payment */}
-      <Dialog open={payOpen} onClose={() => busy !== "submit" && setPayOpen(false)} title="Take payment" locked={busy === "submit"}>
+      <Dialog open={payOpen} onClose={() => busy !== "submit" && setPayOpen(false)} title="Take payment" locked={busy === "submit"} icon={method === "cash" ? <Banknote className="size-5" /> : <CreditCard className="size-5" />} description={`${itemCount} item${itemCount === 1 ? "" : "s"} · cash or card on the terminal`}>
         <div className="rounded-2xl bg-soft p-4 text-center">
           <p className="text-sm font-semibold uppercase tracking-wide text-muted">Amount due</p>
           <p className="tabular text-5xl font-bold" data-testid="pay-due">{formatRand(totalCents)}</p>

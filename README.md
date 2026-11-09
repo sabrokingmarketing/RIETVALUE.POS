@@ -1,4 +1,4 @@
-# Nursery POS — till, owner workspace and product import/export
+# Rietvalei POS — till, owner workspace and product import/export
 
 A single deployable web app for one independent plant nursery in South Africa. It has:
 

@@ -39,7 +39,7 @@ export function AppShell({ actor, businessName, tillOpen, children, fullBleed }:
   const brand = (
     <Link href={actor.role === "owner" ? "/admin" : "/till"} className="flex min-h-11 min-w-0 items-center gap-3 rounded-xl px-2">
       <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary text-ink" aria-hidden><Sprout className="size-5" /></span>
-      <span className="truncate font-semibold">{businessName}</span>
+      <span className="min-w-0"><span className="block truncate font-semibold">Rietvalei POS</span><span className="block truncate text-xs font-normal opacity-80">{businessName}</span></span>
     </Link>
   );
   const userCard = (
@@ -53,7 +53,7 @@ export function AppShell({ actor, businessName, tillOpen, children, fullBleed }:
       {/* Tablet rail + desktop sidebar */}
       <aside className="on-dark no-print sticky top-0 hidden h-dvh shrink-0 flex-col gap-4 bg-deep p-3 text-white md:flex md:w-[92px] lg:w-64 lg:p-4" aria-label="Main navigation">
         <div className="hidden lg:block">{brand}</div>
-        <Link href={actor.role === "owner" ? "/admin" : "/till"} className="mx-auto inline-flex size-11 items-center justify-center rounded-xl bg-primary text-ink lg:hidden" aria-label={`${businessName} home`}><Sprout className="size-5" aria-hidden /></Link>
+        <Link href={actor.role === "owner" ? "/admin" : "/till"} className="mx-auto inline-flex size-11 items-center justify-center rounded-xl bg-primary text-ink lg:hidden" aria-label="Rietvalei POS home"><Sprout className="size-5" aria-hidden /></Link>
         <SideNav items={items} />
         <div className="mt-auto hidden flex-col gap-2 lg:flex">{userCard}<SignOutButton className="justify-center bg-white text-deep hover:bg-soft" /></div>
         <div className="mt-auto lg:hidden"><SignOutButton className="w-full flex-col justify-center gap-0.5 px-1 text-[11px]" compact /></div>
@@ -62,7 +62,7 @@ export function AppShell({ actor, businessName, tillOpen, children, fullBleed }:
       <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
         <header className="no-print sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur">
           <div className="flex items-center gap-2 px-3 py-2 sm:gap-3 sm:px-5">
-            <MobileNav items={items} brand={businessName} userName={actor.name} role={actor.role} />
+            <MobileNav items={items} brand="Rietvalei POS" userName={actor.name} role={actor.role} />
             <form action={actor.role === "owner" ? "/admin/products" : "/till"} role="search" className="relative min-w-0 flex-1 md:max-w-md">
               <label htmlFor="global-search" className="sr-only">Search products</label>
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />

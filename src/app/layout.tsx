@@ -6,8 +6,8 @@ import "@fontsource/poppins/700.css";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: { default: "Nursery", template: "%s · Nursery" },
-  description: "Plants, pots and garden supplies",
+  title: { default: "Rietvalei POS", template: "%s · Rietvalei POS" },
+  description: "Till, stock and labels for Rietvalei Nursery",
 };
 export const viewport: Viewport = { width: "device-width", initialScale: 1, themeColor: "#215C39" };
 

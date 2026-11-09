@@ -7,7 +7,7 @@ import { sendMail } from "./mail";
 const appUrl = process.env.APP_URL || "http://localhost:3000";
 
 export const auth = betterAuth({
-  appName: "Nursery POS",
+  appName: "Rietvalei POS",
   baseURL: appUrl,
   secret: process.env.BETTER_AUTH_SECRET,
   database: getPool(),

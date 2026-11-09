@@ -35,9 +35,9 @@ export async function LabelsPage({ isOwner, searchParams }: { isOwner: boolean; 
   }
   return (
     <div className="mx-auto max-w-6xl">
-      <PageHeader title="Print labels" description="Labels show the plant name, size, current price and barcode. Printing never changes stock." />
+      <PageHeader title="Barcode labels" description="Choose the plants, pick your label paper, print. Printing never changes stock." />
       <LabelPrinter
-        presets={presets.map((p) => ({ id: p.id, name: p.name, kind: p.kind, slots: p.columns * p.rows, labelWidthMm: Number(p.label_width_mm), labelHeightMm: Number(p.label_height_mm), pageWidthMm: Number(p.page_width_mm), pageHeightMm: Number(p.page_height_mm), isDefault: p.is_default }))}
+        presets={presets.map((p) => ({ id: p.id, name: p.name, kind: p.kind, slots: p.columns * p.rows, columns: p.columns, rows: p.rows, labelWidthMm: Number(p.label_width_mm), labelHeightMm: Number(p.label_height_mm), pageWidthMm: Number(p.page_width_mm), pageHeightMm: Number(p.page_height_mm), isDefault: p.is_default }))}
         initialItems={initial} initialPurpose={purpose} deliveryId={deliveryId} initialJobId={jobId} initialPresetId={jobPresetId}
         relabel={relabel.map((v) => ({ variantId: v.id, name: v.common_name, size: v.size_label, priceCents: v.price_cents, oldCents: v.old_cents, barcode: v.barcode }))}
         recent={recent.map((j) => ({ id: j.id, purpose: j.purpose, count: j.label_count, at: j.created_at, preset: j.preset_name, by: j.created_by_name, items: j.items }))}
