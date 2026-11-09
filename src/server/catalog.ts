@@ -64,6 +64,8 @@ export const variantInput = z.object({
   lowStockThreshold: z.coerce.number().int().min(0).max(10000).default(3),
   isPublic: boolish().default(false),
   aliasBarcode: text(48).default("").refine((s) => s === "" || CODE_RE.test(s), "Supplier barcode has invalid characters"),
+  /** Optional existing barcode to use as this size's label code (e.g. from an import). Blank = generate one. */
+  barcode: text(48).default("").refine((s) => s === "" || CODE_RE.test(s), "Barcode has invalid characters"),
 });
 export type VariantInput = z.input<typeof variantInput>;
 
@@ -283,7 +285,12 @@ export async function createVariant(actor: Actor, productId: number, input: Vari
     const dupe = await q1(`SELECT 1 FROM variants WHERE product_id = $1 AND lower(size_label) = lower($2)`, [productId, data.sizeLabel], c);
     if (dupe) throw new AppError("CONFLICT", `“${data.sizeLabel}” already exists for this product`);
     const sku = data.sku || (await uniqueSku(c, skuBase(product.common_name, data.sizeLabel)));
-    const code = await allocateInternalCode(c);
+    let code: string;
+    if (data.barcode) {
+      const taken = await q1(`SELECT 1 FROM barcodes WHERE code = $1`, [data.barcode], c);
+      if (taken) throw new AppError("CONFLICT", `Barcode ${data.barcode} is already registered. Codes are never reused.`);
+      code = data.barcode;
+    } else code = await allocateInternalCode(c);
     let id: number;
     try {
       await c.query("SAVEPOINT v");

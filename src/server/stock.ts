@@ -21,7 +21,7 @@ export const REASON_LABEL: Record<MovementReason, string> = {
 /** Apply a signed stock change to a row already locked FOR UPDATE, and record the movement. */
 export async function applyMovement(
   c: Db,
-  m: { variantId: number; delta: number; reason: MovementReason; operatorId: string; sourceType: "delivery" | "sale" | "return" | "adjustment"; sourceRef: string; note?: string },
+  m: { variantId: number; delta: number; reason: MovementReason; operatorId: string; sourceType: "delivery" | "sale" | "return" | "adjustment" | "import"; sourceRef: string; note?: string },
 ): Promise<number> {
   const row = await q1<{ on_hand: number }>(
     `UPDATE variants SET on_hand = on_hand + $2, updated_at = now() WHERE id = $1 AND on_hand + $2 >= 0 RETURNING on_hand`,
