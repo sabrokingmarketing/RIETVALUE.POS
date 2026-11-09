@@ -11,12 +11,14 @@ export type Settings = {
   vat_rate_bp: number; address_lines: string; phone: string; whatsapp_number: string; email: string;
   opening_hours: string; map_url: string; directions: string; tagline: string; about_text: string;
   receipt_footer: string; is_fixture: boolean;
+  logo_file: string; invoice_payment_info: string; invoice_terms_days: number; invoice_thanks: string;
 };
 
 export async function getSettings(db?: Db): Promise<Settings> {
   const s = await q1<Settings>(
     `SELECT business_name, legal_name, registration_no, vat_registered, vat_number, vat_rate_bp, address_lines, phone,
-            whatsapp_number, email, opening_hours, map_url, directions, tagline, about_text, receipt_footer, is_fixture
+            whatsapp_number, email, opening_hours, map_url, directions, tagline, about_text, receipt_footer, is_fixture,
+            logo_file, invoice_payment_info, invoice_terms_days, invoice_thanks
      FROM settings WHERE id = 1`, [], db);
   return s!;
 }
@@ -72,4 +74,56 @@ export async function updateSettings(actor: Actor, input: z.input<typeof setting
       v.receiptFooter, actor.id],
   );
   await audit(undefined, actor, "settings.update", "settings", 1, v);
+}
+
+// ---------------------------------------------------------------------------
+// Invoice settings and logo
+// ---------------------------------------------------------------------------
+export const invoiceSettingsInput = z.object({
+  paymentInfo: t(600),
+  termsDays: z.coerce.number().int("Whole days only").min(0, "0 or more days").max(365, "At most 365 days").default(7),
+  thanks: t(120),
+});
+
+export async function updateInvoiceSettings(actor: Actor, input: z.input<typeof invoiceSettingsInput>) {
+  assertRole(actor, ["owner"]);
+  const r = invoiceSettingsInput.safeParse(input);
+  if (!r.success) throw new AppError("VALIDATION", r.error.issues[0].message);
+  const v = r.data;
+  await q(`UPDATE settings SET invoice_payment_info=$1, invoice_terms_days=$2, invoice_thanks=$3, updated_at=now(), updated_by=$4 WHERE id=1`,
+    [v.paymentInfo, v.termsDays, v.thanks, actor.id]);
+  await audit(undefined, actor, "settings.invoices", "settings", 1, v);
+}
+
+const LOGO_MAX_BYTES = 2_000_000;
+/** Detects PNG/JPEG by magic bytes (never trusts the browser's file type). */
+export function sniffLogo(buf: Uint8Array): "png" | "jpg" | null {
+  if (buf.length > 8 && buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) return "png";
+  if (buf.length > 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "jpg";
+  return null;
+}
+
+export async function setLogo(actor: Actor, file: File | null) {
+  assertRole(actor, ["owner"]);
+  if (!file || file.size === 0) throw new AppError("VALIDATION", "Choose a PNG or JPG file.");
+  if (file.size > LOGO_MAX_BYTES) throw new AppError("VALIDATION", "The logo must be smaller than 2 MB.");
+  const buf = new Uint8Array(await file.arrayBuffer());
+  const kind = sniffLogo(buf);
+  if (!kind) throw new AppError("VALIDATION", "Use a PNG or JPG image. Other formats can't go on PDF invoices.");
+  const { randomUUID } = await import("node:crypto");
+  const fs = await import("node:fs/promises");
+  const path = await import("node:path");
+  const { uploadDir } = await import("./uploads");
+  const name = `${randomUUID()}.${kind}`;
+  await fs.mkdir(uploadDir(), { recursive: true });
+  await fs.writeFile(path.join(/*turbopackIgnore: true*/ uploadDir(), name), buf);
+  await q(`UPDATE settings SET logo_file=$1, updated_at=now(), updated_by=$2 WHERE id=1`, [name, actor.id]);
+  await audit(undefined, actor, "settings.logo", "settings", 1, { file: name, bytes: buf.length });
+  return name;
+}
+
+export async function clearLogo(actor: Actor) {
+  assertRole(actor, ["owner"]);
+  await q(`UPDATE settings SET logo_file='', updated_at=now(), updated_by=$1 WHERE id=1`, [actor.id]);
+  await audit(undefined, actor, "settings.logo", "settings", 1, { file: "" });
 }

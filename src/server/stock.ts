@@ -38,7 +38,7 @@ export async function applyMovement(
   return row.on_hand;
 }
 
-async function nextNumber(c: Db, name: "sale" | "return" | "delivery", prefix: string): Promise<string> {
+async function nextNumber(c: Db, name: "sale" | "return" | "delivery" | "invoice", prefix: string): Promise<string> {
   const r = await q1<{ value: number }>(`UPDATE counters SET value = value + 1 WHERE name = $1 RETURNING value`, [name], c);
   return `${prefix}${String(r!.value).padStart(6, "0")}`;
 }

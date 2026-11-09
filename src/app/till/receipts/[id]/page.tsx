@@ -7,6 +7,8 @@ import { getReceipt } from "@/server/receipts";
 import { ReceiptView } from "@/components/receipt/receipt-view";
 import { Card, buttonClass } from "@/components/ui";
 import { ReturnPanel } from "./return-panel";
+import { InvoicePanel } from "./invoice-panel";
+import { invoiceForSale } from "@/server/invoices";
 
 export const metadata: Metadata = { title: "Receipt" };
 
@@ -16,6 +18,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
   const r = await getReceipt(actor, id);
   if (!r) notFound();
   const returnable = r.lines.some((l) => l.quantity > l.returned_qty);
+  const inv = await invoiceForSale(actor, r.id);
   return (
     <div className="mx-auto grid w-full max-w-5xl gap-6 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
       <div>
@@ -25,6 +28,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
           <a className={buttonClass("primary")} href={`/print/receipt/${r.id}?size=80mm&auto=1&copy=1`} target="_blank" rel="noopener" data-testid="reprint-80"><Printer className="size-4" aria-hidden /> Reprint receipt (80 mm)</a>
           <a className={buttonClass("secondary")} href={`/print/receipt/${r.id}?size=a4&auto=1&copy=1`} target="_blank" rel="noopener">A4 copy</a>
         </div>
+        <InvoicePanel saleId={r.id} receiptNo={r.receipt_no} isOwner={actor.role === "owner"}
+          existing={inv && inv.invoice_no ? { id: inv.id, invoiceNo: inv.invoice_no, email: inv.bill_email, lastStatus: inv.emails[0]?.status ?? null } : null} />
         <Card className="mt-4 flex justify-center overflow-x-auto p-4"><ReceiptView r={r} size="80mm" /></Card>
       </div>
       <div>

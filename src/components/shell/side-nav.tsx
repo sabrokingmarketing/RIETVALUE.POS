@@ -2,35 +2,51 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Barcode, Boxes, FileSpreadsheet, LayoutDashboard, Menu, Receipt, Settings, ShoppingCart, Sprout, X } from "lucide-react";
+import { BarChart3, Barcode, Boxes, FileSpreadsheet, FileText, LayoutDashboard, Menu, Receipt, Settings, ShoppingCart, Sprout, X } from "lucide-react";
 import type { NavItem, NavKey } from "./app-shell";
 import { SignOutButton } from "@/components/staff/sign-out";
 
 const ICON: Record<NavKey, typeof Menu> = {
   dashboard: LayoutDashboard, pos: ShoppingCart, products: Sprout, inventory: Boxes, labels: Barcode,
-  sales: Receipt, reports: BarChart3, data: FileSpreadsheet, settings: Settings,
+  sales: Receipt, invoices: FileText, reports: BarChart3, data: FileSpreadsheet, settings: Settings,
 };
 
 function isActive(path: string, item: NavItem) {
   return item.match.some((m) => (m.endsWith("$") ? path === m.slice(0, -1) : path === m || path.startsWith(m + "/")));
 }
 
-export function SideNav({ items }: { items: NavItem[] }) {
+/** Pages where the sidebar shrinks to an icon rail to give the work area more room. */
+const COMPACT = ["/till"];
+
+/** Tablet/desktop sidebar. On the POS screen it collapses to icons only (labels show as tooltips). */
+export function SideRail({ items, homeHref, brand, userCard }: { items: NavItem[]; homeHref: string; brand: React.ReactNode; userCard: React.ReactNode }) {
   const path = usePathname();
+  const compact = COMPACT.includes(path);
   return (
-    <nav className="flex flex-col gap-1">
-      {items.map((it) => {
-        const Icon = ICON[it.key]; const active = isActive(path, it);
-        return (
-          <Link key={it.key} href={it.href} aria-current={active ? "page" : undefined}
-            className={`group flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-xl px-1 text-[11px] font-medium leading-tight lg:flex-row lg:justify-start lg:gap-3 lg:px-3 lg:text-sm ${
-              active ? "bg-primary text-ink" : "text-white/90 hover:bg-white/10 hover:text-white"}`}>
-            <Icon className="size-5 shrink-0" aria-hidden />
-            <span className="text-center lg:text-left">{it.label}</span>
-          </Link>
-        );
-      })}
-    </nav>
+    <aside data-compact={compact || undefined} aria-label="Main navigation"
+      className={`on-dark no-print sticky top-0 hidden h-dvh shrink-0 flex-col gap-4 bg-deep p-3 text-white transition-[width] duration-200 md:flex ${compact ? "md:w-[76px]" : "md:w-[92px] lg:w-64 lg:p-4"}`}>
+      {!compact && <div className="hidden lg:block">{brand}</div>}
+      <Link href={homeHref} className={`mx-auto inline-flex size-11 items-center justify-center rounded-xl bg-primary text-ink ${compact ? "" : "lg:hidden"}`} aria-label="Rietvalei POS home" title="Rietvalei POS"><Sprout className="size-5" aria-hidden /></Link>
+      <nav className="flex flex-col gap-1">
+        {items.map((it) => {
+          const Icon = ICON[it.key]; const active = isActive(path, it);
+          return (
+            <Link key={it.key} href={it.href} aria-current={active ? "page" : undefined} aria-label={compact ? it.label : undefined}
+              className={`group flex min-h-12 items-center rounded-xl font-medium leading-tight ${compact
+                ? "relative justify-center"
+                : "flex-col justify-center gap-0.5 px-1 text-[11px] lg:flex-row lg:justify-start lg:gap-3 lg:px-3 lg:text-sm"} ${
+                active ? "bg-primary text-ink" : "text-white/90 hover:bg-white/10 hover:text-white"}`}>
+              <Icon className="size-5 shrink-0" aria-hidden />
+              {compact
+                ? <span aria-hidden className="pointer-events-none absolute left-full z-50 ml-3 whitespace-nowrap rounded-lg bg-ink px-2.5 py-1.5 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">{it.label}</span>
+                : <span className="text-center lg:text-left">{it.label}</span>}
+            </Link>
+          );
+        })}
+      </nav>
+      {!compact && <div className="mt-auto hidden flex-col gap-2 lg:flex">{userCard}<SignOutButton className="justify-center bg-white text-deep hover:bg-soft" /></div>}
+      <div className={`mt-auto ${compact ? "" : "lg:hidden"}`}><SignOutButton className="w-full flex-col justify-center gap-0.5 px-1 text-[11px]" compact /></div>
+    </aside>
   );
 }
 

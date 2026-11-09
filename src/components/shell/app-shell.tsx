@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { Search, Sprout } from "lucide-react";
 import type { Actor } from "@/server/session-types";
-import { SideNav, MobileNav } from "./side-nav";
-import { SignOutButton } from "@/components/staff/sign-out";
+import { SideRail, MobileNav } from "./side-nav";
 
-export type NavKey = "dashboard" | "pos" | "products" | "inventory" | "labels" | "sales" | "reports" | "data" | "settings";
+export type NavKey = "dashboard" | "pos" | "products" | "inventory" | "labels" | "sales" | "invoices" | "reports" | "data" | "settings";
 export type NavItem = { key: NavKey; href: string; label: string; match: string[] };
 
 export function navFor(role: Actor["role"]): NavItem[] {
@@ -16,6 +15,7 @@ export function navFor(role: Actor["role"]): NavItem[] {
       { key: "inventory", href: "/admin/stock", label: "Inventory", match: ["/admin/stock", "/admin/receive"] },
       { key: "labels", href: "/admin/labels", label: "Barcode Labels", match: ["/admin/labels", "/till/labels"] },
       { key: "sales", href: "/till/receipts", label: "Sales", match: ["/till/receipts", "/till/cash"] },
+      { key: "invoices", href: "/admin/invoices", label: "Invoices", match: ["/admin/invoices"] },
       { key: "reports", href: "/admin/reports", label: "Reports", match: ["/admin/reports"] },
       { key: "data", href: "/admin/import-export", label: "Import/Export", match: ["/admin/import-export"] },
       { key: "settings", href: "/admin/settings", label: "Settings", match: ["/admin/settings", "/admin/staff"] },
@@ -50,14 +50,8 @@ export function AppShell({ actor, businessName, tillOpen, children, fullBleed }:
   );
   return (
     <div className="min-h-dvh md:flex">
-      {/* Tablet rail + desktop sidebar */}
-      <aside className="on-dark no-print sticky top-0 hidden h-dvh shrink-0 flex-col gap-4 bg-deep p-3 text-white md:flex md:w-[92px] lg:w-64 lg:p-4" aria-label="Main navigation">
-        <div className="hidden lg:block">{brand}</div>
-        <Link href={actor.role === "owner" ? "/admin" : "/till"} className="mx-auto inline-flex size-11 items-center justify-center rounded-xl bg-primary text-ink lg:hidden" aria-label="Rietvalei POS home"><Sprout className="size-5" aria-hidden /></Link>
-        <SideNav items={items} />
-        <div className="mt-auto hidden flex-col gap-2 lg:flex">{userCard}<SignOutButton className="justify-center bg-white text-deep hover:bg-soft" /></div>
-        <div className="mt-auto lg:hidden"><SignOutButton className="w-full flex-col justify-center gap-0.5 px-1 text-[11px]" compact /></div>
-      </aside>
+      {/* Tablet rail + desktop sidebar (icon rail on the POS screen) */}
+      <SideRail items={items} homeHref={actor.role === "owner" ? "/admin" : "/till"} brand={brand} userCard={<>{userCard}</>} />
 
       <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
         <header className="no-print sticky top-0 z-30 border-b border-line bg-surface/95 backdrop-blur">

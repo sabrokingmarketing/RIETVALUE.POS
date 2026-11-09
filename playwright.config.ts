@@ -30,6 +30,7 @@ export default defineConfig({
       UPLOAD_DIR: "./test-results/uploads",
       NEXT_DIST_DIR: ".next-e2e",
       AUTH_RATE_LIMIT: "off",
+      MAIL_CAPTURE_DIR: "./test-results/mail",
     },
   },
 });

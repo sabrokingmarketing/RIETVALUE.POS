@@ -186,6 +186,20 @@ How the import keeps data consistent:
 
 Uploads, starts, row corrections, retries, completions, reports and exports are all recorded in `audit_log`.
 
+## Invoices
+
+Invoices live under **Invoices** in the owner's menu. Each invoice is saved, numbered (`INV-000001`, gap-free) and can be downloaded as an A4 PDF or e-mailed with the PDF attached.
+
+**From the POS.** In *Take payment*, switch on **E-mail an invoice** and type the customer's e-mail (saved customers are suggested). When the sale completes, a paid invoice with the sale's lines is created and e-mailed. The sale itself is never held up: if e-mail fails, the screen says so and offers *Try again*. A sale only ever has one invoice — sending again re-sends the same one. Forgot to tick it? Use **E-mail invoice** on the *Sale complete* card or on the receipt page.
+
+**By hand.** *Invoices → New invoice*: pick or type the customer, choose payment terms (on receipt / 7 / 14 / 30 days or a date), add plants from the catalogue or any custom line, and watch the live preview. *Save draft* keeps it editable with no number; *Issue* numbers and locks it; *Issue & e-mail* also sends it. Later: **Mark as paid** (EFT, cash, card, other), **Void** with a reason, **Duplicate**, or delete a draft. Manual invoices never change stock.
+
+**Rules.** Prices include VAT, like shelf prices. When the business is VAT registered the document is titled *Tax invoice* with both VAT numbers. Once issued, an invoice's lines, amounts and customer are fixed by database triggers; only payment status and voiding can change. Till invoices are refunded through a return on the receipt, not voided. Cashiers can e-mail invoices for till sales but cannot open the Invoices section.
+
+**Logo and payment details.** *Settings → Invoices & logo*: upload the nursery logo (PNG or JPG, up to 2 MB), enter bank details, default payment terms and the footer message. Until a logo is uploaded, a built-in vector version of the Rietvallei emblem is used.
+
+**E-mail setup.** Set `SMTP_URL` and `MAIL_FROM` in `.env` (any SMTP provider: Google Workspace, Microsoft 365, Afrihost, Mailgun…) and restart. Without them, invoices are still saved and downloadable, and the app clearly says nothing was sent. For demos, `MAIL_CAPTURE_DIR=./mail-out` writes each message to a JSON file instead of sending it.
+
 ## Deploy (production)
 
 **Status:** not deployed. No hosting account, domain or server access was available in this build. See *What remains* in [docs/TEST-RESULTS.md](docs/TEST-RESULTS.md).

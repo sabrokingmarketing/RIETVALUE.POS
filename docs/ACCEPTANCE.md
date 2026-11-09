@@ -63,12 +63,20 @@ Date: ____________  Owner: ____________  Cashier: ____________  Installer: _____
 - [ ] **Export Excel**, change one price in Excel, and import the file again. The preview shows **1 update** and the rest **no change**. Product counts do not increase.
 - [ ] Print a label for the re-priced size and scan it at the POS. The new price rings up.
 
-## J. Devices
+## J. Invoices
+
+- [ ] *Settings → Invoices & logo*: upload the real logo, enter bank details and payment terms. The logo shows in the preview.
+- [ ] At the till, sell one item with **E-mail an invoice** switched on, using your own e-mail address. The sale completes and the card says the invoice was e-mailed.
+- [ ] The e-mail arrives (check spam) with the logo, the amount and the PDF attached. The PDF prints on A4 and shows "Tax invoice" and both VAT numbers if registered.
+- [ ] *Invoices → New invoice*: make an invoice for a business customer with one catalogue plant and one custom line. **Issue & e-mail** it. It arrives.
+- [ ] **Mark as paid** by EFT. The status turns green and the stock count did not change.
+
+## K. Devices
 
 - [ ] On the till computer or tablet, the order total and **Take payment** stay visible while scanning a long order.
 - [ ] The owner can open Dashboard, Products and Inventory on their phone.
 
-## K. Backup
+## L. Backup
 
 - [ ] Run `scripts/backup.sh` (or the Docker equivalent) once by hand. Confirm the files exist and are copied off-site.
 - [ ] Schedule the nightly backup.

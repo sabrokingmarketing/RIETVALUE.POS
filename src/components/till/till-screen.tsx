@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Banknote, CreditCard, Leaf, Minus, Plus, Printer, ScanBarcode, Search, ShoppingBag, Trash2, Volume2, VolumeX, WifiOff, RotateCcw } from "lucide-react";
 import { Alert, Badge, Button, cx, inputClass } from "@/components/ui";
 import { Dialog } from "@/components/dialog";
+import { InvoiceOptIn, SaleInvoiceDialog, SaleInvoiceStatus, isEmail, sendSaleInvoice, type SaleInvoiceRequest, type SaleInvoiceState } from "@/components/invoice/sale-invoice";
 import { formatRand, parseRandToCents, centsToInput } from "@/lib/money";
 import type { PosCategory, TillItem } from "@/lib/till-types";
 import { vatIncluded } from "@/lib/money";
@@ -77,6 +78,10 @@ export function TillScreen({ tillOpen, staffName, categories, vatRateBp, initial
   const [payError, setPayError] = useState<string | null>(null);
   const [priceReview, setPriceReview] = useState<Issue[] | null>(null);
   const [done, setDone] = useState<Done | null>(null);
+  const [invOn, setInvOn] = useState(false);
+  const [invReq, setInvReq] = useState<SaleInvoiceRequest>({ email: "", name: "" });
+  const [invState, setInvState] = useState<SaleInvoiceState | null>(null);
+  const [invDlg, setInvDlg] = useState(false);
   const [checkoutKey, setCheckoutKey] = useState<string | null>(null);
   const [search, setSearch] = useState(initialQuery);
   const [category, setCategory] = useState<string | null>(null);
@@ -274,6 +279,13 @@ export function TillScreen({ tillOpen, staffName, categories, vatRateBp, initial
 
   const finishSuccess = (p: Pending, result: { saleId: string; receiptNo: string; totalCents: number; changeCents: number; replayed: boolean }) => {
     setDone({ ...result, method: p.payment.method });
+    setInvState(null);
+    if (invOn && isEmail(invReq.email)) {
+      const req = invReq;
+      setInvState({ status: "sending", to: req.email.trim() });
+      sendSaleInvoice(result.saleId, req).then(setInvState);
+    }
+    setInvOn(false); setInvReq({ email: "", name: "" });
     setPending(null); setBasket([]); setLastScanId(null); setCheckoutKey(null); setPayOpen(false); setLineIssues({});
     setMsg(null);
   };
@@ -307,13 +319,19 @@ export function TillScreen({ tillOpen, staffName, categories, vatRateBp, initial
   const tenderedCents = parseRandToCents(tendered);
   const change = tenderedCents !== null ? tenderedCents - totalCents : null;
 
+  const invoiceBlocked = () => {
+    if (invOn && !isEmail(invReq.email)) { setPayError("Check the customer's e-mail address, or switch off “E-mail an invoice”."); return true; }
+    return false;
+  };
   const completeCash = () => {
     if (!checkoutKey || tenderedCents === null) return;
+    if (invoiceBlocked()) return;
     if (tenderedCents < totalCents) { setPayError(`Cash tendered is ${formatRand(totalCents - tenderedCents)} short.`); return; }
     submit({ key: checkoutKey, lines: basket, payment: { method: "cash", tenderedCents }, totalCents, status: "sending", startedAt: new Date().toISOString() });
   };
   const completeCard = () => {
     if (!checkoutKey) return;
+    if (invoiceBlocked()) return;
     submit({ key: checkoutKey, lines: basket, payment: { method: "card", terminalApproved: true, reference: cardRef.trim() }, totalCents, status: "sending", startedAt: new Date().toISOString() });
   };
   const declined = async () => {
@@ -401,8 +419,13 @@ export function TillScreen({ tillOpen, staffName, categories, vatRateBp, initial
               <Button onClick={() => printReceipt(done.saleId, "80mm")}><Printer className="size-4" aria-hidden /> Print receipt</Button>
               <Button variant="secondary" onClick={() => printReceipt(done.saleId, "a4")}>A4 receipt</Button>
               <Link className="inline-flex min-h-11 items-center px-3 text-sm font-semibold text-deep underline" href={`/till/receipts/${done.saleId}`}>View receipt</Link>
-              <Button variant="ghost" onClick={() => { setDone(null); refocusScan(); }}>Next customer</Button>
+              <Button variant="ghost" onClick={() => { setDone(null); setInvState(null); refocusScan(); }}>Next customer</Button>
             </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <SaleInvoiceStatus state={invState} onOpen={() => setInvDlg(true)} />
+            </div>
+            <SaleInvoiceDialog open={invDlg} onClose={() => { setInvDlg(false); refocusScan(); }} saleId={done.saleId} receiptNo={done.receiptNo}
+              initial={invState && invState.status !== "sending" ? { email: invState.to, name: "" } : undefined} onDone={setInvState} />
           </section>
         )}
 
@@ -615,6 +638,8 @@ export function TillScreen({ tillOpen, staffName, categories, vatRateBp, initial
             </button>
           ))}
         </div>
+
+        <div className="mt-4"><InvoiceOptIn on={invOn} setOn={(b) => { setInvOn(b); setPayError(null); }} value={invReq} onChange={(v) => { setInvReq(v); setPayError(null); }} /></div>
 
         {method === "cash" ? (
           <form className="mt-4" onSubmit={(e) => { e.preventDefault(); completeCash(); }}>
