@@ -346,9 +346,9 @@ export function TillScreen({ tillOpen, staffName }: { tillOpen: boolean; staffNa
 
   // ---------------------------------------------------------------------------
   return (
-    <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+    <div className="flex min-h-0 flex-1 flex-col md:flex-row">
       {/* LEFT: scan & search */}
-      <div className="flex min-w-0 flex-1 flex-col gap-4 p-4 pb-40 lg:pb-4">
+      <div className="flex min-w-0 flex-1 flex-col gap-4 p-4 pb-4 md:overflow-y-auto">
         {!online && (
           <Alert tone="error" title="Offline — checkout is disabled">
             The till cannot reach the server. Keep the customer&apos;s items aside; you can finish the sale when the connection returns.
@@ -450,7 +450,7 @@ export function TillScreen({ tillOpen, staffName }: { tillOpen: boolean; staffNa
       </div>
 
       {/* RIGHT: basket, total, payment */}
-      <aside className="flex w-full flex-col border-line bg-surface lg:w-[44%] lg:max-w-xl lg:border-l" aria-label="Basket">
+      <aside className="flex w-full flex-col border-t border-line bg-surface pb-44 md:w-1/2 md:max-w-xl md:border-t-0 md:border-l md:pb-0 lg:w-[44%]" aria-label="Basket">
         <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
           <h2 className="text-lg font-semibold">Basket <span className="text-sm font-normal text-muted">({itemCount} item{itemCount === 1 ? "" : "s"})</span></h2>
           <div className="flex gap-1">
@@ -509,7 +509,7 @@ export function TillScreen({ tillOpen, staffName }: { tillOpen: boolean; staffNa
           )}
         </div>
         {/* Total + checkout: sticky at the bottom on tablet/phone so it is always visible */}
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface p-4 shadow-[0_-4px_16px_rgba(32,48,40,0.08)] lg:static lg:shadow-none">
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface p-4 shadow-[0_-4px_16px_rgba(32,48,40,0.08)] md:sticky md:bottom-0 md:shadow-none">
           <div className="flex items-end justify-between gap-4">
             <span className="text-sm font-semibold uppercase tracking-wide text-muted">Amount due</span>
             <span className="tabular text-4xl font-bold sm:text-5xl" data-testid="amount-due">{formatRand(totalCents)}</span>

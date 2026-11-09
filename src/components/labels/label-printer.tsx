@@ -7,6 +7,7 @@ import { formatRand } from "@/lib/money";
 import { formatDateTime } from "@/lib/dates";
 import { createPrintJobAction, searchVariantsAction } from "@/app/admin/actions";
 import { acknowledgeRelabelAction } from "@/app/till/actions";
+import { PdfPreview } from "./pdf-preview";
 
 export type PrintItem = { variantId: number; name: string; size: string; priceCents: number; quantity: number; barcode: string };
 type Preset = { id: number; name: string; kind: "roll" | "sheet"; slots: number; labelWidthMm: number; labelHeightMm: number; pageWidthMm: number; pageHeightMm: number; isDefault: boolean };
@@ -63,7 +64,6 @@ export function LabelPrinter({ presets, initialItems, initialPurpose, deliveryId
   };
 
   const pdfUrl = jobId ? `/api/labels/${jobId}${outlines ? "?outlines=1" : ""}` : null;
-  const aspect = preset ? `${preset.pageWidthMm} / ${preset.pageHeightMm}` : "5 / 3";
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
@@ -174,9 +174,7 @@ export function LabelPrinter({ presets, initialItems, initialPurpose, deliveryId
           </div>
           {pdfUrl ? (
             <>
-              <div className="mt-3 w-full overflow-hidden rounded-lg border border-line bg-mist" style={{ aspectRatio: aspect, maxHeight: "70vh" }}>
-                <iframe title="Label print preview (PDF)" src={pdfUrl} className="h-full w-full" data-testid="label-preview" />
-              </div>
+              <div className="mt-3"><PdfPreview url={pdfUrl} /></div>
               <div className="mt-3 flex flex-wrap gap-2">
                 <a className={buttonClass("primary")} href={pdfUrl} target="_blank" rel="noopener" data-testid="open-pdf"><Printer className="size-4" aria-hidden /> Open PDF to print</a>
                 <a className={buttonClass("secondary")} href={`/api/labels/${jobId}?download=1`}><Download className="size-4" aria-hidden /> Download PDF</a>

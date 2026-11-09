@@ -15,10 +15,10 @@ export function StaffBar({ actor, businessName, tillOpen }: { actor: Actor; busi
   return (
     <header className="on-dark no-print sticky top-0 z-40 bg-forest text-white">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 px-3 py-1.5">
-        <Link href="/till" className="mr-auto flex min-h-11 items-center gap-2 rounded-lg px-2 font-semibold md:mr-2">
+        <Link href="/till" className="mr-auto flex min-h-11 items-center gap-2 rounded-lg px-2 font-semibold lg:mr-2">
           <Sprout className="size-5" aria-hidden /> <span className="max-w-[12rem] truncate">{businessName}</span>
         </Link>
-        <nav aria-label="Staff" className="order-last -mx-1 flex w-full min-w-0 gap-1 overflow-x-auto md:order-none md:mx-0 md:w-auto md:flex-1">
+        <nav aria-label="Staff" className="order-last -mx-1 flex w-full min-w-0 gap-1 overflow-x-auto lg:order-none lg:mx-0 lg:w-auto lg:flex-1">
           <NavLinks links={links} />
         </nav>
         {tillOpen !== undefined && (
@@ -26,7 +26,7 @@ export function StaffBar({ actor, businessName, tillOpen }: { actor: Actor; busi
             {tillOpen ? "Till open" : "Till closed"}
           </span>
         )}
-        <span className="hidden text-sm opacity-90 md:inline">{actor.name} · {actor.role === "owner" ? "Owner" : "Cashier"}</span>
+        <span className="hidden text-sm opacity-90 xl:inline">{actor.name} · {actor.role === "owner" ? "Owner" : "Cashier"}</span>
         <SignOutButton />
       </div>
     </header>

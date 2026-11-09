@@ -15,7 +15,8 @@
     "db:seed": "node --env-file-if-exists=.env --conditions=react-server --import tsx scripts/seed.ts",
     "owner:reset-password": "node --env-file-if-exists=.env --conditions=react-server --import tsx scripts/reset-owner-password.ts",
     "test": "vitest run",
-    "test:e2e": "playwright test --trace off"
+    "test:e2e": "playwright test --trace off",
+    "postinstall": "node scripts/copy-pdf-worker.mjs"
   },
   "dependencies": {
     "@fontsource/poppins": "^5.3.0",
@@ -26,6 +27,7 @@
     "next": "^16.4.5",
     "nodemailer": "^10.4.0",
     "pdf-lib": "^1.17.1",
+    "pdfjs-dist": "^6.5.438",
     "pg": "^8.23.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",

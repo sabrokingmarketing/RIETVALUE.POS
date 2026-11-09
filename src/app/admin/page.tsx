@@ -6,6 +6,7 @@ import { dayReport } from "@/server/reports";
 import { relabelQueue } from "@/server/catalog";
 import { getSettings } from "@/server/settings";
 import { ledgerMismatches } from "@/server/stock";
+import { q } from "@/server/db";
 import { todayBusinessDate, formatBusinessDate } from "@/lib/dates";
 import { formatRand } from "@/lib/money";
 import { Alert, Badge, Card, PageHeader, buttonClass } from "@/components/ui";
@@ -15,7 +16,8 @@ export const metadata: Metadata = { title: "Owner workspace" };
 export default async function AdminHome() {
   const actor = await pageActor(["owner"], "/admin");
   const today = todayBusinessDate();
-  const [report, relabel, settings, mismatches] = await Promise.all([dayReport(actor, today), relabelQueue(), getSettings(), ledgerMismatches()]);
+  const [report, relabel, settings, mismatches, demo] = await Promise.all([dayReport(actor, today), relabelQueue(), getSettings(), ledgerMismatches(),
+    q<{ email: string }>(`SELECT email FROM "user" WHERE email LIKE '%@demo.test' AND active`)]);
   const actions = [
     { href: "/admin/receive", label: "Receive stock", icon: PackagePlus, text: "Count in a delivery and print its labels." },
     { href: "/admin/labels", label: "Print labels", icon: Tags, text: "Batches, reprints and replacement shelf labels." },
@@ -28,6 +30,11 @@ export default async function AdminHome() {
       {settings.is_fixture && (
         <Alert tone="warn" title="Before launch: replace the placeholder business details" className="mb-4">
           The name, address, contact numbers and VAT settings are development fixtures. <Link className="font-semibold underline" href="/admin/settings">Open Settings</Link>
+        </Alert>
+      )}
+      {demo.length > 0 && (
+        <Alert tone="error" title="Demo accounts are active" className="mb-4">
+          {demo.map((d) => d.email).join(", ")} must not exist on the live system. Deactivate them under <Link className="font-semibold underline" href="/admin/staff">Staff</Link>.
         </Alert>
       )}
       {mismatches.length > 0 && <Alert tone="error" className="mb-4">Stock ledger check found {mismatches.length} item(s) whose count does not match their movement history. Contact support.</Alert>}

@@ -26,13 +26,24 @@ export const returnInput = z.object({
 });
 export type ReturnInput = z.input<typeof returnInput>;
 
+// Throttle owner-authorisation attempts per staff member (single app instance, in memory).
+const failures = new Map<string, number[]>();
+const WINDOW_MS = 15 * 60 * 1000, MAX_FAILURES = 5;
+
 /** Verify an owner's credentials for a one-off authorisation. Returns the owner's user id. */
-async function verifyOwner(email: string, password: string): Promise<string> {
+async function verifyOwner(actorId: string, email: string, password: string): Promise<string> {
+  const now = Date.now();
+  const recent = (failures.get(actorId) ?? []).filter((t) => now - t < WINDOW_MS);
+  if (recent.length >= MAX_FAILURES) throw new AppError("FORBIDDEN", "Too many failed owner authorisations. Wait 15 minutes or ask the owner to sign in.");
   const row = await q1<{ id: string; password: string | null }>(
     `SELECT u.id, a.password FROM "user" u JOIN account a ON a."userId" = u.id AND a."providerId" = 'credential'
      WHERE lower(u.email) = $1 AND u.role = 'owner' AND u.active`, [email]);
   const ok = row?.password ? await verifyPassword({ hash: row.password, password }) : false;
-  if (!row || !ok) throw new AppError("FORBIDDEN", "Owner authorisation failed. Check the owner e-mail and password.");
+  if (!row || !ok) {
+    failures.set(actorId, [...recent, now]);
+    throw new AppError("FORBIDDEN", "Owner authorisation failed. Check the owner e-mail and password.");
+  }
+  failures.delete(actorId);
   return row.id;
 }
 
@@ -52,7 +63,7 @@ export async function processReturn(actor: Actor, input: ReturnInput): Promise<R
   let authorisedBy = actor.id;
   if (actor.role !== "owner") {
     if (!data.ownerApproval) throw new AppError("FORBIDDEN", "Returns must be authorised by the owner.");
-    authorisedBy = await verifyOwner(data.ownerApproval.email, data.ownerApproval.password);
+    authorisedBy = await verifyOwner(actor.id, data.ownerApproval.email, data.ownerApproval.password);
   }
 
   return tx(async (c) => {
