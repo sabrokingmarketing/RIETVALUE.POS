@@ -3,6 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <style>
 /* Counter tool: brand-committed single light palette (the nursery's own colours), scan left / basket right. */
 :root{
@@ -104,16 +105,106 @@ td.r,th.r{text-align:right}
 .empty{border:1px dashed var(--line);border-radius:12px;padding:28px;text-align:center;background:var(--surface)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(16px,env(safe-area-inset-bottom,0px));background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;z-index:60;max-width:calc(100% - 32px)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+/* ---- v2: light-green identity, sidebar shell (contrast: ink/primary 11:1, white/deep 8.7:1, muted/white 5.2:1) ---- */
+:root{
+  --surface:#FFFFFF; --leaf:#ECFCCB; --leaf-2:#D9F99D; --forest:#365314; --forest-2:#2B4210;
+  --mist:#F7F9F6; --ink:#17211B; --muted:#647067; --line:#E5E7EB; --field:#879189;
+  --primary:#A3E635; --primary-2:#84CC16; --shadow:0 1px 2px rgb(23 33 27/.04),0 4px 16px rgb(23 33 27/.04);
+}
+body{background:var(--mist);color:var(--ink)}
+:focus-visible{outline:3px solid var(--forest)}
+.btn{border-radius:12px;border-color:var(--field)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:var(--ink)}.btn.primary:hover{background:var(--primary-2);border-color:var(--primary-2)}
+.btn:hover{background:var(--leaf)}
+input.i,select.i,textarea.i{border-color:var(--field);border-radius:12px}
+.card{border-radius:16px;box-shadow:var(--shadow)}
+.tablewrap{border-radius:16px;box-shadow:var(--shadow);position:relative}
+.seg button[aria-checked=true]{background:var(--leaf);border-color:var(--forest);color:var(--forest)}
+.shell{min-height:100%;display:flex}
+.side{width:248px;flex-shrink:0;background:var(--forest);color:#fff;display:flex;flex-direction:column;gap:14px;padding:16px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.side .brand{display:flex;align-items:center;gap:10px;font-weight:600;min-height:44px}
+.logo{display:inline-flex;width:36px;height:36px;border-radius:12px;background:var(--primary);color:var(--ink);align-items:center;justify-content:center;flex-shrink:0}
+.side nav{display:flex;flex-direction:column;gap:4px}
+.side nav button{display:flex;align-items:center;gap:12px;min-height:46px;padding:0 12px;border-radius:12px;border:0;background:transparent;color:rgba(255,255,255,.92);font-weight:500;text-align:left;cursor:pointer}
+.side nav button:hover{background:rgba(255,255,255,.1);color:#fff}
+.side nav button[aria-current=page]{background:var(--primary);color:var(--ink)}
+.side nav svg,.ico{width:20px;height:20px;flex-shrink:0}
+.side-foot{margin-top:auto;background:rgba(255,255,255,.1);border-radius:14px;padding:10px;font-size:.85rem}
+.content{flex:1;min-width:0;display:flex;flex-direction:column}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:rgba(255,255,255,.96);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px))}
+body::before{background:#fff}
+.top form{flex:1;max-width:440px;position:relative}
+.top input{width:100%;min-height:44px;border-radius:999px;border:1px solid var(--field);background:var(--mist);padding:0 16px 0 38px;font-size:.9rem}
+.top form svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--muted)}
+.userpill{margin-left:auto;display:inline-flex;align-items:center;gap:8px;background:var(--mist);border:1px solid var(--line);border-radius:999px;padding:4px 12px 4px 4px;font-size:.85rem;white-space:nowrap}
+.avatar{display:inline-flex;width:32px;height:32px;border-radius:999px;background:var(--forest);color:#fff;font-size:.75rem;font-weight:600;align-items:center;justify-content:center}
+.iconbtn{display:none;min-width:44px;min-height:44px;border-radius:12px;border:1px solid var(--line);background:#fff;cursor:pointer;align-items:center;justify-content:center}
+#tillPill{white-space:nowrap}
+@media(max-width:899px){
+  .side{position:fixed;inset:0 auto 0 0;z-index:60;transform:translateX(-105%);transition:transform .2s;width:272px;max-width:85vw;height:100%}
+  body.menu-open .side{transform:none}
+  body.menu-open::after{content:"";position:fixed;inset:0;background:rgba(23,33,27,.5);z-index:55}
+  .iconbtn{display:inline-flex}
+  .userpill .nm{display:none}
+}
+.subtabs{display:flex;gap:4px;overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:16px;padding:4px;width:max-content;max-width:100%}
+.subtabs button{min-height:44px;padding:0 16px;border:0;border-radius:12px;background:transparent;color:var(--muted);font-weight:500;white-space:nowrap;cursor:pointer}
+.subtabs button[aria-current=page]{background:var(--primary);color:var(--ink);font-weight:600}
+/* POS */
+.till{min-height:calc(100vh - 61px)}
+@media(min-width:768px){.till{grid-template-columns:minmax(0,1fr) 380px;height:calc(100vh - 61px)}.till .left{overflow-y:auto}.till aside{height:100%}}
+.till aside{background:#fff}
+.basket{background:rgba(247,249,246,.6);padding:10px}
+.bline{background:#fff;border:1px solid var(--line);border-radius:16px;margin-bottom:8px}
+.bline.hl{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary);background:#fff}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.chip{display:inline-flex;align-items:center;gap:8px;min-height:48px;padding:0 14px 0 6px;border-radius:16px;border:1px solid var(--line);background:#fff;font-weight:500;white-space:nowrap;cursor:pointer}
+.chip .dot{display:inline-flex;width:34px;height:34px;border-radius:12px;background:var(--leaf);color:var(--forest);align-items:center;justify-content:center}
+.chip[aria-pressed=true]{background:var(--primary);border-color:var(--primary)}
+.chip[aria-pressed=true] .dot{background:rgba(255,255,255,.6)}
+.pgrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}
+.pcard{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+.pcard.inbasket{box-shadow:0 0 0 2px var(--primary)}
+.pimg{position:relative;aspect-ratio:4/3;background:var(--leaf);display:flex;align-items:center;justify-content:center;color:var(--forest)}
+.pimg .pill{position:absolute;top:8px;left:8px}
+.pimg .pill.r{left:auto;right:8px;background:var(--primary);color:var(--ink)}
+.pbody{padding:10px 12px;display:flex;flex-direction:column;gap:2px;flex:1}
+.addbtn{margin-top:6px;min-height:44px;border-radius:12px;border:0;background:var(--primary);color:var(--ink);font-weight:600;cursor:pointer}
+.addbtn:hover{background:var(--primary-2)}
+.due .amt{font-size:2.3rem}
+.paypref{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.paypref button{min-height:44px;border-radius:12px;border:1px solid var(--line);background:#fff;font-weight:600;cursor:pointer}
+.paypref button[aria-pressed=true]{border-color:var(--forest);background:var(--leaf);color:var(--forest)}
+/* Dashboard + import */
+.kpis{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
+.kpi{display:flex;gap:12px;align-items:flex-start}
+.kpi .ic{display:inline-flex;width:40px;height:40px;border-radius:12px;background:var(--leaf);color:var(--forest);align-items:center;justify-content:center;flex-shrink:0}
+.kpi .v{font-size:1.5rem;font-weight:600;font-variant-numeric:tabular-nums}
+.steps{display:flex;gap:8px;overflow-x:auto;list-style:none;margin:0;padding:0}
+.steps li{display:flex;align-items:center;gap:8px;border-radius:999px;padding:6px 12px;font-size:.85rem;background:#fff;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.steps li.done{background:var(--leaf);color:var(--forest);border-color:transparent}
+.steps li[aria-current=step]{background:var(--primary);color:var(--ink);font-weight:600;border-color:transparent}
+.drop{border:2px dashed var(--field);border-radius:16px;background:#fff;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;padding:24px;cursor:pointer}
+.drop.over{border-color:var(--forest);background:var(--leaf)}
+.bar{height:14px;border-radius:999px;background:var(--leaf);overflow:hidden}.bar>div{height:100%;background:var(--forest);border-radius:999px;transition:width .3s}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 </style>
 
-<div class="app" id="app">
-  <header class="bar on-dark">
-    <div class="brand" id="brand">Nursery Till</div>
-    <nav class="tabs" id="tabs" aria-label="Sections"></nav>
-    <span class="pill green" id="tillPill" hidden>Till open</span>
-    <span class="small" id="who" style="opacity:.9"></span>
-  </header>
-  <main id="main"><div class="page"><div class="empty"><h2>Connecting to the shop database…</h2><p class="muted">Stock, prices and sales load in a moment.</p></div></div></main>
+<div class="shell">
+  <aside class="side on-dark" id="side" aria-label="Main navigation">
+    <div class="brand"><span class="logo" aria-hidden="true"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/></svg></span><span id="brand">Nursery Till</span></div>
+    <nav id="tabs"></nav>
+    <div class="side-foot" id="who"></div>
+  </aside>
+  <div class="content">
+    <header class="top">
+      <button class="iconbtn" id="menuBtn" aria-label="Open menu" aria-expanded="false"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <form id="topSearch" role="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><label for="topq" class="sr">Search products</label><input id="topq" type="search" placeholder="Search products, SKU or barcode" autocomplete="off"></form>
+      <span class="pill green" id="tillPill" hidden>Till open</span>
+      <span class="userpill" id="whoTop"></span>
+    </header>
+    <main id="main"><div class="page"><div class="empty"><h2>Connecting to the shop database…</h2><p class="muted">Stock, prices and sales load in a moment.</p></div></div></main>
+  </div>
 </div>
 <div id="dlg"></div>
 <div id="toast" class="toast" role="status" hidden></div>
@@ -195,6 +286,7 @@ async function boot() {
   const write = user ? await user.can("data.write") : null;
   S.role = edit ? "owner" : write === false ? "viewer" : "cashier";
   if (!isOwner() && S.view !== "till") S.view = "till";
+  if (isOwner()) S.view = "dashboard";
   const timer = setTimeout(() => { if (!S.loaded.catalog) { S.msg = { tone: "warn", text: "The shop database is slow to answer. Data may be out of date." }; render(); } }, 10000);
   for (const [k, p] of Object.entries(DOCS)) {
     S.db.doc(p).onSnapshot((s) => { S[k] = s.exists ? s.data() : null; S.loaded[k] = true; if (k === "catalog") clearTimeout(timer); render(); },
@@ -219,29 +311,55 @@ function renderNoDb() {
 // ---------------------------------------------------------------- names
 async function nameOf(ids) {
   const need = ids.filter((id) => id && !(id in S.names));
-  need.forEach((id) => (S.names[id] = "…"));
   if (need.length && S.user) { const ps = await S.user.profiles(need); for (const id of need) S.names[id] = ps[id]?.name || "Staff member"; render(); }
 }
 const staff = (id) => (id ? S.names[id] ?? "…" : "—");
 
 // ---------------------------------------------------------------- nav + render
+const IC = {
+  dashboard: '<rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/>',
+  till: '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
+  products: '<path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/>',
+  stock: '<path d="M21 8 12 3 3 8v8l9 5 9-5z"/><path d="m3 8 9 5 9-5"/><path d="M12 13v8"/>',
+  labels: '<path d="M3 5v14M7 5v14M10 5v14M14 5v14M17 5v14M21 5v14"/>',
+  receipts: '<path d="M4 2v20l3-2 3 2 3-2 3 2 3-2 2 2V2l-2 2-3-2-3 2-3-2-3 2-3-2z"/><path d="M8 8h8M8 12h8M8 16h5"/>',
+  report: '<path d="M3 3v18h18"/><path d="M8 17v-5M13 17V8M18 17v-9"/>',
+  data: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h8M12 11v8"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 0 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 0 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 0 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 0 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  leaf: '<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>',
+};
+const icon = (k, cls = "ico") => `<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IC[k]}</svg>`;
 const VIEWS = [
-  ["till", "Till", "sell"], ["receipts", "Receipts", "sell"], ["cash", "Cash up", "sell"],
-  ["receive", "Receive stock", "owner"], ["labels", "Print labels", "sell"], ["products", "Plants & prices", "owner"],
-  ["stock", "Stock", "owner"], ["report", "Day report", "owner"], ["settings", "Settings", "owner"],
+  ["dashboard", "Dashboard", "owner"], ["till", "POS", "sell"], ["products", "Products", "owner"], ["stock", "Inventory", "owner"],
+  ["labels", "Barcode Labels", "sell"], ["receipts", "Sales", "sell"], ["report", "Reports", "owner"], ["data", "Import/Export", "owner"], ["settings", "Settings", "owner"],
 ];
+const GROUP = { receive: "stock", cash: "receipts" };
+const SUBTABS = {
+  stock: [["stock", "Stock levels"], ["receive", "Receive stock"]], receive: [["stock", "Stock levels"], ["receive", "Receive stock"]],
+  receipts: [["receipts", "Receipts & returns"], ["cash", "Till & cash-up"]], cash: [["receipts", "Receipts & returns"], ["cash", "Till & cash-up"]],
+};
+const initials = (n) => (n || "?").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
 function render() {
   if (!S.db) return;
   const ready = S.loaded.catalog && S.loaded.stock && S.loaded.settings && S.loaded.till;
   $("#brand").textContent = S.settings?.businessName || "Nursery Till";
   $("#tillPill").hidden = !S.till?.open;
-  $("#who").textContent = S.me?.name ? `${S.me.name} · ${isOwner() ? "Owner" : S.role === "cashier" ? "Cashier" : "View only"}` : "";
+  const roleName = isOwner() ? "Owner" : S.role === "cashier" ? "Cashier" : "View only";
+  $("#who").innerHTML = S.me?.name ? `<strong>${esc(S.me.name)}</strong><br><span style="opacity:.85">${roleName}</span>` : roleName;
+  $("#whoTop").innerHTML = `<span class="avatar" aria-hidden="true">${esc(initials(S.me?.name))}</span><span class="nm">${esc(S.me?.name || "")} <span class="muted">· ${roleName}</span></span>`;
+  const active = GROUP[S.view] || S.view;
   $("#tabs").innerHTML = VIEWS.filter(([, , who]) => who === "sell" ? canSell() || S.role === "viewer" : isOwner())
-    .map(([k, t]) => `<button data-nav="${k}" ${S.view === k ? 'aria-current="page"' : ""}>${t}</button>`).join("");
+    .map(([k, t]) => `<button data-nav="${k}" ${active === k ? 'aria-current="page"' : ""}>${icon(k)}<span>${t}</span></button>`).join("");
   if (!ready) return;
   const keep = captureFocus();
-  const fn = { till: viewTill, receipts: viewReceipts, cash: viewCash, receive: viewReceive, labels: viewLabels, products: viewProducts, stock: viewStock, report: viewReport, settings: viewSettings }[S.view] || viewTill;
-  $("#main").innerHTML = fn();
+  const fn = { dashboard: viewDashboard, data: viewData, till: viewTill, receipts: viewReceipts, cash: viewCash, receive: viewReceive, labels: viewLabels, products: viewProducts, stock: viewStock, report: viewReport, settings: viewSettings }[S.view] || viewTill;
+  let html = fn();
+  const tabs = SUBTABS[S.view];
+  if (tabs && (isOwner() || S.view === "receipts" || S.view === "cash")) {
+    const bar = `<nav class="subtabs" aria-label="Section">${tabs.filter(([k]) => isOwner() || !["stock", "receive"].includes(k)).map(([k, t]) => `<button data-nav="${k}" ${S.view === k ? 'aria-current="page"' : ""}>${t}</button>`).join("")}</nav>`;
+    html = html.replace(/(<div class="page"[^>]*>)/, `$1${bar}`);
+  }
+  $("#main").innerHTML = html;
   restoreFocus(keep);
   afterRender();
 }
@@ -249,15 +367,32 @@ function captureFocus() { const a = document.activeElement; return a && a.id ? {
 function restoreFocus(k) { if (!k) return; const el = document.getElementById(k.id); if (el) { el.focus(); try { if (k.s != null) el.setSelectionRange(k.s, k.e); } catch {} } }
 let afterHooks = [];
 function afterRender() { const h = afterHooks; afterHooks = []; h.forEach((f) => f()); }
+document.addEventListener("click", (e) => {
+  if (e.target.closest("#menuBtn")) { const o = document.body.classList.toggle("menu-open"); $("#menuBtn").setAttribute("aria-expanded", String(o)); return; }
+  if (document.body.classList.contains("menu-open") && (e.target.closest("[data-nav]") || !e.target.closest("#side"))) { document.body.classList.remove("menu-open"); $("#menuBtn").setAttribute("aria-expanded", "false"); }
+}, true);
+document.addEventListener("submit", (e) => {
+  if (e.target.id !== "topSearch") return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  const t = $("#topq").value.trim();
+  if (isOwner() && S.view !== "till") { prod.term = t; S.view = "products"; } else { S.search = t; S.view = "till"; }
+  render();
+}, true);
 
 // ---------------------------------------------------------------- TILL
+let posCat = null; let payPref = "cash";
 function basketTotal() { return S.basket.reduce((s, l) => s + l.unitPrice * l.qty, 0); }
 function viewTill() {
   const total = basketTotal(); const items = S.basket.reduce((s, l) => s + l.qty, 0);
   const last = S.basket.find((l) => l.id === S.lastId);
   const readOnly = !canSell();
-  const res = S.search.trim().length >= 2 ? searchVariants(S.search) : null;
+  const all = Object.values(S.catalog?.variants || {}).filter((v) => !v.archived);
+  const cats = [...new Set(all.map((v) => v.category))].sort().map((c) => [c, all.filter((v) => v.category === c).length]);
+  const t = S.search.trim().toLowerCase();
+  const grid = all.filter((v) => (!posCat || v.category === posCat) && (!t || (v.name + " " + (v.botanical || "") + " " + v.sku).toLowerCase().includes(t) || v.barcode === S.search.trim()))
+    .sort((a, b) => a.name.localeCompare(b.name) || a.size.localeCompare(b.size));
   const blocked = !S.online || !S.till?.open || !!S.pending || readOnly;
+  const bp = vatBp(); const vat = S.basket.reduce((s, l) => s + vatIn(l.unitPrice * l.qty, bp), 0);
   return `<div class="till">
   <div class="left">
     ${readOnly ? `<div class="alert warn"><strong>View only.</strong> Ask the owner to give you Contributor access to sell.</div>` : ""}
@@ -265,31 +400,42 @@ function viewTill() {
     ${!S.till?.open && !readOnly ? `<div class="alert warn"><strong>The till is not open.</strong> Count the opening float first. <button class="btn ghost" data-nav="cash">Open the till</button></div>` : ""}
     ${S.pending ? `<div class="alert warn stack"><p><strong>Connection lost while completing a sale.</strong> Checkout ${esc(S.pending.key.slice(0, 8).toUpperCase())} for <strong>${rand(S.pending.total)}</strong> (${S.pending.payment.method}). <strong>Do not take payment again.</strong></p>
       <div class="row"><button class="btn primary" data-act="recover">Check and finish sale</button><button class="btn" data-act="abandon">Customer was not charged — back to basket</button></div></div>` : ""}
+    ${S.done ? doneCard() : ""}
     <form class="card stack" id="scanForm" autocomplete="off">
       <label class="f" for="scan" style="font-size:.9rem;font-weight:600">Scan barcode</label>
       <div class="row" style="flex-wrap:nowrap"><input id="scan" class="i scan" placeholder="Scan or type code" inputmode="text" spellcheck="false" ${S.pending || readOnly ? "disabled" : ""}><button class="btn lg" type="submit" ${S.pending || readOnly ? "disabled" : ""}>Add</button></div>
       <p class="small muted">Each scan adds one item. Scan the same pot twice to sell two.</p>
-      <div aria-live="polite">${last ? `<div class="last"><div><p class="small muted" style="text-transform:uppercase;letter-spacing:.06em">Last item</p><p style="font-weight:600">${esc(last.name)} — ${esc(last.size)}</p></div><p style="text-align:right"><span class="small muted">Qty in basket</span><br><span class="tab" style="font-size:1.6rem;font-weight:700">${last.qty}</span></p></div>` : ""}</div>
+      <div aria-live="polite">${last ? `<div class="last"><div><p class="small muted" style="text-transform:uppercase;letter-spacing:.06em">Last item</p><p style="font-weight:600">${esc(last.name)} — ${esc(last.size)}</p></div><p style="text-align:right"><span class="small muted">Qty in order</span><br><span class="tab" style="font-size:1.6rem;font-weight:700">${last.qty}</span></p></div>` : ""}</div>
       ${S.msg ? `<div class="alert ${S.msg.tone === "error" ? "error" : S.msg.tone === "ok" ? "ok" : "warn"}" role="alert">${esc(S.msg.text)}</div>` : ""}
     </form>
-    <section class="card stack">
-      <label class="f" for="tsearch" style="font-size:.9rem;font-weight:600">Find by name or SKU</label>
-      <input id="tsearch" class="i" type="search" placeholder="e.g. lavender" value="${esc(S.search)}" autocomplete="off">
-      ${res ? (res.length ? `<div class="results">${res.map((v) => `<button class="result" data-add="${v.id}" ${S.pending || readOnly ? "disabled" : ""}><strong>${esc(v.name)}</strong><span class="row small muted" style="justify-content:space-between"><span>${esc(v.size)}</span><span class="tab" style="color:var(--ink);font-weight:600">${rand(v.price)}</span></span><span class="small muted">${esc(v.sku)} · ${onHand(v.id)} in stock</span></button>`).join("")}</div>` : `<p class="muted small">Nothing matches “${esc(S.search)}”.</p>`) : ""}
+    <section class="stack" aria-labelledby="cat-h"><h2 id="cat-h">Category</h2>
+      <div class="chips" role="group" aria-label="Filter products by category">
+        <button class="chip" data-cat="" aria-pressed="${!posCat}"><span class="dot">${icon("leaf")}</span>All plants <span class="small muted">${all.length}</span></button>
+        ${cats.map(([c, n]) => `<button class="chip" data-cat="${esc(c)}" aria-pressed="${posCat === c}"><span class="dot">${icon("leaf")}</span>${esc(c)} <span class="small muted">${n}</span></button>`).join("")}
+      </div></section>
+    <section class="stack" aria-labelledby="prod-h">
+      <div class="row" style="justify-content:space-between"><h2 id="prod-h">Products</h2><label class="sr" for="tsearch">Find by name or SKU</label><input id="tsearch" class="i" type="search" style="max-width:280px" placeholder="Find by name or SKU" value="${esc(S.search)}" autocomplete="off"></div>
+      ${grid.length ? `<ul class="pgrid" style="list-style:none;margin:0;padding:0">${grid.map((v) => { const n = onHand(v.id); const inB = S.basket.find((l) => l.id === v.id)?.qty || 0; return `<li class="pcard ${inB ? "inbasket" : ""}">
+        <div class="pimg">${icon("leaf", "ico")}${n <= 0 ? `<span class="pill danger">Sold out</span>` : n <= v.low ? `<span class="pill warn">${n} left</span>` : ""}${inB ? `<span class="pill r">${inB} in order</span>` : ""}</div>
+        <div class="pbody"><strong style="line-height:1.25">${esc(v.name)}</strong><span class="small muted">${esc(v.size)}</span><span class="tab" style="font-size:1.1rem;font-weight:700;margin-top:auto;padding-top:4px">${rand(v.price)}</span>
+        <button class="addbtn" data-add="${v.id}" aria-label="Add ${esc(v.name)} ${esc(v.size)} to order" ${S.pending || readOnly ? "disabled" : ""}>+ Add</button></div></li>`; }).join("")}</ul>`
+      : `<div class="empty"><p style="font-weight:600">${t ? `Nothing matches “${esc(S.search)}”` : all.length ? "No products in this category" : "No products yet"}</p><p class="muted small">${all.length ? "Try another name or category, or scan the label." : "The owner adds plants under Products or Import/Export."}</p></div>`}
     </section>
-    ${S.done ? doneCard() : ""}
   </div>
-  <aside aria-label="Basket">
-    <div class="row" style="justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)"><h2>Basket <span class="muted small" style="font-weight:400">(${items} item${items === 1 ? "" : "s"})</span></h2><button class="btn ghost" data-act="clear" ${!S.basket.length || S.pending ? "disabled" : ""}>Clear</button></div>
-    <div class="basket">${S.basket.length ? S.basket.map(lineHtml).join("") : `<div style="padding:32px;text-align:center"><p style="font-weight:600">The basket is empty</p><p class="muted small">Scan a label to start a sale.</p></div>`}</div>
-    <div class="due"><div class="row" style="justify-content:space-between;align-items:flex-end"><span class="small muted" style="font-weight:600;letter-spacing:.06em;text-transform:uppercase">Amount due</span><span class="amt" id="amountDue">${rand(total)}</span></div>
-      <button class="btn primary xl" style="margin-top:12px" data-act="pay" ${blocked || !S.basket.length ? "disabled" : ""}>${S.online ? "Take payment" : "Offline — checkout disabled"}</button></div>
+  <aside aria-label="Order" style="display:flex;flex-direction:column">
+    <div class="row" style="justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)"><h2>Order <span class="pill green">${items} item${items === 1 ? "" : "s"}</span></h2><button class="btn ghost" data-act="clear" ${!S.basket.length || S.pending ? "disabled" : ""}>Clear all</button></div>
+    <div class="basket" style="flex:1;overflow-y:auto">${S.basket.length ? S.basket.map(lineHtml).join("") : `<div style="padding:32px;text-align:center"><p style="font-weight:600">The order is empty</p><p class="muted small">Scan a label or tap a product to start a sale.</p></div>`}</div>
+    <div class="due">
+      ${bp ? `<div class="row small muted" style="justify-content:space-between"><span>VAT included (${bp / 100}%)</span><span class="tab">${rand(vat)}</span></div>` : ""}
+      <div class="row" style="justify-content:space-between;align-items:flex-end"><span class="small muted" style="font-weight:600;letter-spacing:.06em;text-transform:uppercase">Total</span><span class="amt" id="amountDue">${rand(total)}</span></div>
+      <div class="paypref" role="group" aria-label="Payment method"><button data-paypref="cash" aria-pressed="${payPref === "cash"}">Pay by cash</button><button data-paypref="card" aria-pressed="${payPref === "card"}">Pay by card</button></div>
+      <button class="btn primary xl" style="margin-top:10px" data-act="pay" ${blocked || !S.basket.length ? "disabled" : ""}>${S.online ? "Take payment" : "Offline — checkout disabled"}</button></div>
   </aside></div>`;
 }
 function lineHtml(l) {
   const issue = S.issues[l.id]; const v = V(l.id);
   return `<div class="bline ${issue ? "bad" : l.id === S.lastId ? "hl" : ""}">
-    <div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><div style="min-width:0"><p style="font-weight:600">${esc(l.name)}</p><p class="small muted">${esc(l.size)} · <span class="tab">${rand(l.unitPrice)}</span> each</p></div><p class="tab" style="font-size:1.25rem;font-weight:700">${rand(l.unitPrice * l.qty)}</p></div>
+    <div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><div style="min-width:0"><p style="font-weight:600">${esc(l.name)}</p><p class="small muted">${esc(l.size)} · <span class="tab">${rand(l.unitPrice)}</span> each</p></div><p class="tab" style="font-size:1.15rem;font-weight:700">${rand(l.unitPrice * l.qty)}</p></div>
     <div class="row" style="justify-content:space-between;margin-top:8px">
       <div class="row" style="gap:4px"><button class="qtybtn" data-dec="${l.id}" aria-label="One fewer ${esc(l.name)}" ${l.qty <= 1 || S.pending ? "disabled" : ""}>−</button>
       <input class="qty tab" id="q-${l.id}" data-qty="${l.id}" type="number" inputmode="numeric" min="1" max="999" value="${l.qty}" aria-label="Quantity of ${esc(l.name)}" ${S.pending ? "disabled" : ""}>
@@ -347,7 +493,7 @@ function findIssues(lines) {
     const v = V(l.id);
     if (!v || v.archived) { out.push({ id: l.id, kind: "inactive", text: "No longer for sale — remove this line." }); continue; }
     if (v.price !== l.unitPrice) out.push({ id: l.id, kind: "price", was: l.unitPrice, now: v.price, desc: label(v) });
-    if (onHand(l.id) < l.qty) out.push({ id: l.id, kind: "stock", text: `Only ${onHand(l.id)} in stock — basket has ${l.qty}. Reduce the quantity or ask the owner to correct the count.` });
+    if ((S.stock.levels[l.id] ?? 0) < l.qty) out.push({ id: l.id, kind: "stock", text: `Only ${S.stock.levels[l.id] ?? 0} in stock — basket has ${l.qty}. Reduce the quantity or ask the owner to correct the count.` });
   }
   return out;
 }
@@ -374,7 +520,7 @@ function openPriceReview(prices) {
 function acceptPrices() { for (const p of acceptPrices.list || []) { const l = S.basket.find((x) => x.id === p.id); if (l) l.unitPrice = p.now; } saveLocal(); closeDialog(); S.msg = { tone: "ok", text: "New prices accepted. Check the total with the customer, then take payment." }; render(); }
 
 let payState = { method: "cash", tendered: "", ref: "", err: null, busy: false };
-function openPay() { payState = { method: "cash", tendered: "", ref: "", err: null, busy: false }; drawPay(); }
+function openPay() { payState = { method: payPref, tendered: "", ref: "", err: null, busy: false }; drawPay(); }
 function drawPay() {
   const total = basketTotal(); const t = parseRand(payState.tendered); const ch = t === null ? null : t - total;
   const quick = [...new Set([total, ...[1000, 2000, 5000, 10000, 20000].map((n) => Math.ceil(total / n) * n)])].filter((x) => x >= total).sort((a, b) => a - b).slice(0, 5);
@@ -701,7 +847,7 @@ function viewLabels() {
       ${lbl.err ? `<div class="alert error">${esc(lbl.err)}</div>` : ""}
       <div class="row"><button class="btn primary" data-act="labelPdf" ${!count ? "disabled" : ""}>Save ${count} label${count === 1 ? "" : "s"} as PDF</button><button class="btn" data-act="labelTest" ${!count ? "disabled" : ""}>Save one test label</button></div></section>
     <section class="card stack"><h2>Shelf labels to replace</h2><p class="small muted">These prices changed. Print new labels, stick them on, then mark them done.</p>
-      ${relabel.length ? `<div class="tablewrap"><table><tbody>${relabel.map((v) => `<tr><td>${esc(label(v))}</td><td class="r tab">${v.oldPrice ? `<s class="muted">${rand(v.oldPrice)}</s> → ` : ""}<strong>${rand(v.price)}</strong></td><td class="r"><button class="btn ghost" data-ladd="${v.id}">Add</button>${isOwner() ? `<button class="btn ghost" data-relabelled="${v.id}">Done</button>` : ""}</td></tr>`).join("")}</tbody></table></div>` : `<p class="small">Nothing to replace.</p>`}</section>
+      ${relabel.length ? `<div class="tablewrap"><table><tbody>${relabel.map((v) => `<tr><td>${esc(label(v))}</td><td class="r tab">${v.oldPrice ? `<s class="muted">${rand(v.oldPrice)}</s> → ` : ""}<strong>${rand(v.price)}</strong></td><td class="r"><button class="btn ghost" data-ladd="${v.id}">Add</button><button class="btn ghost" data-relabelled="${v.id}">Done</button></td></tr>`).join("")}</tbody></table></div>` : `<p class="small">Nothing to replace.</p>`}</section>
   </div>
   <div class="stack"><section class="card stack"><h2>Preview <span class="pill grey">${p.lw} × ${p.lh} mm</span></h2>
     ${S.labelItems.length ? `<div class="labels">${S.labelItems.slice(0, 6).map((it) => labelSvg(V(it.id))).join("")}</div>${S.labelItems.length > 6 ? `<p class="small muted">Showing 6 of ${S.labelItems.length} items.</p>` : ""}` : `<p class="small muted">Choose items to see the labels.</p>`}</section>
@@ -858,6 +1004,344 @@ function csvFor(d) {
   return rows.map((row) => row.map(cell).join(",")).join("\r\n");
 }
 
+// ---------------------------------------------------------------- DASHBOARD (owner)
+let dash = { days: null, loading: false };
+async function loadDash() {
+  if (dash.loading) return; dash.loading = true;
+  const dates = Array.from({ length: 14 }, (_, i) => addDays(S.dayDate, i - 13));
+  const docs = await Promise.all(dates.map((d) => (d === S.dayDate ? Promise.resolve(S.day) : getDay(d).catch(() => emptyDay(d)))));
+  dash = { days: docs.map((x, i) => ({ date: dates[i], doc: x || emptyDay(dates[i]) })), loading: false }; render();
+}
+function viewDashboard() {
+  if (!dash.days) { loadDash(); return `<div class="page"><h1>Dashboard</h1><div class="kpis">${'<div class="card" style="height:96px"></div>'.repeat(4)}</div><p class="muted">Loading the last 14 days…</p></div>`; }
+  const days = dash.days.map((x) => (x.date === S.dayDate ? { date: x.date, doc: S.day || x.doc } : x));
+  const net = (d) => d.sales.reduce((a, s) => a + s.total, 0) - d.returns.reduce((a, r) => a + r.total, 0);
+  const series = days.map((x) => ({ date: x.date, net: net(x.doc) }));
+  const t = days[13].doc, y = days[12].doc; const tn = net(t), yn = net(y);
+  const items = t.sales.reduce((a, s) => a + s.lines.reduce((b, l) => b + l.qty, 0), 0);
+  const variants = Object.values(S.catalog?.variants || {}).filter((v) => !v.archived);
+  const units = variants.reduce((a, v) => a + onHand(v.id), 0);
+  const low = variants.filter((v) => onHand(v.id) <= v.low).sort((a, b) => onHand(a.id) - onHand(b.id));
+  const relabel = variants.filter((v) => v.relabel).length;
+  let cash = 0, card = 0; const top = {};
+  for (const x of days.slice(7)) { for (const s of x.doc.sales) { if (s.payment.method === "cash") cash += s.total; else card += s.total; for (const l of s.lines) { top[l.desc] = (top[l.desc] || 0) + l.qty; } } for (const r of x.doc.returns) { if (r.method === "cash") cash -= r.total; else card -= r.total; } }
+  const tops = Object.entries(top).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  const recent = t.sales.slice().reverse().slice(0, 5);
+  const change = yn ? Math.round(((tn - yn) / Math.abs(yn)) * 100) : null;
+  const max = Math.max(1, ...series.map((s) => s.net)); const avg = series.reduce((a, s) => a + s.net, 0) / 14;
+  const W = 640, H = 210, pb = 26, pt = 14, bw = W / 14; const yy = (v) => pt + (H - pt - pb) * (1 - Math.max(0, v) / max);
+  const lab = (d) => new Date(d + "T12:00:00Z").toLocaleDateString("en-ZA", { day: "numeric", month: "short", timeZone: "UTC" });
+  const chart = `<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" role="img" aria-label="Net sales for the last 14 days; average ${rand(Math.round(avg))} a day">
+    ${[0.5, 1].map((f) => `<line x1="0" x2="${W}" y1="${yy(max * f)}" y2="${yy(max * f)}" stroke="#E5E7EB"/>`).join("")}
+    ${series.map((s, i) => { const x = i * bw + bw * 0.18, w = bw * 0.64, top = yy(s.net), today = i === 13; return `<rect x="${x}" y="${top}" width="${w}" height="${Math.max(0, H - pb - top)}" rx="6" fill="${today ? "#365314" : s.net > avg ? "#A3E635" : "#D9F99D"}"><title>${lab(s.date)}: ${rand(s.net)}</title></rect>${i % 2 === 1 || today ? `<text x="${x + w / 2}" y="${H - 8}" text-anchor="middle" font-size="11" fill="#647067">${today ? "Today" : lab(s.date)}</text>` : ""}`; }).join("")}
+    <line x1="0" x2="${W}" y1="${yy(avg)}" y2="${yy(avg)}" stroke="#8A5A00" stroke-width="1.5" stroke-dasharray="6 5"/><text x="4" y="${yy(avg) - 6}" font-size="11" fill="#8A5A00">Daily average ${rand(Math.round(avg))}</text></svg>`;
+  const share = cash + card > 0 ? Math.max(0, cash) / (Math.max(0, cash) + Math.max(0, card)) : 0; const C = 2 * Math.PI * 42;
+  const kpi = (ic, l, v, s) => `<div class="card kpi"><span class="ic">${icon(ic)}</span><div><p class="small muted">${l}</p><p class="v">${v}</p>${s ? `<p class="small muted">${s}</p>` : ""}</div></div>`;
+  return `<div class="page">
+  <div class="row" style="justify-content:space-between"><div><h1>Dashboard</h1><p class="muted small">${longDate(S.dayDate)}</p></div><button class="btn primary lg" data-nav="till">${icon("till")} Open POS</button></div>
+  ${S.settings?.isFixture ? `<div class="alert warn"><strong>Before launch:</strong> replace the placeholder business details in <button class="btn ghost" data-nav="settings">Settings</button></div>` : ""}
+  <div class="kpis">${kpi("receipts", "Net sales today", rand(tn), change === null ? "No sales yesterday to compare" : `${change >= 0 ? "▲" : "▼"} ${Math.abs(change)}% vs yesterday`)}${kpi("till", "Sales today", t.sales.length, `${items} item${items === 1 ? "" : "s"} sold`)}${kpi("stock", "Stock on hand", units.toLocaleString("en-ZA"), `${variants.length} sizes for sale`)}${kpi("leaf", "Low stock", low.length, relabel ? `${relabel} shelf label${relabel === 1 ? "" : "s"} to replace` : "Shelf labels up to date")}</div>
+  <div class="grid2" style="grid-template-columns:minmax(0,2fr) minmax(0,1fr)">
+    <section class="card stack"><div class="row" style="justify-content:space-between"><h2>Net sales</h2><span class="pill" style="background:var(--forest);color:#fff">Last 14 days</span></div>${chart}</section>
+    <section class="card stack"><h2>Payments · last 7 days</h2><div class="row" style="flex-wrap:nowrap"><svg viewBox="0 0 100 100" style="width:110px;flex-shrink:0" role="img" aria-label="Cash ${Math.round(share * 100)} percent"><circle cx="50" cy="50" r="42" fill="none" stroke="#ECFCCB" stroke-width="14"/>${cash + card > 0 ? `<circle cx="50" cy="50" r="42" fill="none" stroke="#365314" stroke-width="14" stroke-dasharray="${share * C} ${C}" transform="rotate(-90 50 50)"/>` : ""}<text x="50" y="55" text-anchor="middle" font-size="16" font-weight="600" fill="#17211B">${cash + card > 0 ? Math.round(share * 100) + "%" : "—"}</text></svg>
+      <div class="small"><p>■ Cash <strong class="tab">${rand(cash)}</strong></p><p style="color:var(--muted)">■ Card <strong class="tab" style="color:var(--ink)">${rand(card)}</strong></p></div></div>
+      <div class="row"><button class="btn" data-nav="receive">Receive stock</button><button class="btn" data-nav="labels">Print labels</button><button class="btn" data-nav="data">Import products</button></div></section>
+  </div>
+  <div class="grid2" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr))">
+    <section class="card stack"><h2>Top plants · 7 days</h2>${tops.length ? `<ol style="margin:0;padding-left:20px">${tops.map(([n, q]) => `<li class="row" style="justify-content:space-between;display:list-item"><span>${esc(n)}</span> <strong class="tab" style="float:right">${q}×</strong></li>`).join("")}</ol>` : `<p class="muted small">No sales yet this week.</p>`}</section>
+    <section class="card stack"><div class="row" style="justify-content:space-between"><h2>Low stock</h2><button class="btn ghost" data-nav="stock">View all</button></div>${low.length ? low.slice(0, 6).map((v) => `<p class="row" style="justify-content:space-between"><span>${esc(label(v))}</span><span class="pill ${onHand(v.id) ? "warn" : "danger"}">${onHand(v.id) ? onHand(v.id) + " left" : "Sold out"}</span></p>`).join("") : `<p class="muted small">Nothing is low.</p>`}</section>
+    <section class="card stack"><div class="row" style="justify-content:space-between"><h2>Recent sales</h2><button class="btn ghost" data-nav="receipts">All sales</button></div>${recent.length ? recent.map((s) => `<p class="row" style="justify-content:space-between"><button class="btn ghost" style="padding:0 6px" data-receipt="${S.dayDate}|${s.key}">${s.no}</button><span class="muted small">${dt(s.at)} · ${s.payment.method}</span><strong class="tab">${rand(s.total)}</strong></p>`).join("") : `<p class="muted small">No sales yet today.</p>`}</section>
+  </div></div>`;
+}
+// ---------------------------------------------------------------- IMPORT / EXPORT (owner)
+const IF = [
+  ["product_handle", "Product handle", "", ["handle", "product id", "product key", "slug", "parent"]],
+  ["product_name", "Product name", "new", ["name", "common name", "product", "title", "plant"]],
+  ["botanical_name", "Botanical name", "", ["botanical", "latin name", "scientific name"]],
+  ["category", "Category", "new", ["categories", "type", "group", "department"]],
+  ["pot_size", "Pot / pack size", "new", ["size", "pot size", "pack size", "variation", "variant", "option"]],
+  ["sku", "SKU", "always", ["sku code", "item code", "stock code", "product code"]],
+  ["barcode", "Barcode", "", ["ean", "upc", "gtin", "barcode number", "label barcode"]],
+  ["supplier_barcodes", "Supplier barcodes (| separated)", "", ["supplier barcode", "alias barcodes", "aliases"]],
+  ["price", "Selling price (R)", "new", ["selling price", "retail price", "price incl vat", "sell price", "rrp"]],
+  ["quantity", "Stock quantity", "", ["qty", "stock", "on hand", "quantity on hand", "inventory"]],
+  ["low_stock_threshold", "Low-stock warning at", "", ["low stock", "reorder level", "reorder point", "min stock"]],
+  ["status", "Status (active / archived)", "", ["publication status", "published", "state"]],
+];
+const MAX_IMPORT_ROWS = 1500, MAX_SIZES = 600;
+const normH = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+let imp = { step: 0, busy: false, err: null, opt: { mode: "create_update", stock: "ignore", blanks: "keep", createCategories: true }, filter: "all" };
+
+function impParseCsv(text) {
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+  const first = text.slice(0, text.search(/\r?\n|$/)); const delim = (first.match(/;/g) || []).length > (first.match(/,/g) || []).length ? ";" : ",";
+  const rows = []; let row = [], f = "", q = false;
+  for (let i = 0; i < text.length; i++) { const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c; }
+    else if (c === '"' && f === "") q = true; else if (c === delim) { row.push(f); f = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(f); rows.push(row); row = []; f = ""; } else f += c; }
+  if (q) throw new AppErr("FILE", "The CSV file has an unclosed quote. Export it again.");
+  if (f !== "" || row.length) { row.push(f); rows.push(row); }
+  return rows.map((r) => r.map((t) => ({ t, num: false })));
+}
+function impCell(v) {
+  if (v == null) return { t: "", num: false };
+  if (typeof v === "number") return { t: String(v), num: true };
+  if (typeof v === "string") return { t: v, num: false };
+  if (typeof v === "boolean") return { t: String(v), num: false };
+  if (v instanceof Date) return { t: v.toISOString().slice(0, 10), num: false };
+  if (v.richText) return { t: v.richText.map((r) => r.text).join(""), num: false };
+  if (typeof v.text === "string") return { t: v.text, num: false };
+  if ("result" in v) return impCell(v.result); // formulas: use the saved result, never evaluate
+  return { t: "", num: false };
+}
+async function impRead(file) {
+  if (file.size === 0) throw new AppErr("FILE", "The file is empty.");
+  if (file.size > 5 * 1024 * 1024) throw new AppErr("FILE", "The file is larger than 5 MB. Split it into smaller files.");
+  const buf = new Uint8Array(await file.arrayBuffer()); const zip = buf[0] === 0x50 && buf[1] === 0x4b; const name = file.name.toLowerCase();
+  let grid;
+  if (name.endsWith(".xlsx") || zip) {
+    if (!zip) throw new AppErr("FILE", "This is not a valid .xlsx file. Save it from Excel as .xlsx or CSV.");
+    if (!window.ExcelJS) throw new AppErr("FILE", "The Excel reader did not load. Check the connection, or save the file as CSV.");
+    const wb = new ExcelJS.Workbook();
+    try { await wb.xlsx.load(buf.buffer); } catch { throw new AppErr("FILE", "The spreadsheet could not be read. Save it again as .xlsx or CSV."); }
+    const ws = wb.worksheets.find((w) => w.state === "visible" && w.name.toLowerCase() !== "instructions") || wb.worksheets[0];
+    if (!ws) throw new AppErr("FILE", "The workbook has no worksheets.");
+    grid = []; const width = ws.columnCount;
+    ws.eachRow({ includeEmpty: true }, (r, n) => { const line = []; for (let c = 1; c <= width; c++) line.push(impCell(r.getCell(c).value)); grid[n - 1] = line; });
+    for (let i = 0; i < grid.length; i++) grid[i] ||= [];
+  } else if (name.endsWith(".csv") || name.endsWith(".txt")) grid = impParseCsv(new TextDecoder().decode(buf));
+  else throw new AppErr("FILE", "Upload a .csv or .xlsx file.");
+  let h = 0; while (h < grid.length && grid[h].every((c) => !c.t.trim())) h++;
+  if (h >= grid.length) throw new AppErr("FILE", "The file has no header row.");
+  const headers = grid[h].map((c, i) => c.t.trim() || `Column ${i + 1}`);
+  const seen = new Set(); for (const x of headers) { if (seen.has(x.toLowerCase())) throw new AppErr("FILE", `Two columns are both called “${x}”. Rename one.`); seen.add(x.toLowerCase()); }
+  const rows = [];
+  for (let i = h + 1; i < grid.length; i++) { const line = grid[i]; if (!line || line.every((c) => !c?.t.trim())) continue;
+    const cells = {}, numeric = []; headers.forEach((hd, j) => { cells[hd] = line[j]?.t ?? ""; if (line[j]?.num) numeric.push(hd); }); rows.push({ n: i + 1, cells, numeric }); }
+  if (!rows.length) throw new AppErr("FILE", "The file has a header row but no data rows.");
+  if (rows.length > MAX_IMPORT_ROWS) throw new AppErr("FILE", `This hosted version imports up to ${MAX_IMPORT_ROWS} rows at a time. Split the file.`);
+  const mapping = {}; const used = new Set();
+  for (const [k, l, , al] of IF) { const names = [k.replace(/_/g, " "), normH(l), ...al].map(normH); const hit = headers.find((x) => !used.has(x) && names.includes(normH(x))); if (hit) { mapping[k] = hit; used.add(hit); } }
+  return { headers, rows, mapping };
+}
+const unguard = (s) => (/^'[=+\-@\t\r]/.test(s) ? s.slice(1) : s);
+function impNormalise(r) {
+  const errors = [], warnings = []; const m = imp.mapping; const o = imp.opt;
+  const val = (k) => { const h = m[k]; if (!h) return undefined; const v = unguard(String(r.cells[h] ?? "")).trim(); return v === "" ? undefined : v; };
+  const skuRaw = val("sku"); const sku = (skuRaw || "").toUpperCase();
+  if (!skuRaw) errors.push("SKU is missing. Every row needs a SKU so it can be matched next time.");
+  else if (!/^[A-Z0-9][A-Z0-9-]{1,31}$/.test(sku)) errors.push(`SKU “${skuRaw}” may only use letters, numbers and dashes (2–32 characters).`);
+  const d = { sku, name: val("product_name"), category: val("category"), size: val("pot_size") };
+  const hs = val("product_handle"); d.pk = (hs || d.name || "").trim().toLowerCase() || undefined;
+  const bot = val("botanical_name"); d.botanical = bot !== undefined ? bot : m.botanical_name && o.blanks === "clear" ? "" : undefined;
+  for (const [k, max] of [["name", 80], ["category", 40], ["size", 40]]) if (d[k] && d[k].length > max) errors.push(`${k === "name" ? "Product name" : k === "size" ? "Pot size" : "Category"} is longer than ${max} characters.`);
+  const p = val("price"); if (p !== undefined) { const c = parseRand(p); if (c === null || c <= 0) errors.push(`Price “${p}” is not a valid amount above R0 (use e.g. 89.90).`); else d.price = c; }
+  const qy = val("quantity"); if (qy !== undefined && o.stock !== "ignore") { if (!/^\d{1,6}$/.test(qy)) errors.push(`Quantity “${qy}” must be a whole number of 0 or more.`); else d.qty = +qy; }
+  const lw = val("low_stock_threshold"); if (lw !== undefined) { if (!/^\d{1,5}$/.test(lw)) errors.push(`Low-stock warning “${lw}” must be a whole number.`); else d.low = +lw; }
+  const st = val("status")?.toLowerCase(); if (st !== undefined) { if (["active", "published", "yes", "1", "true"].includes(st)) d.status = "active"; else if (["archived", "draft", "inactive", "no", "0", "false"].includes(st)) d.status = "archived"; else errors.push(`Status “${st}” must be active or archived.`); }
+  const bc = val("barcode"); if (bc !== undefined) { if (!/^[\x21-\x7E]{1,48}$/.test(bc)) errors.push(`Barcode “${bc}” has spaces or unsupported characters.`); else d.barcode = bc; if (r.numeric.includes(m.barcode)) warnings.push(`Barcode ${bc} was stored as a number in the spreadsheet, so leading zeros may already be lost. Format the column as Text.`); }
+  const sp = val("supplier_barcodes"); if (sp !== undefined) { const codes = [...new Set(sp.split("|").map((x) => x.trim()).filter(Boolean))]; const bad = codes.find((c) => !/^[\x21-\x7E]{1,48}$/.test(c)); if (bad) errors.push(`Supplier barcode “${bad}” has unsupported characters (separate several with |).`); else d.aliases = codes; }
+  return { d, errors, warnings };
+}
+function impCodes(cat) { const own = new Map(); for (const v of Object.values(cat.variants)) { own.set(v.barcode, v.id); for (const a of v.aliases || []) own.set(a, v.id); } for (const c of cat.codesUsed || []) if (!own.has(c)) own.set(c, "retired"); return own; }
+function impPlan(d, cat) {
+  const errors = [], warnings = [], ch = {}; const o = imp.opt; const vs = Object.values(cat.variants); const own = impCodes(cat);
+  const v = vs.find((x) => x.sku === d.sku);
+  if (v) {
+    if (o.mode === "create_only") return { action: "skip", errors, warnings: ["SKU already exists; “create new only” was chosen."], ch };
+    if (d.pk && d.pk !== v.product) errors.push(`SKU ${d.sku} belongs to “${v.name}” (handle ${v.product}), but this row puts it under “${d.pk}”. Sizes cannot move between products.`);
+    if (d.barcode && d.barcode !== v.barcode && own.get(d.barcode) !== v.id) errors.push(`Barcode cannot be changed for an existing size (it is ${v.barcode}). Add the new code under supplier barcodes instead.`);
+    for (const c of d.aliases || []) if (own.has(c) && own.get(c) !== v.id) errors.push(`Supplier barcode ${c} is already registered to another item. Codes are never reused.`);
+    if (d.size && d.size !== v.size && vs.some((x) => x.product === v.product && x.id !== v.id && x.size.toLowerCase() === d.size.toLowerCase())) errors.push(`“${v.name}” already has a size “${d.size}”.`);
+    const cmp = (k, a, b) => { if (b !== undefined && b !== a) ch[k] = [a, b]; };
+    cmp("name", v.name, d.name); cmp("botanical", v.botanical || "", d.botanical); cmp("category", v.category, d.category); cmp("size", v.size, d.size);
+    cmp("price", v.price, d.price); cmp("low", v.low, d.low); cmp("status", v.archived ? "archived" : "active", d.status);
+    const add = (d.aliases || []).filter((c) => own.get(c) !== v.id); if (add.length) ch.aliases = [null, add];
+    if (d.qty !== undefined) { const cur = (imp.stockNow?.[v.id]) ?? onHand(v.id); if (o.stock === "set" && d.qty !== cur) ch.stock = [cur, d.qty]; if (o.stock === "add" && d.qty > 0) ch.stock = [cur, cur + d.qty]; }
+    return { action: Object.keys(ch).length ? "update" : "unchanged", errors, warnings, ch, v };
+  }
+  if (o.mode === "update_only") return { action: "skip", errors, warnings: ["SKU not found; “update existing only” was chosen."], ch };
+  const exists = vs.find((x) => x.product === d.pk);
+  if (!d.size) errors.push("Pot / pack size is required to create a new item.");
+  if (d.price === undefined) errors.push("Selling price is required to create a new item.");
+  if (!exists) { if (!d.name) errors.push("Product name is required to create a new plant."); if (!d.category) errors.push("Category is required to create a new plant."); }
+  if (exists && d.size && vs.some((x) => x.product === d.pk && x.size.toLowerCase() === d.size.toLowerCase())) errors.push(`This plant already has a size “${d.size}”. Use its SKU to update it.`);
+  for (const c of [d.barcode, ...(d.aliases || [])].filter(Boolean)) if (own.has(c)) errors.push(`Barcode ${c} is already registered to another item. Codes are never reused.`);
+  if (d.category && !(cat.categories || []).includes(d.category) && !o.createCategories) errors.push(`Category “${d.category}” does not exist.`);
+  if (d.qty > 0 && o.stock !== "ignore") ch.stock = [0, d.qty];
+  return { action: "create", errors, warnings, ch };
+}
+function impEvaluate(rows) {
+  const cat = S.catalog || { variants: {}, categories: [] };
+  const norm = rows.map((r) => ({ r, ...impNormalise(r) }));
+  const bySku = {}, byCode = {}, bySize = {}, first = {};
+  for (const x of norm) { const d = x.d; if (d.sku) (bySku[d.sku] ||= []).push(x.r.n); for (const c of [d.barcode, ...(d.aliases || [])].filter(Boolean)) (byCode[c] ||= new Set()).add(d.sku); if (d.pk && d.size) (bySize[d.pk + "\u0000" + d.size.toLowerCase()] ||= new Set()).add(d.sku); }
+  return norm.map((x) => {
+    const d = x.d, errors = [...x.errors], warnings = [...x.warnings];
+    const dup = (bySku[d.sku] || []).filter((n) => n !== x.r.n); if (d.sku && dup.length) errors.push(`SKU ${d.sku} also appears on row ${dup.join(", ")}. Each SKU may appear once.`);
+    for (const c of [d.barcode, ...(d.aliases || [])].filter(Boolean)) if (byCode[c].size > 1) errors.push(`Barcode ${c} is used by more than one SKU in this file.`);
+    if (d.pk && d.size && bySize[d.pk + "\u0000" + d.size.toLowerCase()].size > 1) errors.push(`Size “${d.size}” appears twice for the same product with different SKUs.`);
+    if (d.pk) { const f = first[d.pk]; if (!f) first[d.pk] = { cat: d.category, n: x.r.n }; else if (d.category && f.cat && d.category !== f.cat) errors.push(`Category “${d.category}” differs from row ${f.n} (“${f.cat}”) for the same product.`); }
+    let plan = { action: "skip", errors: [], warnings: [], ch: {} };
+    if (!errors.length) plan = impPlan(d, cat);
+    errors.push(...plan.errors); warnings.push(...plan.warnings);
+    return { n: x.r.n, d, status: errors.length ? "failed" : plan.action === "skip" ? "skipped" : "pending", action: plan.action, msg: errors.join(" "), warnings, ch: plan.ch };
+  });
+}
+async function impApply(list) {
+  const short = imp.jobId.slice(0, 8).toUpperCase();
+  for (let i = 0; i < list.length; i += 20) {
+    const batch = list.slice(i, i + 20).filter((e) => e.status === "pending");
+    if (!batch.length) continue;
+    await withLock(async () => {
+      const d0 = today();
+      const [cat0, stock, day] = await Promise.all([get(DOCS.catalog, null), get(DOCS.stock, { levels: {} }), getDay(d0)]);
+      const cat = cat0 || { variants: {}, categories: [], nextCode: 1, nextId: 1, codesUsed: [] };
+      imp.stockNow = stock.levels;
+      for (const e of batch) {
+        const d = e.d; const plan = impPlan(d, cat);
+        if (plan.errors.length) { e.status = "failed"; e.msg = plan.errors.join(" "); continue; }
+        if (plan.action === "skip") { e.status = "skipped"; e.warnings = plan.warnings; continue; }
+        let v = plan.v;
+        if (!v) {
+          if (Object.keys(cat.variants).length >= MAX_SIZES) { e.status = "failed"; e.msg = `This hosted version holds up to ${MAX_SIZES} sizes.`; continue; }
+          const own = impCodes(cat); let code = d.barcode, n = cat.nextCode || 1;
+          if (!code) { do { code = "21" + String(n++).padStart(6, "0"); } while (own.has(code)); cat.nextCode = n; }
+          const existing = Object.values(cat.variants).find((x) => x.product === d.pk);
+          const id = "v" + (cat.nextId || 1); cat.nextId = (cat.nextId || 1) + 1;
+          v = cat.variants[id] = { id, product: d.pk, name: d.name || existing.name, botanical: d.botanical ?? existing?.botanical ?? "", category: d.category || existing.category, size: d.size, sku: d.sku, barcode: code, aliases: [], price: d.price, low: d.low ?? 3, archived: d.status === "archived", relabel: false, createdAt: new Date().toISOString(), importedBy: S.me?.id || null };
+          cat.codesUsed = [...(cat.codesUsed || []), code];
+        } else {
+          const nameChanged = d.name !== undefined && d.name !== v.name;
+          for (const x of Object.values(cat.variants)) if (x.product === v.product) { if (d.name !== undefined) x.name = d.name; if (d.botanical !== undefined) x.botanical = d.botanical; if (d.category !== undefined) x.category = d.category; if (nameChanged && !x.archived) x.relabel = true; }
+          if (d.price !== undefined && d.price !== v.price) { v.history = [...(v.history || []), { at: new Date().toISOString(), from: v.price, to: d.price, by: S.me?.id || null, source: "import" }]; v.oldPrice = v.price; v.price = d.price; v.relabel = true; }
+          if (d.size !== undefined && d.size !== v.size) { v.size = d.size; v.relabel = true; }
+          if (d.low !== undefined) v.low = d.low;
+          if (d.status) v.archived = d.status === "archived";
+        }
+        for (const c of d.aliases || []) if (!impCodes(cat).has(c)) { v.aliases = [...(v.aliases || []), c]; cat.codesUsed = [...(cat.codesUsed || []), c]; }
+        if (d.category && !cat.categories.includes(d.category)) cat.categories.push(d.category);
+        const ref = `IMP-${short}-${e.n}`;
+        if (d.qty !== undefined && imp.opt.stock !== "ignore" && !day.movements.some((m) => m.ref === ref)) {
+          const cur = stock.levels[v.id] ?? 0; const delta = imp.opt.stock === "set" ? d.qty - cur : d.qty;
+          if (delta !== 0) { stock.levels[v.id] = cur + delta; day.movements.push(mv(v.id, delta, imp.opt.stock === "set" ? "count_correction" : "receive", ref, imp.opt.stock === "set" ? "Import: stock count" : "Import: stock received", stock.levels[v.id])); }
+        }
+        e.status = "ok"; e.action = plan.action; e.ch = plan.ch; e.vid = v.id;
+      }
+      // Record first, then stock: a row's stock change is matched by its unique reference on retry.
+      await S.db.doc(DOCS.catalog).set(cat); await dayRef(d0).set(day); await S.db.doc(DOCS.stock).set(stock);
+    });
+    imp.done = Math.min(list.length, i + 20); render();
+  }
+}
+async function impSaveJob() {
+  const ev = imp.evals; const summary = { file: imp.file, at: new Date().toISOString(), by: S.me?.id || null, options: imp.opt,
+    counts: { ok: ev.filter((e) => e.status === "ok").length, failed: ev.filter((e) => e.status === "failed").length, skipped: ev.filter((e) => e.status === "skipped").length },
+    rows: ev.slice(0, 1500).map((e) => ({ n: e.n, sku: e.d.sku, status: e.status, action: e.action, msg: e.msg.slice(0, 300) })) };
+  try { await S.db.doc(`imports/${imp.jobId}`).set(summary); } catch {}
+}
+function impStart(fileObj) {
+  imp = { ...imp, step: 0, busy: true, err: null };
+  render();
+  impRead(fileObj).then((r) => { imp = { ...imp, ...r, file: fileObj.name, step: 1, busy: false, jobId: uuid(), evals: null, done: 0 }; render(); })
+    .catch((e) => { imp.busy = false; imp.err = e instanceof AppErr ? e.message : "The file could not be read."; render(); });
+}
+const impDesc = (ch) => Object.entries(ch || {}).map(([k, [a, b]]) => k === "aliases" ? `adds barcodes ${b.join(", ")}` : `${k} ${k === "price" ? rand(a) : a ?? "—"} → ${k === "price" ? rand(b) : b}`).join(" · ");
+function viewData() {
+  const STEPS = ["Upload", "Map columns", "Check & preview", "Confirm", "Progress", "Results"];
+  const ev = imp.evals || []; const cnt = (f) => ev.filter(f).length;
+  const nNew = cnt((e) => e.status !== "failed" && e.status !== "skipped" && e.action === "create"), nUpd = cnt((e) => e.status !== "failed" && e.status !== "skipped" && e.action === "update"),
+    nSame = cnt((e) => e.status !== "failed" && e.status !== "skipped" && e.action === "unchanged"), nSkip = cnt((e) => e.status === "skipped"), nFail = cnt((e) => e.status === "failed"), nPend = cnt((e) => e.status === "pending");
+  const newPlants = new Set(ev.filter((e) => e.action === "create" && e.status !== "failed" && !Object.values(S.catalog?.variants || {}).some((v) => v.product === e.d.pk && !(e.vid === v.id))).map((e) => e.d.pk)).size;
+  const step = imp.step;
+  const shown = ev.filter((e) => imp.filter === "all" || (imp.filter === "failed" ? e.status === "failed" : imp.filter === "skipped" ? e.status === "skipped" : e.status !== "failed" && e.status !== "skipped" && e.action === imp.filter));
+  const tile = (l, v) => `<div class="card"><p class="small muted">${l}</p><p class="tab" style="font-size:1.5rem;font-weight:600">${v}</p></div>`;
+  const badge = (e) => e.status === "failed" ? `<span class="pill danger">Problem</span>` : e.status === "skipped" ? `<span class="pill grey">Skipped</span>` : e.status === "ok" ? `<span class="pill green">${e.action === "create" ? "Created" : e.action === "update" ? "Updated" : "No change"}</span>` : `<span class="pill ${e.action === "create" ? "green" : e.action === "update" ? "warn" : "grey"}">${e.action === "create" ? "New" : e.action === "update" ? "Update" : "No change"}</span>`;
+  const table = () => `<div class="tablewrap"><div class="row" style="padding:8px">${[["all", "All"], ["create", "New"], ["update", "Updates"], ["unchanged", "No change"], ["skipped", "Skipped"], ["failed", "Problems"]].map(([k, l]) => `<button class="btn ${imp.filter === k ? "primary" : "ghost"}" data-impfilter="${k}">${l}</button>`).join("")}</div>
+    <div style="max-height:440px;overflow:auto;position:relative"><table><thead><tr><th>Row</th><th>SKU</th><th>Plant · size</th><th>Result</th><th>Details</th><th><span class="sr">Actions</span></th></tr></thead><tbody>
+    ${shown.slice(0, 400).map((e) => `<tr ${e.status === "failed" ? 'style="background:#fdecea"' : ""}><td class="tab">${e.n}</td><td class="small">${esc(e.d.sku || "—")}</td><td>${esc(e.d.name || "(existing)")}${e.d.size ? ` <span class="muted">· ${esc(e.d.size)}</span>` : ""}</td><td>${badge(e)}</td>
+      <td class="small">${e.msg ? `<span style="color:var(--danger)">${esc(e.msg)}</span><br>` : ""}${e.status !== "failed" ? esc(impDesc(e.ch)) : ""}${e.warnings.map((w) => `<br><span style="color:var(--warn)">${esc(w)}</span>`).join("")}</td>
+      <td>${e.status === "failed" ? `<button class="btn" data-impfix="${e.n}">Correct</button>` : ""}</td></tr>`).join("") || `<tr><td colspan="6" class="muted">No rows in this view.</td></tr>`}</tbody></table></div></div>`;
+  return `<div class="page"><div><h1>Import/Export</h1><p class="muted small">Add or update many plants at once from a spreadsheet, or export your products to edit them in Excel.</p></div>
+  <ol class="steps" aria-label="Import steps">${STEPS.map((s, i) => `<li class="${i < step ? "done" : ""}" ${i === step ? 'aria-current="step"' : ""}><strong class="tab">${i < step ? "✓" : i + 1}</strong> ${s}</li>`).join("")}</ol>
+  ${imp.err ? `<div class="alert error" role="alert">${esc(imp.err)}</div>` : ""}
+  ${step === 0 ? `<div class="grid2"><label class="drop" id="impDrop" for="impFile"><strong style="font-size:1.1rem">${imp.busy ? "Reading the file…" : "Choose a CSV or Excel file"}</strong><span class="small muted">or drag it here · .csv or .xlsx · up to ${MAX_IMPORT_ROWS} rows</span><input id="impFile" type="file" accept=".csv,.xlsx" class="sr"></label>
+    <div class="card stack"><h2>Start from the template</h2><p class="small muted">One row per pot size. Rows with the same product handle are sizes of one plant. Rows are matched by SKU, so importing the same file twice never creates duplicates.</p>
+    <div class="row"><button class="btn" data-act="tplX">Template (.xlsx)</button><button class="btn" data-act="tplC">Template (.csv)</button></div>
+    <ul class="small muted" style="margin:0;padding-left:18px"><li>Required on every row: <strong>SKU</strong>. New items also need name, category, pot size and price.</li><li>Format barcode columns as <strong>Text</strong> in Excel so leading zeros stay.</li><li>Nothing changes until you check the preview and confirm.</li></ul></div></div>` : ""}
+  ${step === 1 ? `<section class="card stack"><h2>Match your columns · ${esc(imp.file)}</h2><p class="small muted">${imp.rows.length} data rows. Recognised columns are already matched.</p>
+    <div class="fields">${IF.map(([k, l, req]) => { const s = imp.mapping[k] ? imp.rows.slice(0, 2).map((r) => r.cells[imp.mapping[k]]).filter(Boolean).join(" · ") : ""; return `<label class="f" for="map-${k}">${l} ${req === "always" ? '<span class="pill danger">Required</span>' : req === "new" ? '<span class="pill warn">New items</span>' : ""}
+      <select id="map-${k}" class="i" data-map="${k}"><option value="">— Not in this file —</option>${imp.headers.map((h) => `<option ${imp.mapping[k] === h ? "selected" : ""}>${esc(h)}</option>`).join("")}</select><span class="small muted">${s ? "e.g. " + esc(s.slice(0, 50)) : "&nbsp;"}</span></label>`; }).join("")}</div></section>
+    <section class="card grid2">
+      <fieldset style="border:0;padding:0"><legend style="font-weight:600">What may the import do?</legend>${[["create_update", "Create new items and update existing ones"], ["create_only", "Create new items only"], ["update_only", "Update existing items only"]].map(([v, l]) => `<label class="row small" style="min-height:44px;flex-wrap:nowrap"><input type="radio" name="impmode" value="${v}" ${imp.opt.mode === v ? "checked" : ""} style="width:20px;height:20px;accent-color:var(--forest)">${l}</label>`).join("")}</fieldset>
+      <fieldset style="border:0;padding:0"><legend style="font-weight:600">How should quantities be used?</legend>${[["ignore", "Don't change stock"], ["set", "Replace stock with the quantity (a stock count)"], ["add", "Add the quantity to stock (stock received)"]].map(([v, l]) => `<label class="row small" style="min-height:44px;flex-wrap:nowrap"><input type="radio" name="impstock" value="${v}" ${imp.opt.stock === v ? "checked" : ""} style="width:20px;height:20px;accent-color:var(--forest)">${l}</label>`).join("")}</fieldset>
+      <fieldset style="border:0;padding:0"><legend style="font-weight:600">Blank cells for existing items</legend>${[["keep", "Keep the current value"], ["clear", "Clear the botanical name"]].map(([v, l]) => `<label class="row small" style="min-height:44px;flex-wrap:nowrap"><input type="radio" name="impblank" value="${v}" ${imp.opt.blanks === v ? "checked" : ""} style="width:20px;height:20px;accent-color:var(--forest)">${l}</label>`).join("")}</fieldset>
+      <fieldset style="border:0;padding:0"><legend style="font-weight:600">Extras</legend><label class="row small" style="min-height:44px;flex-wrap:nowrap"><input type="checkbox" id="impcat" ${imp.opt.createCategories ? "checked" : ""} style="width:20px;height:20px;accent-color:var(--forest)">Create missing categories</label></fieldset></section>
+    <div class="row"><button class="btn primary lg" data-act="impCheck" ${imp.mapping.sku ? "" : "disabled"}>Check file</button><button class="btn ghost lg" data-act="impReset">Choose another file</button>${imp.mapping.sku ? "" : '<span class="small" style="color:var(--danger)">Match a column to SKU to continue.</span>'}</div>` : ""}
+  ${step === 2 || step === 5 ? `${step === 5 ? `<div class="alert ${nFail ? "warn" : "ok"}"><strong>${nFail ? "Import finished with problems" : "Import complete"}</strong> — ${cnt((e) => e.status === "ok")} imported${nFail ? `, ${nFail} need correcting` : ""}${nSkip ? `, ${nSkip} skipped` : ""}.</div>` : ""}
+    <div class="tiles">${tile(step === 5 ? "Created" : "New sizes", step === 5 ? cnt((e) => e.status === "ok" && e.action === "create") : `${nNew} <span class="small muted" style="font-weight:400">(${newPlants} new plant${newPlants === 1 ? "" : "s"})</span>`)}${tile(step === 5 ? "Updated" : "Updates", step === 5 ? cnt((e) => e.status === "ok" && e.action === "update") : nUpd)}${tile("No change", nSame)}${tile("Skipped", nSkip)}${tile("Problems", nFail)}</div>
+    ${table()}
+    ${step === 2 ? `<section class="card stack"><h2>Confirm the import</h2><p>${nPend} row${nPend === 1 ? "" : "s"} will be imported${imp.opt.stock !== "ignore" ? `; stock will be ${imp.opt.stock === "set" ? "replaced with the counted quantities" : "increased by the received quantities"}` : "; stock will not change"}.</p>
+      ${nFail ? `<label class="row small" style="flex-wrap:nowrap;min-height:44px"><input type="checkbox" id="impAck" ${imp.ack ? "checked" : ""} style="width:20px;height:20px;accent-color:var(--forest)">Import the ${nPend} valid rows now. The ${nFail} row${nFail === 1 ? "" : "s"} with problems will not be imported — you can correct them afterwards.</label>` : ""}
+      <div class="row"><button class="btn primary lg" data-act="impGo" ${!nPend || (nFail && !imp.ack) ? "disabled" : ""}>Import ${nPend} row${nPend === 1 ? "" : "s"}</button><button class="btn lg" data-act="impBack">Back to column matching</button><button class="btn ghost lg" data-act="impReset">Cancel</button></div></section>`
+    : `<div class="row"><button class="btn" data-act="impReport">Download results (.csv)</button><button class="btn ghost" data-act="impReset">Start a new import</button></div>`}` : ""}
+  ${step === 4 ? `<section class="card stack" aria-live="polite"><h2>Importing ${esc(imp.file)}…</h2><div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round((imp.done / Math.max(1, ev.length)) * 100)}" aria-label="Import progress"><div style="width:${Math.round((imp.done / Math.max(1, ev.length)) * 100)}%"></div></div><p class="small tab">${imp.done} of ${ev.length} rows processed. Keep this page open until it finishes.</p></section>` : ""}
+  <section class="card stack"><h2>Export products</h2><p class="small muted">Every size with its SKU, barcodes, price, stock and status — in the same format as the import template, so you can edit it in Excel and import it back. Barcodes stay as text so leading zeros are kept.</p>
+    <div class="row"><button class="btn primary" data-act="expX">Export Excel (.xlsx)</button><button class="btn" data-act="expC">Export CSV</button></div>
+    <p class="small muted">CSV cells that start with = + - or @ get a leading apostrophe so spreadsheets never run them as formulas; the import removes it again.</p></section></div>`;
+}
+const EXP_HEAD = IF.map(([k]) => k);
+function expRows() {
+  return Object.values(S.catalog?.variants || {}).sort((a, b) => a.name.localeCompare(b.name) || a.size.localeCompare(b.size))
+    .map((v) => [v.product, v.name, v.botanical || "", v.category, v.size, v.sku, v.barcode, (v.aliases || []).join("|"), centsIn(v.price), onHand(v.id), v.low, v.archived ? "archived" : "active"]);
+}
+const csvOf = (head, rows) => "﻿" + [head, ...rows].map((r) => r.map((x) => { let s = x == null ? "" : String(x); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return /[",\r\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; }).join(",")).join("\r\n") + "\r\n";
+async function xlsxOf(sheets) {
+  if (!window.ExcelJS) throw new AppErr("FILE", "The Excel writer did not load. Use CSV instead.");
+  const wb = new ExcelJS.Workbook();
+  for (const s of sheets) { const ws = wb.addWorksheet(s.name, { views: [{ state: "frozen", ySplit: 1 }] }); ws.addRow(s.head).font = { bold: true };
+    for (const r of s.rows) { const row = ws.addRow(r.map((x, i) => (x === "" || x == null ? null : s.num?.includes(s.head[i]) && typeof x === "number" ? x : String(x)))); row.eachCell((c, col) => { if (!s.num?.includes(s.head[col - 1])) c.numFmt = "@"; }); }
+    s.head.forEach((h, i) => { ws.getColumn(i + 1).width = Math.max(12, h.length + 4); }); }
+  return new Uint8Array(await wb.xlsx.writeBuffer());
+}
+async function saveFile(name, data, type) {
+  downloads ||= await window.claude?.use?.("downloads");
+  if (!downloads) { toast("Saving files isn't available in this view. Open the page in Claude."); return; }
+  try { await downloads.save({ filename: name, data: new Blob([data], { type }) }); } catch { toast("The file was not saved."); }
+}
+const XT = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+async function impAction(act) {
+  try {
+    if (act === "tplX" || act === "tplC") {
+      const ex = [["example-lavender", "EXAMPLE Lavender", "Lavandula angustifolia", "Herbs & lavender", "15 cm pot", "EX-LAV-15", "", "", "89.90", "12", "3", "active"], ["example-lavender", "EXAMPLE Lavender", "Lavandula angustifolia", "Herbs & lavender", "20 cm pot", "EX-LAV-20", "", "0060012345678", "149.90", "6", "3", "active"]];
+      if (act === "tplC") return saveFile("product-import-template.csv", csvOf(EXP_HEAD, ex), "text/csv");
+      return saveFile("product-import-template.xlsx", await xlsxOf([{ name: "Products", head: EXP_HEAD, rows: ex }, { name: "Instructions", head: ["column", "meaning"], rows: [...IF.map(([k, l, r]) => [k, `${l}${r === "always" ? " (required on every row)" : r === "new" ? " (required for new items)" : ""}`]), ["", "One row per pot size. Same product_handle = sizes of one plant. Delete the EXAMPLE rows before importing."]] }]), XT);
+    }
+    if (act === "expC") return saveFile(`products-${today()}.csv`, csvOf(EXP_HEAD, expRows()), "text/csv");
+    if (act === "expX") return saveFile(`products-${today()}.xlsx`, await xlsxOf([{ name: "Products", head: EXP_HEAD, rows: expRows(), num: ["quantity", "low_stock_threshold"] }]), XT);
+    if (act === "impReset") { imp = { step: 0, busy: false, err: null, opt: imp.opt, filter: "all" }; return render(); }
+    if (act === "impBack") { imp.step = 1; return render(); }
+    if (act === "impCheck") { imp.stockNow = null; imp.evals = impEvaluate(imp.rows); imp.step = 2; imp.ack = false; imp.err = null; return render(); }
+    if (act === "impGo") { imp.step = 4; imp.done = 0; render(); await impApply(imp.evals); await impSaveJob(); imp.step = 5; return render(); }
+    if (act === "impReport") return saveFile(`import-results-${imp.file.replace(/\.[^.]+$/, "")}.csv`, csvOf(["row", "sku", "product_name", "pot_size", "result", "action", "changes", "message", "warnings"],
+      imp.evals.map((e) => [e.n, e.d.sku, e.d.name || "", e.d.size || "", { ok: "imported", failed: "failed", skipped: "skipped", pending: "not processed" }[e.status], e.action, impDesc(e.ch), e.msg, e.warnings.join(" ")])), "text/csv");
+  } catch (e) { imp.err = e instanceof AppErr ? e.message : "Something went wrong. Nothing more was changed — check the results and try again."; if (imp.step === 4) imp.step = 5; render(); }
+}
+function impFix(n) {
+  const r = imp.rows.find((x) => x.n === n); const e = imp.evals.find((x) => x.n === n);
+  dialog(`Correct row ${n}`, `<div class="alert error">${esc(e.msg)}</div><form id="impFixForm" data-n="${n}" class="stack" style="margin-top:10px"><div class="fields">${IF.filter(([k]) => imp.mapping[k]).map(([k, l]) => `<label class="f" for="fix-${k}">${l}<input id="fix-${k}" class="i" data-fix="${esc(imp.mapping[k])}" value="${esc(r.cells[imp.mapping[k]] ?? "")}"></label>`).join("")}</div>
+    <p class="small muted">${imp.step === 2 ? "Saving re-checks this row; if it passes it is included when you confirm." : "Saving re-checks this row and, if it passes, imports it straight away."}</p><button class="btn primary">Save and re-check</button></form>`, { wide: true });
+}
+async function impFixSave(form) {
+  const n = +form.dataset.n; const r = imp.rows.find((x) => x.n === n);
+  for (const inp of form.querySelectorAll("[data-fix]")) r.cells[inp.dataset.fix] = inp.value;
+  const others = imp.evals.filter((x) => x.n !== n && x.status !== "failed").map((x) => imp.rows.find((y) => y.n === x.n));
+  const fresh = impEvaluate([...others, r]).find((x) => x.n === n);
+  const i = imp.evals.findIndex((x) => x.n === n); imp.evals[i] = fresh; closeDialog();
+  if (imp.step === 5 && fresh.status === "pending") { imp.step = 4; imp.done = 0; render(); try { await impApply([fresh]); await impSaveJob(); } catch {} imp.step = 5; }
+  render();
+}
 // ---------------------------------------------------------------- SETTINGS (owner)
 function viewSettings() {
   const s = S.settings || {};
@@ -901,7 +1385,12 @@ document.addEventListener("click", async (e) => {
   const t = e.target.closest("button,[data-scrim]"); if (!t) return;
   const d = t.dataset;
   if (d.scrim !== undefined && e.target === t && !dialogOpts.locked) { closeDialog(); return; }
-  if (d.nav) { S.view = d.nav; S.msg = null; render(); if (d.nav === "till") refocusScan(); return; }
+  if (d.nav) { S.view = d.nav; S.msg = null; if (d.nav === "dashboard") dash.days = null; render(); if (d.nav === "till") refocusScan(); return; }
+  if (d.cat !== undefined) { posCat = d.cat || null; render(); refocusScan(); return; }
+  if (d.paypref) { payPref = d.paypref; render(); refocusScan(); return; }
+  if (d.impfilter) { imp.filter = d.impfilter; render(); return; }
+  if (d.impfix) { impFix(+d.impfix); return; }
+  if (["tplX", "tplC", "expX", "expC", "impReset", "impBack", "impCheck", "impGo", "impReport"].includes(d.act)) { impAction(d.act); return; }
   if (d.close !== undefined) { closeDialog(); refocusScan(); return; }
   if (d.add) { addToBasket(V(d.add)); render(); refocusScan(); return; }
   if (d.inc) { const l = S.basket.find((x) => x.id === d.inc); l.qty = Math.min(999, l.qty + 1); delete S.issues[l.id]; saveLocal(); render(); refocusScan(); return; }
@@ -953,6 +1442,7 @@ document.addEventListener("submit", async (e) => {
   else if (f.id === "editForm") saveEdit(f);
   else if (f.id === "adjForm") saveAdjust(f);
   else if (f.id === "setForm") saveSettings();
+  else if (f.id === "impFixForm") impFixSave(f);
   else if (f.id === "npForm" || f.id === "ppForm") {
     const p = f.id.slice(0, 2); const errEl = $(`#${p}-err`);
     try { const id = await createVariant(readPlantForm(p)); if (p === "np") { recv.newOpen = false; S.deliveryLines.push({ id, qty: "", price: centsIn(V(id)?.price ?? parseRand($(`#np-price`).value)) }); } else { prod.newOpen = false; toast("Plant saved. Receive its stock and print labels next."); } render(); }
@@ -982,9 +1472,19 @@ document.addEventListener("change", (e) => {
   else if (t.id === "preset") { lbl.preset = t.value; lbl.start = 1; render(); }
   else if (t.id === "lstart") { lbl.start = Math.max(1, Math.floor(+t.value) || 1); }
   else if (t.id === "slow") { stk.low = t.checked; render(); }
+  else if (t.id === "impFile" && t.files?.[0]) impStart(t.files[0]);
+  else if (t.dataset.map) { imp.mapping[t.dataset.map] = t.value || undefined; if (!t.value) delete imp.mapping[t.dataset.map]; render(); }
+  else if (t.name === "impmode") { imp.opt.mode = t.value; }
+  else if (t.name === "impstock") { imp.opt.stock = t.value; }
+  else if (t.name === "impblank") { imp.opt.blanks = t.value; }
+  else if (t.id === "impcat") { imp.opt.createCategories = t.checked; }
+  else if (t.id === "impAck") { imp.ack = t.checked; render(); }
   else if (t.id === "areason") $("#aqtyLabel").textContent = t.value === "count_correction" ? "Actual number counted" : "How many to remove";
   else if (t.dataset.lq) render();
 });
 
+document.addEventListener("dragover", (e) => { const z = e.target.closest?.("#impDrop"); if (z) { e.preventDefault(); z.classList.add("over"); } });
+document.addEventListener("dragleave", (e) => { e.target.closest?.("#impDrop")?.classList.remove("over"); });
+document.addEventListener("drop", (e) => { const z = e.target.closest?.("#impDrop"); if (z) { e.preventDefault(); const f = e.dataTransfer?.files?.[0]; if (f) impStart(f); } });
 boot();
 </script>
