@@ -55,7 +55,20 @@ Date: ____________  Owner: ____________  Cashier: ____________  Installer: _____
 
 - [ ] On the sale's receipt, return 1 item as **Resellable** (as the cashier, with the owner's authorisation). The stock goes up by one, and net sales drop by the item price.
 
-## I. Backup
+## I. Bulk import and export
+
+- [ ] Download the Excel template from **Import/Export**. Fill in two real plants with two pot sizes each, real prices and the counted stock. Format the barcode column as **Text**.
+- [ ] Upload it. The columns are matched automatically. Choose **Replace stock** and press **Check file**.
+- [ ] The preview shows 4 new sizes and 2 new plants. Confirm the import; it completes.
+- [ ] **Export Excel**, change one price in Excel, and import the file again. The preview shows **1 update** and the rest **no change**. Product counts do not increase.
+- [ ] Print a label for the re-priced size and scan it at the POS. The new price rings up.
+
+## J. Devices
+
+- [ ] On the till computer or tablet, the order total and **Take payment** stay visible while scanning a long order.
+- [ ] The owner can open Dashboard, Products and Inventory on their phone.
+
+## K. Backup
 
 - [ ] Run `scripts/backup.sh` (or the Docker equivalent) once by hand. Confirm the files exist and are copied off-site.
 - [ ] Schedule the nightly backup.

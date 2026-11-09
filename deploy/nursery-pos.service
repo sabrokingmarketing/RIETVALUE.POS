@@ -1,0 +1,21 @@
+# /etc/systemd/system/nursery-pos.service — runs the app as an unprivileged user and restarts it on failure.
+[Unit]
+Description=Nursery POS
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+User=nursery
+WorkingDirectory=/srv/nursery
+EnvironmentFile=/srv/nursery/.env
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=5
+# Logs (one JSON line per event) go to the journal: journalctl -u nursery-pos
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

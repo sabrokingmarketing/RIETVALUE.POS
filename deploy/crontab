@@ -1,0 +1,5 @@
+# crontab -e (as the nursery user). Times are server time; set the server to Africa/Johannesburg.
+# Nightly backup at 21:30, copied off-site by your backup tool or rclone.
+30 21 * * * cd /srv/nursery && set -a && . ./.env && set +a && BACKUP_DIR=/srv/backups scripts/backup.sh >> /srv/backups/backup.log 2>&1
+# Weekly restore drill (Sunday 06:00): restores the newest backup into a scratch database and checks it.
+0 6 * * 0 cd /srv/nursery && scripts/restore-drill.sh >> /srv/backups/restore-drill.log 2>&1

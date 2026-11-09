@@ -1,6 +1,7 @@
 import "server-only";
 import { q } from "./db";
 import { kickImportWorker } from "./importer";
+import { log } from "./log";
 
 declare global {
   // eslint-disable-next-line no-var
@@ -16,7 +17,7 @@ export function startScheduler() {
       // Uploaded-but-never-started imports are removed after 7 days (rows cascade).
       await q(`DELETE FROM import_jobs WHERE status IN ('uploaded','validated') AND created_at < now() - interval '7 days'`);
     } catch (e) {
-      console.error("[scheduler]", e);
+      log("error", "scheduler.tick", {}, e);
     }
   };
   setTimeout(tick, 2000);

@@ -1,97 +1,138 @@
-# Nursery POS — owner workspace and till
+# Nursery POS — till, owner workspace and product import/export
 
-A single deployable web app for one independent plant nursery in South Africa. There is no public website: the root URL goes straight to staff sign-in and the till.
+A single deployable web app for one independent plant nursery in South Africa. It has:
 
-- **Owner workspace** (`/admin`) – plants and sizes, receiving stock, label printing, stock and adjustments, day report and CSV, staff, settings.
-- **Cashier till** (`/till`) – scan and sell, cash and card (separate terminal), receipts and reprints, returns, till float and cash-up.
+- **POS (till)** for cashiers
+- **Owner workspace**: Dashboard, Products, Inventory, Barcode Labels, Sales, Reports, Import/Export, Settings
+- **Bulk import and export** of products from CSV and Excel
 
-Money is integer cents (ZAR), formatting is `en-ZA`, and business dates are `Africa/Johannesburg`. No AI API key is needed.
+Money is stored as integer cents (ZAR), shown in `en-ZA` format, and business dates use the `Africa/Johannesburg` time zone. The app needs no AI API key.
 
-**Out of scope:** a public website/catalogue (removed; migration `0002` drops its view), online ordering, delivery, card-terminal integration, multi-branch and offline payment capture.
+**Not included:** a public website, online ordering, delivery, card-terminal integration, multi-branch and offline payment capture.
 
-## Assumptions
+## Foundation decision: why this is not WooCommerce
 
-| Area | Assumption |
-|---|---|
-| Hardware | One checkout PC or tablet with Chrome or Edge, a USB keyboard-mode barcode scanner that sends Enter after each scan, a 203 dpi direct-thermal label printer with 50 × 30 mm labels, and an 80 mm receipt printer that has a normal OS driver. See [docs/HARDWARE.md](docs/HARDWARE.md). |
-| Prices | Selling prices include VAT. VAT is optional and set in Settings; 15% is the default rate. Each sale line stores its own VAT rate and amount. |
-| Barcodes | Each sellable size gets an 8-digit internal Code 128 value of the form `21nnnnnn` (`21` is from the GS1 in-store range). These come from a sequence that never resets, so a code is never reused. Supplier barcodes can be added as aliases; they are stored as text, so leading zeros are kept. |
-| Cards | Card payments run on the nursery's own standalone terminal. The cashier confirms the terminal shows APPROVED and may enter its reference. This app never collects card details. |
-| Returns | The owner authorises every return: either the owner is signed in, or the cashier enters the owner's e-mail and password on the return form. |
-| Labels | Labels show the current price at print time. They are not tied to stock, so printing or reprinting never changes stock. |
-| Hosting | The app runs as one Node.js process with one PostgreSQL database behind HTTPS. Only one till is assumed (the database allows one open till session at a time). |
+The brief proposed WooCommerce with FooSales. I checked what exists and found:
+
+- **This repository** is a custom Next.js + PostgreSQL system with no WooCommerce code.
+- **The connected WordPress.com site** "Rietvalei Nursery" is on a *Simple* plan. That plan cannot install plugins, so it cannot run WooCommerce or FooSales without a paid upgrade.
+- **FooSales** is a separate till app with limited styling options, so the requested redesign could not be applied inside it.
+
+The owner chose to **keep the current system as the system of record**.
+
+Moving to WooCommerce later would need four things:
+
+1. A Business or Commerce plan.
+2. WooCommerce REST API keys, kept on the server.
+3. A one-off product and stock export from this app (Import/Export → Export, which is already in a re-importable format).
+4. A decision on which system holds stock and orders.
+
+Nothing in this build blocks that path.
+
+## Design system
+
+The interface uses Poppins throughout. Colours are defined once as tokens in `src/app/globals.css`:
+
+| Token | Hex | Use | Contrast |
+|---|---|---|---|
+| primary | `#A3E635` | Primary actions and active states, always with dark text | 11.0:1 with dark text |
+| soft | `#ECFCCB` | Soft green surfaces and selected rows | deep green text on it: 8.1:1 |
+| deep | `#365314` | Readable green text, focus rings, sidebar | 8.7:1 on white |
+| surface | `#FFFFFF` | Cards and work surfaces | — |
+| mist | `#F7F9F6` | Workspace background | — |
+| line | `#E5E7EB` | Card borders (decorative only) | — |
+| field | `#879189` | Form-field outlines | 3.3:1 on white (WCAG non-text minimum is 3:1) |
+| ink | `#17211B` | Main text | 16.5:1 on white |
+| muted | `#647067` | Secondary text | 5.2:1 on white, 4.8:1 on soft |
+
+Rules that come from the contrast checks:
+
+- White text on the bright green fails (1.5:1), so it is never used.
+- Keyboard focus is a 3 px deep-green ring, because the bright green is too faint on white.
+- Touch targets are at least 44 px.
+- Icons always sit next to a text label, or have an accessible name.
+
+The layout follows the two reference images:
+
+- A deep-green sidebar with icons and labels. It becomes an icon rail on tablets and a drawer on phones.
+- A top bar with product search, till status and the signed-in user.
+- Rounded cards with restrained shadows.
+- On the POS: category chips, product cards with **Add** buttons, and a full-height order panel with quantity steppers, the VAT and total summary, payment choice and **Take payment**.
 
 ## Stack
 
-- Next.js 16 (App Router), React 19, TypeScript and Tailwind CSS 4. Poppins is self-hosted via `@fontsource`.
-- PostgreSQL 16 with versioned SQL migrations (`migrations/NNNN_*.sql`, applied by `scripts/migrate.ts` with checksums).
-- [Better Auth](https://better-auth.com) for email/password, sessions, password reset and rate limiting. Public sign-up is disabled.
-- Labels: `bwip-js` (Code 128 encoder) and `pdf-lib`. Bars are drawn as exact vector rectangles at the configured module width. The browser preview uses pdf.js.
-- Tests: Vitest (integration, real PostgreSQL) and Playwright (real production build with Chromium). Barcodes are decoded with ZXing (`zxing-wasm`) after rasterising with poppler `pdftoppm`.
+- **App:** Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4.
+- **Database:** PostgreSQL 16 with versioned SQL migrations (`migrations/`, applied with checksums by `scripts/migrate.ts`) and rollback scripts (`migrations/rollback/`).
+- **Sign-in:** Better Auth (email and password, sessions, password reset, rate limiting; public sign-up is turned off).
+- **Labels:** bwip-js for Code 128 encoding and pdf-lib for vector PDFs; the label preview uses pdf.js.
+- **Spreadsheets:** ExcelJS for reading and writing XLSX, plus a built-in RFC 4180 CSV parser.
+- **Background jobs:** a scheduler inside the app (`src/instrumentation.ts`). It resumes imports and tidies abandoned uploads every 30 seconds.
+- **Tests:** Vitest against a real PostgreSQL database, and Playwright against a production build. Barcodes are checked with poppler and ZXing.
 
-## Local setup (development)
+## Local setup
 
-Prerequisites: Node.js 22, PostgreSQL 16 (local install, or Docker) and `poppler-utils` (only needed for the barcode-decoding tests).
+You need Node.js 22, PostgreSQL 16 (installed locally or via Docker), and `poppler-utils` (only for the barcode tests).
 
-**1. Install dependencies** (this also copies the pdf.js worker into `public/`):
+1. Install dependencies:
 
-```bash
-npm install
-```
+   ```bash
+   npm install
+   ```
 
-**2. Start a database.** Either use Docker:
+2. Start a development database with Docker:
 
-```bash
-docker compose -f docker-compose.dev.yml up -d
-```
+   ```bash
+   docker compose -f docker-compose.dev.yml up -d
+   ```
 
-or create the databases on a local PostgreSQL:
+   Or, on a local PostgreSQL, create the user and three databases yourself:
 
-```bash
-sudo -u postgres psql -c "CREATE ROLE nursery LOGIN PASSWORD 'nursery' CREATEDB" -c "CREATE DATABASE nursery_dev OWNER nursery" -c "CREATE DATABASE nursery_test OWNER nursery" -c "CREATE DATABASE nursery_e2e OWNER nursery"
-```
+   ```bash
+   sudo -u postgres psql -c "CREATE ROLE nursery LOGIN PASSWORD 'nursery' CREATEDB" -c "CREATE DATABASE nursery_dev OWNER nursery" -c "CREATE DATABASE nursery_test OWNER nursery" -c "CREATE DATABASE nursery_e2e OWNER nursery"
+   ```
 
-**3. Configure.** Copy the example file, then set `BETTER_AUTH_SECRET` (`openssl rand -base64 32`) and `SETUP_TOKEN`:
+3. Create your settings file:
 
-```bash
-cp .env.example .env
-```
+   ```bash
+   cp .env.example .env
+   ```
 
-**4. Apply migrations:**
+   Then set `DATABASE_URL=postgres://nursery:nursery@localhost:5432/nursery_dev` and `APP_URL=http://localhost:3000`.
 
-```bash
-npm run db:migrate
-```
+4. Apply the database migrations:
 
-**5. Optional: load demo data.** This adds demo accounts, placeholder business details and sample stock. It is development only and refuses to run with `NODE_ENV=production`:
+   ```bash
+   npm run db:migrate
+   ```
 
-```bash
-npm run db:seed
-```
+5. Optionally load demo data (development only; this refuses to run when `NODE_ENV=production`):
 
-**6. Run the app.** Either the live-reloading dev server, or a production build (more robust when opened through a proxy, a cloud preview or another device on the network):
+   ```bash
+   npm run db:seed
+   ```
 
-```bash
-npm run dev
-```
+6. Run the app. Use `npm run dev` for live reload, or `npm run local` for a production build (more reliable when opened through a proxy, a preview or another device).
 
-```bash
-npm run local
-```
+   ```bash
+   npm run dev
+   ```
 
-Open http://localhost:3000. With demo data, sign in as `owner@demo.test` / `demo-owner-pass` or `cashier@demo.test` / `demo-cashier-pass`. Without demo data, open `/setup` and create the owner with your `SETUP_TOKEN`.
+The demo data includes these accounts:
+
+- Owner: `owner@demo.test` / `demo-owner-pass`
+- Cashier: `cashier@demo.test` / `demo-cashier-pass`
+
+Without demo data, open `/setup` and enter your `SETUP_TOKEN` to create the owner.
 
 ## Tests
 
-The integration tests use the `nursery_test` database and the browser tests use `nursery_e2e`. Both are wiped on every run.
-
-Integration tests:
+Integration tests run against the `nursery_test` database (46 tests):
 
 ```bash
 npm test
 ```
 
-Browser tests (production build plus Chromium):
+Browser tests run against a production build and the `nursery_e2e` database (22 tests):
 
 ```bash
 npm run test:e2e
@@ -103,133 +144,171 @@ Type check:
 npm run typecheck
 ```
 
-The latest results are in [docs/TEST-RESULTS.md](docs/TEST-RESULTS.md).
+Results are in [docs/TEST-RESULTS.md](docs/TEST-RESULTS.md).
 
-## Production deployment
+## Bulk import and export (owner)
 
-Use a small VPS or an in-store PC with HTTPS in front of the app (Caddy or nginx). There are two options.
+Open **Import/Export**. The import is a six-step guided workflow:
 
-### Option A: Docker Compose (app + PostgreSQL)
+1. **Upload** a CSV or XLSX file (up to 10 MB or 20 000 rows). Templates in both formats can be downloaded from the same page. Each template has two clearly marked EXAMPLE rows and, in the XLSX version, an instructions sheet.
+2. **Map columns.** Columns are matched automatically from their headers and aliases, and each match shows example values from the file. Choose the options:
+   - **What the import may do:** create and update, create only, or update only.
+   - **Quantities:** ignore them, *replace* on-hand stock (a stock count), or *add* them as received stock.
+   - **Blank cells:** keep the existing value, or clear optional text fields.
+   - Whether to create missing categories and whether to download photos.
+3. **Check and preview.** Every row is validated and compared with the catalogue. **Nothing is written at this stage.** The checks include:
+   - missing or invalid SKUs, and duplicate SKUs within the file;
+   - invalid prices and quantities;
+   - barcodes already used by another item;
+   - the same size appearing twice under one product;
+   - a SKU that belongs to a different product;
+   - a category that changes between rows of the same product;
+   - a barcode cell saved as a number (which may already have lost its leading zeros).
+   The preview shows new plants and sizes, updates (with before → after values), unchanged rows, skipped rows and problems.
+4. **Confirm.** If some rows have problems, you must tick to import only the valid rows.
+5. **Progress.** Rows are processed in background batches of 25, each row in its own transaction. Leaving the page is safe; a stalled job is picked up again after 2 minutes.
+6. **Results.** See the outcome of every row and download the report as XLSX or CSV. Rows with problems can be corrected on screen and imported again.
 
-**1.** Copy the example environment file:
+How the import keeps data consistent:
 
-```bash
-cp .env.example .env
-```
+- **Matching:** rows are matched to existing items by **SKU**. Pot sizes belong together through `product_handle`. Sizes never move between products.
+- **No duplicates:** re-importing a file updates items in place.
+- **Stock changes happen once:** each row's stock movement has a unique reference (`job:row`) enforced by a database index. A resumed or retried job can never add the same stock twice. A *new* import with "add" adds again, and the screen says so.
+- **Barcodes:** leading zeros are kept. Internal barcodes can never be changed or reused. Supplier barcodes are only ever added.
+- **Images:** downloaded over https only, with internal and private network addresses blocked (checked at DNS time), 5 MB and 15-second limits, and JPEG/PNG/WebP confirmed from the file's bytes. Each file is saved under a random name. A failed download is reported on its row; the rest of the row still imports.
 
-**2.** Edit `.env`:
+**Export:** all products, or a filtered selection (search, category, status, low stock), as XLSX or CSV.
 
-- Set `APP_URL=https://your-domain`, a new `BETTER_AUTH_SECRET`, a `SETUP_TOKEN` and `POSTGRES_PASSWORD`.
-- Optionally set `SMTP_URL` and `MAIL_FROM` for password-reset e-mails.
+- **Owners** get every column, in the import template's format, so an export can be edited and imported back.
+- **Cashiers** get a price list (name, category, size, SKU, barcode, price, stock).
+- **XLSX** cells are written as text, never as formulas.
+- **CSV** cells that start with `=`, `+`, `-` or `@` get a leading apostrophe so spreadsheets don't run them; the import removes it again.
 
-**3.** Build and start:
+Uploads, starts, row corrections, retries, completions, reports and exports are all recorded in `audit_log`.
 
-```bash
-docker compose up -d --build
-```
+## Deploy (production)
 
-The app container applies migrations on every start, then serves on `127.0.0.1:3000`.
+**Status:** not deployed. No hosting account, domain or server access was available in this build. See *What remains* in [docs/TEST-RESULTS.md](docs/TEST-RESULTS.md).
 
-**4.** Put HTTPS in front. For example, a Caddyfile containing `your-domain { reverse_proxy 127.0.0.1:3000 }`.
+Recommended setup: a small Ubuntu VPS in a South African region (or an in-store PC) with PostgreSQL 16, Node.js 22 and Caddy for automatic HTTPS.
 
-### Option B: Plain Node.js
+1. Create a server user and the database:
 
-```bash
-npm ci
-```
+   ```bash
+   sudo adduser --system --group nursery
+   ```
 
-```bash
-npm run build
-```
+   ```bash
+   sudo -u postgres psql -c "CREATE ROLE nursery LOGIN PASSWORD '<strong password>'" -c "CREATE DATABASE nursery OWNER nursery"
+   ```
 
-```bash
-NODE_ENV=production npm run db:migrate
-```
+2. Copy the app to `/srv/nursery`, then install, configure, build and migrate:
 
-```bash
-NODE_ENV=production npm start
-```
+   ```bash
+   npm ci
+   ```
 
-Run the last command under systemd or pm2 so it restarts automatically. `UPLOAD_DIR` must be a persistent directory that is included in backups.
+   ```bash
+   cp .env.example .env
+   ```
 
-### First launch
+   Edit `.env`: set `APP_URL`, `BETTER_AUTH_SECRET`, `SETUP_TOKEN`, `DATABASE_URL` and `UPLOAD_DIR`.
 
-1. Open `https://your-domain/setup`, enter the `SETUP_TOKEN` and create the owner account. Then remove or rotate `SETUP_TOKEN`.
-2. Go to **Settings** and enter the real business details, VAT status and VAT number, address, phone and receipt footer. Check them with the owner (and their accountant for VAT).
-3. Go to **Staff** and add each cashier with a temporary password.
-4. Go to **Print labels → Edit label sizes** and measure the real label stock. Print a test label.
-5. Never run `db:seed` against the live database. The owner dashboard shows a red warning if any `@demo.test` account is active.
+   ```bash
+   npm run build
+   ```
 
-### Password recovery
+   ```bash
+   NODE_ENV=production npm run db:migrate
+   ```
 
-- **Cashier:** the owner uses **Staff → Set new password**. This also signs the cashier out everywhere.
-- **Owner with e-mail configured:** use "Forgot your password?" on the sign-in page.
-- **Owner without e-mail:** run this on the server:
+3. Install `deploy/nursery-pos.service` as a systemd service, then:
 
-  ```bash
-  npm run owner:reset-password -- owner@example.co.za
-  ```
+   ```bash
+   sudo systemctl enable --now nursery-pos
+   ```
 
-### Backups and restore (tested)
+4. Install `deploy/Caddyfile` (set your domain) and reload Caddy. Caddy handles HTTPS automatically.
 
-`scripts/backup.sh` writes a `pg_dump` custom-format dump and a tarball of the photos, checks that the dump is readable and keeps 30 days of backups. Run it nightly from cron and copy `BACKUP_DIR` off-site.
+5. Install the cron jobs in `deploy/crontab`: a nightly backup and a weekly restore drill.
 
-Example crontab entry:
+6. Check the app is up. A `200` response (with the migration version and the number of stalled imports) means healthy; `503` means the database is down.
 
-```cron
-30 21 * * * cd /srv/nursery && DATABASE_URL=... UPLOAD_DIR=/srv/nursery/uploads BACKUP_DIR=/srv/backups scripts/backup.sh
-```
+   ```bash
+   curl -s https://<domain>/api/health
+   ```
 
-With Docker, run `pg_dump` inside the database container instead:
+Later releases are deployed with `scripts/deploy.sh <tag>`. It backs up first, then builds, migrates, restarts and waits for the health check.
 
-```bash
-docker compose exec -T db pg_dump -U nursery --format=custom nursery > backups/db_$(date +%F).dump
-```
+**Docker option:** `docker compose up -d --build` uses `Dockerfile` and `docker-compose.yml`, and binds the app to `127.0.0.1:3000` for Caddy. *This was not tested here because there is no Docker daemon in this environment.*
 
-**Restoring** only works into an *empty* database. The script refuses to restore over existing data.
+### Sessions, secrets and logs
 
-**1.** Create an empty database:
+- **Sessions:** cookies are `HttpOnly`, `SameSite=Lax` and `Secure` (because `APP_URL` is https), and last 14 hours. Sign-in is rate-limited.
+- **Secrets:** all secrets live only in `.env`, which is git-ignored.
+- **Logs:** errors are written as one JSON line each, so they can be read with `journalctl -u nursery-pos -o cat | grep '"level":"error"'`.
 
-```bash
-createdb -O nursery nursery_restore
-```
+### Backups, restore and rollback
 
-**2.** Restore the dump and photos:
+- **Backup:** `scripts/backup.sh` writes a database dump and a photos archive, checks the dump can be read, and keeps 30 days of files.
+- **Restore:** `scripts/restore.sh` restores into an *empty* database only, never over existing data. This was tested: the counts matched.
+- **Restore drill:** `scripts/restore-drill.sh` restores the newest backup into a scratch database and compares sales counts with live. Run it weekly from cron.
+- **Rollback plan:**
+  1. Every deploy takes a backup first.
+  2. To roll back code, check out the previous tag, then rebuild and restart.
+  3. If a migration must be undone, use the matching `migrations/rollback/*.down.sql` via `scripts/rollback.sh <name>`. It refuses to run without a backup from the last hour.
+  4. If anything goes wrong, restore the pre-deploy backup.
 
-```bash
-RESTORE_DATABASE_URL=postgres://nursery:...@localhost/nursery_restore UPLOAD_DIR=/srv/nursery/uploads scripts/restore.sh backups/db_2026-11-09_2130.dump backups/photos_2026-11-09_2130.tar.gz
-```
+  The rollback for `0003` was tested: apply → roll back (stock and sales kept) → apply again.
 
-**3.** Point `DATABASE_URL` at `nursery_restore` and restart the app. The script prints sale and product counts so you can check them against the report.
+### Going live: removing demo data
 
-This round trip was tested on the development database: 2 sales and 154 units on hand in the source, the same in the restored copy, the ledger check passed and the immutability triggers were still active.
+Production should start from an empty database that has never been seeded. If the demo data was used on the production database, remove it under control:
+
+1. Create the real owner account.
+2. Take a backup.
+3. Preview what would be removed (dry run, changes nothing):
+
+   ```bash
+   npm run purge:demo
+   ```
+
+4. Remove the demo accounts and their test transactions:
+
+   ```bash
+   npm run purge:demo -- --confirm
+   ```
+
+   Add `--catalogue` to also remove the placeholder plants.
+
+The purge refuses to run if any real staff member has made a sale. It runs in a single transaction and is recorded in the audit log. It was tested on a seeded database.
 
 ## Security summary
 
-- **Permissions** are enforced on the server for every read and write. Each service function checks the actor's role (`assertRole`), and every page, route handler and server action resolves the signed-in staff member from the database. Deactivation and role changes therefore apply immediately.
-- **Sessions:** HttpOnly, SameSite=Lax cookies, `Secure` when `APP_URL` is https, 14-hour lifetime. Sign-in is rate-limited in production. Owner authorisation for returns is throttled.
-- **CSRF:** server actions use Next.js's built-in origin check, and route handlers that change data reject cross-site origins (tested).
-- **Inputs** are validated with Zod. Uploaded photos are checked by their magic bytes and stored under random names. CSV export guards against spreadsheet formula injection.
-- **Database integrity:**
-  - Sales, sale lines, payments, returns and stock movements are immutable (triggers).
-  - Stock cannot go negative (CHECK constraint).
-  - Barcodes cannot be deleted (rule), so they are never reused.
+- **Permissions** are enforced on the server for every read and write. Every service checks the signed-in person's role, and that person is re-read from the database on each request. Import, retry and corrections are owner-only.
+- **CSRF:** data-changing API routes refuse requests from other sites (tested), and server actions are protected by Next.js's origin check.
+- **Input validation** uses Zod. File uploads are limited in size and type. Image downloads are protected against server-side request forgery (attempts to reach internal network addresses). Exported spreadsheets are protected against formula injection.
+- **Database:**
+  - Sales, payments, returns and stock movements are immutable.
+  - Stock can never go negative.
+  - Barcodes can never be deleted or reused.
+  - Each import row can move stock only once.
   - Only one till can be open at a time.
-  - Receipt numbers come from gap-free counters.
-- **Audit:** owner changes go to `audit_log`. Each stock movement records quantity, reason, time, operator and source reference.
-- **Secrets** come only from the environment (`.env` is git-ignored).
+- **Audit:** every owner change, import and export is recorded.
 
 ## Project layout
 
 ```
-migrations/            versioned SQL
-scripts/               migrate, seed (dev only), backup/restore, owner password reset
-src/server/            domain services (catalog, stock, checkout, returns, till, labels, reports, users, auth)
-src/app/till/          cashier till, receipts, returns, cash-up
-src/app/admin/         owner workspace
-src/app/api/           till lookup/search, checkout, label PDFs, CSV, health
-src/app/print/         print-friendly 80 mm / A4 receipts and return slips
-tests/integration/     Vitest against PostgreSQL
-tests/e2e/             Playwright against a production build
-docs/                  handover guide, hardware setup, acceptance checklist, test results
+migrations/              versioned SQL (+ rollback/)
+scripts/                 migrate, seed (dev), backup/restore/drill, rollback, deploy, purge demo data, owner password reset
+deploy/                  systemd unit, Caddyfile, crontab
+src/server/              domain services: catalog, stock, checkout, returns, till, labels, reports, dashboard,
+                         importer, exporter, spreadsheet, image-fetch, maintenance, auth, scheduler, log
+src/components/shell/    sidebar + top bar
+src/app/till/            POS, sales/receipts & returns, cash-up, labels, export (cashier)
+src/app/admin/           dashboard, products, inventory, labels, reports, import/export, settings, staff
+src/app/api/             till, checkout, labels, import/export, reports, health
+tests/integration/       Vitest + PostgreSQL
+tests/e2e/               Playwright + production build
+docs/                    handover guide, hardware setup, acceptance checklist, test results
 ```

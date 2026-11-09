@@ -8,6 +8,7 @@ import { applyMovement } from "./stock";
 import { createProduct, createVariant, slugify, updateVariant, CODE_RE } from "./catalog";
 import { readSpreadsheet, unguardCell, toCsv, toXlsx } from "./spreadsheet";
 import { fetchProductImage } from "./image-fetch";
+import { log } from "./log";
 import { parseRandToCents } from "@/lib/money";
 import { autoMap, DEFAULT_OPTIONS, FIELDS, FIELD_BY_KEY, type FieldKey, type ImportOptions } from "@/lib/import-fields";
 
@@ -439,7 +440,7 @@ let workerRunning: Promise<void> | null = null;
 /** Start processing queued imports in this process (no-op if already running here). */
 export function kickImportWorker(): Promise<void> {
   if (!workerRunning) {
-    workerRunning = runQueuedImports().catch((e) => console.error("[import-worker]", e)).finally(() => { workerRunning = null; });
+    workerRunning = runQueuedImports().catch((e) => log("error", "import.worker", {}, e)).finally(() => { workerRunning = null; });
   }
   return workerRunning;
 }
@@ -558,7 +559,7 @@ export async function processRow(jobId: string, rowNo: number, actor: Actor, opt
     });
   } catch (e) {
     const msg = e instanceof AppError ? e.message : isUniqueViolation(e) ? "Another item already uses one of these identifiers." : "Unexpected error while saving this row.";
-    if (!(e instanceof AppError)) console.error("[import-worker] row", jobId, rowNo, e);
+    if (!(e instanceof AppError)) log("error", "import.row", { jobId, rowNo }, e);
     await q(`UPDATE import_rows SET status = 'failed', message = $3, attempts = attempts + 1, processed_at = now() WHERE job_id = $1 AND row_no = $2 AND status = 'pending'`, [jobId, rowNo, msg]);
   }
 }

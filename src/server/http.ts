@@ -2,6 +2,7 @@ import "server-only";
 import { NextResponse } from "next/server";
 import { unstable_rethrow } from "next/navigation";
 import { AppError, isAppError } from "./errors";
+import { log } from "./log";
 
 /** Reject cross-site state-changing requests (CSRF defence in addition to SameSite=Lax cookies). */
 export function assertSameOrigin(req: Request) {
@@ -21,7 +22,7 @@ export function errorResponse(e: unknown) {
   if (isAppError(e)) {
     return NextResponse.json({ error: { code: e.code, message: e.message, details: e.details ?? null } }, { status: e.status, headers: { "Cache-Control": "no-store" } });
   }
-  console.error("[api] unexpected error", e);
+  log("error", "api.unexpected", {}, e);
   return NextResponse.json({ error: { code: "SERVER", message: "Something went wrong on the server. Please try again." } }, { status: 500 });
 }
 
@@ -54,7 +55,7 @@ export async function runAction<T>(fn: () => Promise<T>, message?: string): Prom
   } catch (e) {
     unstable_rethrow(e);
     if (isAppError(e)) return { ok: false, error: e.message, details: e.details };
-    console.error("[action] unexpected error", e);
+    log("error", "action.unexpected", {}, e);
     return { ok: false, error: "Something went wrong on the server. Please try again." };
   }
 }

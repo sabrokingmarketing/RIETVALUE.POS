@@ -1,141 +1,183 @@
 # Test results
 
-Run on 2026-11-09 against PostgreSQL 16.15 and Chromium (Playwright 1.63). The browser tests run against a **production build** (`next build && next start`).
+Run on 2026-11-09 against PostgreSQL 16.15 and Chromium (Playwright 1.63). The browser tests ran against a **production build** (`next build && next start`) on its own database.
 
-The results are split into two groups:
+This report has three sections:
 
-- **Automated** (sections 1–3): ran here and passed.
-- **Physical** (section 4): needs the client's own equipment.
+1. **Automated checks:** all ran in this build environment and passed.
+2. **Manual checks done here:** layout and backup checks run by hand in this environment.
+3. **Physical and live checks:** need the nursery's equipment, a payment terminal or hosting access, and have **not** been done.
 
-## 1. Type check
+## 1. Automated checks
+
+### Type check
 
 `npm run typecheck` reported no errors.
 
-## 2. Integration tests: 29 passed
+### Integration tests: 46 passed
 
-Command: `npm test`. These run against a real PostgreSQL test database, which is reset for every file.
+Command: `npm test`. These run against a real PostgreSQL test database.
 
 ```
-✓ tests/integration/labels.test.ts > label PDF > A4 sheet: exact page size, start position, long names, and every barcode decodes 992ms
-✓ tests/integration/labels.test.ts > label PDF > 50 × 30 mm roll bars are pure black vector rectangles at the configured module width 75ms
-✓ tests/integration/labels.test.ts > money > parses and formats ZAR without floating-point drift 2ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > duplicate checkout (double-click) creates one sale and moves stock once 35ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > lost response after commit: retrying the same checkout reference returns the original sale 21ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > two sessions attempting the final pot: exactly one succeeds, the other is told which line 109ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > rejected card payment records nothing but an audit row; basket can then be paid in cash 20ms
+✓ tests/integration/labels.test.ts > label PDF > A4 sheet: exact page size, start position, long names, and every barcode decodes 767ms
+✓ tests/integration/labels.test.ts > label PDF > 50 × 30 mm roll bars are pure black vector rectangles at the configured module width 58ms
+✓ tests/integration/labels.test.ts > money > parses and formats ZAR without floating-point drift 1ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > duplicate checkout (double-click) creates one sale and moves stock once 32ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > lost response after commit: retrying the same checkout reference returns the original sale 22ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > two sessions attempting the final pot: exactly one succeeds, the other is told which line 90ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > rejected card payment records nothing but an audit row; basket can then be paid in cash 17ms
 ✓ tests/integration/edge-cases.test.ts > checkout safety > unknown barcode resolves to nothing and changes nothing 2ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > stale price: checkout is refused until the cashier accepts the new price 25ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > insufficient cash is refused and nothing is recorded 10ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > archived products cannot be sold 11ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > checkout needs an open till 19ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > sales are immutable at the database level 6ms
-✓ tests/integration/edge-cases.test.ts > returns > damaged return refunds but does not restock 55ms
-✓ tests/integration/edge-cases.test.ts > returns > caps returns at the unreturned quantity and is idempotent 22ms
-✓ tests/integration/edge-cases.test.ts > returns > cashier needs owner authorisation; a wrong password is refused 245ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > stale price: checkout is refused until the cashier accepts the new price 21ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > insufficient cash is refused and nothing is recorded 14ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > archived products cannot be sold 10ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > checkout needs an open till 11ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > sales are immutable at the database level 4ms
+✓ tests/integration/edge-cases.test.ts > returns > damaged return refunds but does not restock 44ms
+✓ tests/integration/edge-cases.test.ts > returns > caps returns at the unreturned quantity and is idempotent 17ms
+✓ tests/integration/edge-cases.test.ts > returns > cashier needs owner authorisation; a wrong password is refused 164ms
 ✓ tests/integration/edge-cases.test.ts > permissions > blocks cashier price editing, receiving, adjustments and reports 10ms
-✓ tests/integration/edge-cases.test.ts > permissions > a deactivated cashier cannot complete a sale 114ms
-✓ tests/integration/edge-cases.test.ts > stock and barcodes > receiving retries are safe 10ms
-✓ tests/integration/edge-cases.test.ts > stock and barcodes > adjustments need a reason and can never make stock negative 24ms
-✓ tests/integration/edge-cases.test.ts > stock and barcodes > supplier aliases keep leading zeros, are unique across all codes and are never reused 37ms
-✓ tests/integration/edge-cases.test.ts > stock and barcodes > scans, label printing and abandoned baskets leave stock untouched 20ms
-✓ tests/integration/edge-cases.test.ts > label layouts > rejects a layout too small for the code 4ms
-✓ tests/integration/journey.test.ts > lavender journey > creates the plant and receives 12 at R89.90 27ms
-✓ tests/integration/journey.test.ts > lavender journey > prints 12 stickers without touching stock, and the barcodes decode 257ms
-✓ tests/integration/journey.test.ts > lavender journey > scans two, takes R200 cash, gives R20.20 change and issues one R179.80 receipt 16ms
-✓ tests/integration/journey.test.ts > lavender journey > reprints the receipt and stock stays at 10 9ms
-✓ tests/integration/journey.test.ts > lavender journey > returns one resellable plant for R89.90: 11 in stock and R89.90 net sales 147ms
-✓ tests/integration/journey.test.ts > lavender journey > reconciles the till and the stock ledger 9ms
-Tests  29 passed (29)
+✓ tests/integration/edge-cases.test.ts > permissions > a deactivated cashier cannot complete a sale 84ms
+✓ tests/integration/edge-cases.test.ts > stock and barcodes > receiving retries are safe 8ms
+✓ tests/integration/edge-cases.test.ts > stock and barcodes > adjustments need a reason and can never make stock negative 12ms
+✓ tests/integration/edge-cases.test.ts > stock and barcodes > supplier aliases keep leading zeros, are unique across all codes and are never reused 21ms
+✓ tests/integration/edge-cases.test.ts > stock and barcodes > scans, label printing and abandoned baskets leave stock untouched 17ms
+✓ tests/integration/edge-cases.test.ts > label layouts > rejects a layout too small for the code 3ms
+✓ tests/integration/import-export.test.ts > bulk import > imports plants with several pot sizes, prices, stock and barcodes (leading zeros kept) 115ms
+✓ tests/integration/import-export.test.ts > bulk import > export → re-import updates in place without duplicates, and price edits flag relabelling 114ms
+✓ tests/integration/import-export.test.ts > bulk import > re-processing or resuming a job never adds the same stock twice 36ms
+✓ tests/integration/import-export.test.ts > bulk import > partial failures: bad rows are reported, good rows import, corrected rows import on retry 74ms
+✓ tests/integration/import-export.test.ts > bulk import > modes: create-only skips existing SKUs, update-only skips new ones; blank cells keep or clear 84ms
+✓ tests/integration/import-export.test.ts > bulk import > archiving through import stops the barcode scanning 22ms
+✓ tests/integration/import-export.test.ts > bulk import > rejects invalid files with a clear message and writes nothing 7ms
+✓ tests/integration/import-export.test.ts > bulk import > warns when a barcode column was stored as numbers in Excel 27ms
+✓ tests/integration/import-export.test.ts > bulk import > validation and cancelling write nothing to the catalogue 15ms
+✓ tests/integration/import-export.test.ts > bulk import > only owners can import; cashiers export a limited price list 4ms
+✓ tests/integration/import-export.test.ts > bulk import > guards CSV exports against formula injection and re-imports the exact value 36ms
+✓ tests/integration/import-export.test.ts > bulk import > template downloads in both formats and auto-maps cleanly 14ms
+✓ tests/integration/import-export.test.ts > image import > blocks internal addresses 0ms
+✓ tests/integration/import-export.test.ts > image import > stores downloaded photos, and reports failed downloads as row warnings 24ms
+✓ tests/integration/journey.test.ts > lavender journey > creates the plant and receives 12 at R89.90 21ms
+✓ tests/integration/journey.test.ts > lavender journey > prints 12 stickers without touching stock, and the barcodes decode 182ms
+✓ tests/integration/journey.test.ts > lavender journey > scans two, takes R200 cash, gives R20.20 change and issues one R179.80 receipt 12ms
+✓ tests/integration/journey.test.ts > lavender journey > reprints the receipt and stock stays at 10 5ms
+✓ tests/integration/journey.test.ts > lavender journey > returns one resellable plant for R89.90: 11 in stock and R89.90 net sales 101ms
+✓ tests/integration/journey.test.ts > lavender journey > reconciles the till and the stock ledger 10ms
+✓ tests/integration/maintenance.test.ts > removing development fixtures before launch > is blocked until a real owner exists 5ms
+✓ tests/integration/maintenance.test.ts > removing development fixtures before launch > dry run lists demo data; confirm removes demo accounts, test sales and the fixture catalogue 128ms
+✓ tests/integration/maintenance.test.ts > removing development fixtures before launch > refuses when real staff have made sales 14ms
+Test Files  5 passed (5)
+Tests  46 passed (46)
 ```
 
-These tests cover:
+The **import and export** tests (`import-export.test.ts`) cover:
 
-- **The journey from the brief:** create lavender → receive 12 @ R89.90 → render 12 stickers (each page 50 × 30 mm, barcode decoded by ZXing after rasterising) → scan two → R200 cash → R20.20 change → one R179.80 receipt (S000001) → 10 in stock → reprint (still 10) → return one resellable → 11 in stock, R89.90 net sales and net cash. The return reproduces the VAT rounding (R23.45 on the sale, R11.73 on the return) and the till balances.
-- **Checkout safety:**
-  - A damaged return refunds the customer but does not restock.
-  - Three simultaneous duplicate checkouts produce one sale.
-  - Two sessions racing for the final pot: one succeeds and the other is told which line failed.
-  - A lost response after commit returns the original sale.
-  - A rejected card leaves an audit row only.
-  - An unknown barcode changes nothing.
-  - A stale price blocks checkout until accepted, and the variant is flagged for relabelling.
-  - Insufficient cash is refused, and receipt numbers stay gap-free.
-  - Archived products cannot be sold. Checkout needs an open till.
-  - The database refuses to update or delete sales.
-- **Permissions and stock:**
-  - A cashier is blocked from price editing, receiving, adjustments and reports. A deactivated cashier cannot sell.
-  - Returns are capped at the unreturned quantity and are idempotent. Owner authorisation is required.
-  - Receiving retries are safe. Adjustments need a reason and never make stock negative.
-  - Supplier aliases keep leading zeros, are unique across all codes and are never reused.
-  - Scans, label jobs and abandoned baskets leave stock untouched.
-- **Labels:**
-  - A layout too small for the code is rejected (too narrow, too short, bars too thin, off the page).
-  - A4 sheet start position and page overflow work. A long name wraps.
-  - A supplier-style code with leading zeros decodes.
-  - The PDF contains vector bars only (no raster images).
+- Importing 5 sizes of 3 plants: multiple pot sizes grouped under one plant, prices, stock added once, a supplied barcode `00012345` with its leading zeros kept, supplier barcodes that scan, and a pot category given the correct kind.
+- Export to XLSX, then re-import:
+  - unchanged rows are reported as "no change" and no items are duplicated;
+  - an edited price and stock count update in place;
+  - the re-priced size is flagged for new shelf labels;
+  - the stock ledger still balances.
+- Resume safety: re-processing a finished row, or resuming a stalled job, never adds stock twice. Exactly one stock movement is recorded.
+- Partial failure with 10 rows: 9 row-level problems are reported (bad price, missing SKU, duplicate SKU in the file, the same size twice, a barcode already taken, a SKU belonging to another plant, a new plant without name or category). The valid row imports. Two corrected rows import on retry. The results report lists every row.
+- Import modes: create-only, update-only, and blank cells kept or cleared.
+- Archiving an item through import.
+- Invalid files refused with clear messages: empty, a fake .xlsx, headers only, duplicate headers, an unclosed CSV quote, the wrong file type, no SKU mapped, and one column mapped twice.
+- A warning when a barcode column was stored as numbers in Excel.
+- Validating or cancelling an import writes nothing.
+- Owner-only import, and the cashier's limited export columns.
+- The audit trail for imports and exports.
+- CSV formula-injection guard, with the exact value restored on re-import.
+- Templates in both formats map automatically.
+- Image import:
+  - private and internal addresses are blocked (127/8, 10/8, 172.16/12, 192.168/16, 169.254.169.254, ::1, fd00::/8, IPv4-mapped addresses);
+  - a photo downloads and is stored under a random name;
+  - a non-image link becomes a row warning, and the rest of the row still imports.
 
-## 3. Browser tests: 16 passed
+The **demo-data removal** tests (`maintenance.test.ts`) cover:
 
-Command: `npm run test:e2e`. These use Playwright and Chromium against the production build.
+- The purge is blocked until a real owner exists.
+- The dry-run plan is accurate.
+- Confirming removes the demo accounts, their test sales and the fixture catalogue, resets receipt numbering, keeps the stock ledger balanced, and leaves the immutability triggers active.
+- The purge refuses outright once real staff have made a sale.
+
+The integration tests from earlier rounds all still pass. They cover:
+
+- **Lavender journey:** receive 12 @ R89.90, render 12 labels (50 × 30 mm, decoded), sell 2 for R179.80 with R200 cash and R20.20 change, 10 left, reprint, return 1, 11 left, net sales R89.90.
+- **Checkout safety:** duplicate checkout, lost response, last-pot race, card declined, stale price, insufficient cash, an archived item, the till closed.
+- **Integrity:** database immutability, permissions, returns limits, stock adjustments, barcode aliases, label layout limits, money and VAT rounding.
+
+### Browser tests: 22 passed
+
+Command: `npm run test:e2e`. These run Chromium against the production build.
 
 ```
-✓   1 [desktop] › tests/e2e/journey.spec.ts:16:1 › owner creates lavender, receives 12 and prints 12 labels (2.8s)
-✓   2 [desktop] › tests/e2e/journey.spec.ts:55:1 › cashier scans two, takes R200 cash and gives R20.20 change (1.1s)
-✓   3 [desktop] › tests/e2e/journey.spec.ts:85:1 › receipt reprints without touching stock; owner returns one resellable plant (1.3s)
-✓   4 [desktop] › tests/e2e/public-and-permissions.spec.ts:10:3 › public website on a phone › home, plants, plant detail, about and visit render without horizontal scroll (673ms)
-✓   5 [desktop] › tests/e2e/public-and-permissions.spec.ts:26:3 › public website on a phone › owner workspace is usable on a phone (1.1s)
-✓   6 [desktop] › tests/e2e/public-and-permissions.spec.ts:36:1 › public pages never expose stock counts, SKUs, barcodes or staff (463ms)
-✓   7 [desktop] › tests/e2e/public-and-permissions.spec.ts:49:1 › anonymous requests to private data are refused (48ms)
-✓   8 [desktop] › tests/e2e/public-and-permissions.spec.ts:59:1 › cashier cannot open owner pages, edit prices or read reports (672ms)
-✓   9 [desktop] › tests/e2e/public-and-permissions.spec.ts:74:1 › deactivated cashier is signed out and cannot sign in (1.6s)
-✓  10 [desktop] › tests/e2e/till-safety.spec.ts:40:1 › unknown barcode shows a message and leaves the basket intact (811ms)
-✓  11 [desktop] › tests/e2e/till-safety.spec.ts:51:1 › quantity field keeps focus while typing; scanning resumes after basket buttons (832ms)
-✓  12 [desktop] › tests/e2e/till-safety.spec.ts:70:1 › insufficient cash blocks completion; rejected card then approved card (1.1s)
-✓  13 [desktop] › tests/e2e/till-safety.spec.ts:95:1 › lost response after commit: recovery finishes the same sale without charging twice (1.2s)
-✓  14 [desktop] › tests/e2e/till-safety.spec.ts:118:1 › offline disables final checkout (815ms)
-✓  15 [desktop] › tests/e2e/till-safety.spec.ts:129:1 › stale price must be accepted before tender (951ms)
-✓  16 [desktop] › tests/e2e/till-safety.spec.ts:146:1 › two sessions racing for the final pot: one sale, the other told which line (5.2s)
-✓  17 [desktop] › tests/e2e/till-safety.spec.ts:164:1 › duplicate checkout POST with the same key returns the original sale (550ms)
-17 passed (33.8s)
+✓   1 [desktop] › tests/e2e/import-export.spec.ts:17:1 › owner imports plants with several pot sizes through the guided workflow (2.8s)
+✓   2 [desktop] › tests/e2e/import-export.spec.ts:48:1 › export, then re-import the same file: everything matches, nothing is duplicated (2.2s)
+✓   3 [desktop] › tests/e2e/import-export.spec.ts:66:1 › partial failure: the bad row is held back, corrected and retried (3.5s)
+✓   4 [desktop] › tests/e2e/import-export.spec.ts:88:1 › an invalid file is refused with a clear message (533ms)
+✓   5 [desktop] › tests/e2e/import-export.spec.ts:94:1 › cashiers cannot import but can export a price list (566ms)
+✓   6 [desktop] › tests/e2e/import-export.spec.ts:109:3 › tablet › POS keeps the total and Take payment on screen (602ms)
+✓   7 [desktop] › tests/e2e/journey.spec.ts:16:1 › owner creates lavender, receives 12 and prints 12 labels (1.7s)
+✓   8 [desktop] › tests/e2e/journey.spec.ts:55:1 › cashier scans two, takes R200 cash and gives R20.20 change (894ms)
+✓   9 [desktop] › tests/e2e/journey.spec.ts:85:1 › receipt reprints without touching stock; owner returns one resellable plant (1.2s)
+✓  10 [desktop] › tests/e2e/permissions.spec.ts:10:3 › owner screens on a phone › owner workspace is usable on a phone (1.1s)
+✓  11 [desktop] › tests/e2e/permissions.spec.ts:20:1 › the public website is gone: the root goes to sign-in (53ms)
+✓  12 [desktop] › tests/e2e/permissions.spec.ts:28:1 › anonymous requests to private data are refused (30ms)
+✓  13 [desktop] › tests/e2e/permissions.spec.ts:38:1 › cashier cannot open owner pages, edit prices or read reports (634ms)
+✓  14 [desktop] › tests/e2e/permissions.spec.ts:53:1 › deactivated cashier is signed out and cannot sign in (1.2s)
+✓  15 [desktop] › tests/e2e/till-safety.spec.ts:40:1 › unknown barcode shows a message and leaves the basket intact (650ms)
+✓  16 [desktop] › tests/e2e/till-safety.spec.ts:51:1 › quantity field keeps focus while typing; scanning resumes after basket buttons (809ms)
+✓  17 [desktop] › tests/e2e/till-safety.spec.ts:70:1 › insufficient cash blocks completion; rejected card then approved card (956ms)
+✓  18 [desktop] › tests/e2e/till-safety.spec.ts:95:1 › lost response after commit: recovery finishes the same sale without charging twice (1.2s)
+✓  19 [desktop] › tests/e2e/till-safety.spec.ts:118:1 › offline disables final checkout (677ms)
+✓  20 [desktop] › tests/e2e/till-safety.spec.ts:129:1 › stale price must be accepted before tender (887ms)
+✓  21 [desktop] › tests/e2e/till-safety.spec.ts:146:1 › two sessions racing for the final pot: one sale, the other told which line (5.1s)
+✓  22 [desktop] › tests/e2e/till-safety.spec.ts:164:1 › duplicate checkout POST with the same key returns the original sale (459ms)
+22 passed (42.4s)
 ```
 
-These tests cover:
+New in this round:
 
-- **Lavender journey through the real UI:**
-  - Owner creates the plant, receives 12 and prints the delivery labels. The PDF is fetched, checked for 12 pages of 50 × 30 mm, and the barcode is decoded.
-  - Cashier opens the till, scans twice (one line, quantity 2, R179.80), tenders R200 and sees R20.20 change on S000001. Stock is 10.
-  - The 80 mm reprint opens marked COPY, and stock stays at 10.
-  - Owner records a resellable return: stock 11, report net sales R89.90.
-  - The till closes with R0.00 variance.
-- **Till failure paths:**
-  - Unknown barcode.
-  - Focus is not stolen from the quantity field. A scanner typing while a button has focus still lands in the scan field.
-  - Insufficient cash, a declined card, then an approved card with a reference.
-  - Lost response after commit: the response is dropped by the network layer, the page is reloaded, and "Check and finish sale" completes the same sale. Exactly one sale exists and stock moved once.
-  - Offline disables checkout. The stale-price dialog must be accepted.
-  - Two browser sessions racing for the last pot.
-  - Duplicate POST with the same key, and a cross-site POST that is refused with 403.
-- **Privacy and permissions:**
-  - The former website paths redirect to sign-in or return 404.
-  - Owner workspace pages fit a Pixel 7-sized phone with no sideways scroll.
-  - Anonymous API calls get 401.
-  - A cashier is sent to "Owner access only", gets 403 on reports and cannot edit prices.
-  - A deactivated cashier is signed out and cannot sign in again.
+- **Import wizard in the real UI:**
+  - upload an XLSX with 5 sizes of 3 plants;
+  - automatic column matching;
+  - "add received stock" option;
+  - preview shows 3 new plants and 0 problems, with nothing written before confirming;
+  - import completes, with barcode `000777000` kept and both sizes on one plant;
+  - the results report downloads.
+- **Export, then re-import through the UI:** "No change" ×5, no duplicates, barcode intact.
+- **Partial failure:** the bad price is held back, the Import button stays disabled until the problem row is acknowledged, the row is corrected in the dialog and imports straight away.
+- **Invalid file:** a clear error is shown.
+- **Cashier:** sent to the forbidden page from Import/Export, gets 403 from the import API, and can export only the price list.
+- **Tablet (iPad):** the POS total and Take payment button stay within the screen.
+- **Phone:** Dashboard, POS, Products, Receive, Stock, Labels, Sales, Reports, Import/Export and Settings have no sideways scrolling.
 
-## 4. Checks that need the client's equipment
+Still passing from earlier rounds:
 
-These cannot be automated here. Use [ACCEPTANCE.md](ACCEPTANCE.md) on site.
+- The lavender journey through the UI.
+- Unknown barcode, focus handling, insufficient cash, declined then approved card, lost response with reload recovery, offline, stale price, last-pot race, duplicate POST, and cross-site POST refused.
+- Privacy, anonymous 401 responses, cashier restrictions, and a deactivated cashier being refused.
 
-| Check | Why it is not automated here |
+## 2. Manual checks done here
+
+- **Layout review:** screenshots at desktop (1440), tablet (820) and phone (390) of the Dashboard, POS, Import/Export, Products, Stock, Sales and Reports. Two problems were found and fixed:
+  - the POS order panel was not filling the screen, which pushed the total off screen on tablets;
+  - a hidden table heading made the stock page scroll sideways on phones.
+- **Colour contrast:** every colour pairing was measured. Results are in the README.
+- **Backup and restore:** round trip on the development database (counts matched). Migration 0003 was rolled back and re-applied on a scratch database, with stock and sales preserved.
+
+## 3. Not yet done: physical and live checks
+
+These need the nursery's equipment or accounts. Run them on site with [ACCEPTANCE.md](ACCEPTANCE.md).
+
+| Check | What is needed |
 |---|---|
-| Printed sticker measures 50 × 30 mm on the real label printer at Actual size | Needs the printer, driver and label stock. The PDF page size and bar widths are verified in software. |
-| The real scanner reads the printed sticker; Enter suffix and keyboard layout | Needs the scanner. Keyboard-wedge input (typing the code plus Enter) is simulated in the browser tests. |
-| Label adhesive and print survive watering | Physical material test. |
-| 80 mm receipt prints full-width and cuts | Needs the receipt printer and driver settings. Receipt content is checked in the browser. |
-| Card terminal approval, decline and reference flow | Standalone terminal. The app's side of the flow is tested. |
-| Till reconciliation with counted physical cash | Needs a real drawer count. The arithmetic is tested. |
-| Docker image build (`docker compose up --build`) | No Docker daemon in this build environment. The same `npm run build && npm start` path is what the browser tests run. |
-| Password-reset e-mail delivery | Needs SMTP credentials (`SMTP_URL`). Without them, links go to the server log, and `npm run owner:reset-password` is available. |
-| Backup restore on the production host | The backup/restore round trip was run on the development database (counts matched). Repeat it once on the live host. |
-
-Note: the public website was removed after this run's first version; the browser list above predates that change. The re-run after removal passed 16/16 browser tests (website tests replaced by a "website is gone" check) and 29/29 integration tests.
+| **Deployment** | **Not deployed.** Needs: a server or VPS with SSH access (or a hosting account), a domain name and its DNS, and the production `.env` values. Then follow README → Deploy. No hosting credentials were provided in this build. |
+| Docker image build | A machine with Docker. There was no Docker daemon in this environment. |
+| Label printed at 50 × 30 mm, adhesive survives watering | The label printer, its driver and the label stock. The PDF's size and bar widths are verified in software. |
+| The real scanner reads labels (Enter suffix, keyboard layout) | The USB scanner. Keyboard-mode input is simulated in the browser tests. |
+| 80 mm receipt prints and cuts | The receipt printer and driver settings. |
+| Card terminal approval, decline and reference | The standalone card terminal. The app's confirm and reconcile workflow is tested. **There is no automatic payment integration.** |
+| Password-reset e-mail delivery | SMTP credentials (`SMTP_URL`). |
+| Restore drill on the production host | Run `scripts/restore-drill.sh` once after deployment. |
+| Image import from real supplier websites | Internet access from the server. The download path was tested against a local server, and the address blocking with unit checks. |
