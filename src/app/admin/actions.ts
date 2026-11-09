@@ -49,7 +49,7 @@ export async function createProductAction(_: ActionState, f: FormData): Promise<
       const pid = await createProduct(actor, productFields(f), c);
       await createVariant(actor, pid, {
         sizeLabel: str(f, "sizeLabel"), sku: str(f, "sku"), priceCents: price(f), lowStockThreshold: Number(str(f, "lowStockThreshold") || 3),
-        isPublic: f.get("isPublic") === "on", aliasBarcode: str(f, "aliasBarcode"),
+        aliasBarcode: str(f, "aliasBarcode"),
       }, c);
       return pid;
     });
@@ -99,7 +99,7 @@ export async function createVariantAction(productId: number, _: ActionState, f: 
     const actor = await requireActor(["owner"]);
     await createVariant(actor, productId, {
       sizeLabel: str(f, "sizeLabel"), sku: str(f, "sku"), priceCents: price(f), lowStockThreshold: Number(str(f, "lowStockThreshold") || 3),
-      isPublic: f.get("isPublic") === "on", aliasBarcode: str(f, "aliasBarcode"),
+      aliasBarcode: str(f, "aliasBarcode"),
     });
     revalidateCatalogue();
   }, "Size added. Print labels before putting it on the shelf.");
@@ -110,7 +110,6 @@ export async function updateVariantAction(variantId: number, _: ActionState, f: 
     const actor = await requireActor(["owner"]);
     const r = await updateVariant(actor, variantId, {
       sizeLabel: str(f, "sizeLabel"), sku: str(f, "sku"), priceCents: price(f), lowStockThreshold: Number(str(f, "lowStockThreshold") || 0),
-      isPublic: f.get("isPublic") === "on",
     });
     revalidateCatalogue();
     return r;
@@ -155,26 +154,26 @@ export async function receiveDeliveryAction(input: DeliveryInput) {
 }
 
 /** Create a plant + size on the receiving screen, returning the variant ready to add to the delivery. */
-export async function quickCreateAction(input: { commonName: string; botanicalName: string; categoryId: number; sizeLabel: string; price: string; isPublic: boolean }) {
+export async function quickCreateAction(input: { commonName: string; botanicalName: string; categoryId: number; sizeLabel: string; price: string }) {
   return runAction(async () => {
     const actor = await requireActor(["owner"]);
     const cents = parseRandToCents(input.price);
     if (cents === null || cents <= 0) throw new AppError("VALIDATION", "Enter the selling price in rand, e.g. 89.90");
     const vid = await tx(async (c) => {
       const pid = await createProduct(actor, { commonName: input.commonName, botanicalName: input.botanicalName, categoryId: input.categoryId }, c);
-      return createVariant(actor, pid, { sizeLabel: input.sizeLabel, priceCents: cents, isPublic: input.isPublic }, c);
+      return createVariant(actor, pid, { sizeLabel: input.sizeLabel, priceCents: cents }, c);
     });
     revalidateCatalogue();
     return (await getVariant(vid))!;
   });
 }
 
-export async function addSizeQuickAction(input: { productId: number; sizeLabel: string; price: string; isPublic: boolean }) {
+export async function addSizeQuickAction(input: { productId: number; sizeLabel: string; price: string }) {
   return runAction(async () => {
     const actor = await requireActor(["owner"]);
     const cents = parseRandToCents(input.price);
     if (cents === null || cents <= 0) throw new AppError("VALIDATION", "Enter the selling price in rand, e.g. 89.90");
-    const vid = await createVariant(actor, input.productId, { sizeLabel: input.sizeLabel, priceCents: cents, isPublic: input.isPublic });
+    const vid = await createVariant(actor, input.productId, { sizeLabel: input.sizeLabel, priceCents: cents });
     revalidateCatalogue();
     return (await getVariant(vid))!;
   });

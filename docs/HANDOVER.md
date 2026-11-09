@@ -7,7 +7,7 @@ This guide is written for the people at the counter. It covers a normal day: sto
 ### First day (once only)
 
 1. **Sign in** at `/login` with the owner account that was created during setup.
-2. **Settings:** enter the nursery's real name, address, opening hours, phone, WhatsApp number and e-mail.
+2. **Settings:** enter the nursery's real name, address, phone, e-mail and receipt footer.
    - Tick "registered for VAT" only if you are registered with SARS, and enter the VAT number.
    - Ask your accountant to confirm your VAT treatment.
 3. **Staff → Add a staff member:** add each cashier and give them their e-mail and temporary password in person.

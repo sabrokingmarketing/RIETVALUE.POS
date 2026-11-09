@@ -40,7 +40,7 @@ export default async function ProductsPage({ searchParams }: { searchParams: Pro
                 <td className={td}><Link className="inline-flex min-h-11 flex-col justify-center font-semibold text-forest underline" href={`/admin/products/${p.id}`}>{p.common_name}</Link>
                   {p.botanical_name && <span className="block text-xs italic text-muted">{p.botanical_name}</span>}</td>
                 <td className={td}>{p.category_name}</td>
-                <td className={td}>{p.variant_count} <span className="text-xs text-muted">({p.public_count} on website)</span></td>
+                <td className={td}>{p.variant_count}</td>
                 <td className={`${td} tabular`}>{p.on_hand}</td>
                 <td className={td}><div className="flex flex-wrap gap-1">{p.low > 0 && <Badge tone="warn">{p.low} low</Badge>}{p.relabel > 0 && <Badge tone="warn">Relabel</Badge>}</div></td>
               </tr>

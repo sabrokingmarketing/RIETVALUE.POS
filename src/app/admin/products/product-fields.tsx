@@ -16,10 +16,10 @@ export function ProductFields({ categories, p }: { categories: Category[]; p?: {
           {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
       </Field>
-      <Field label="Photo (optional)" htmlFor="photo" hint="JPEG, PNG or WebP up to 5 MB. Shown on the website.">
+      <Field label="Photo (optional)" htmlFor="photo" hint="JPEG, PNG or WebP up to 5 MB.">
         <input id="photo" name="photo" type="file" accept="image/jpeg,image/png,image/webp" className="min-h-11 text-sm file:mr-3 file:min-h-11 file:rounded-lg file:border file:border-line file:bg-mist file:px-3 file:font-medium" />
       </Field>
-      <Field label="Description for the website" htmlFor="description" className="sm:col-span-2">
+      <Field label="Description" htmlFor="description" className="sm:col-span-2">
         <textarea id="description" name="description" rows={3} maxLength={2000} defaultValue={p?.description} className={cx(inputClass, "py-2")} />
       </Field>
       <Field label="Care notes" htmlFor="careNotes" className="sm:col-span-2">
@@ -50,9 +50,6 @@ export function VariantFields({ v, showAlias = true, idPrefix = "" }: { v?: { si
           <input id={id("aliasBarcode")} name="aliasBarcode" maxLength={48} className={cx(inputClass, "font-mono")} autoComplete="off" />
         </Field>
       )}
-      <label className="flex min-h-11 items-center gap-3 self-end text-sm font-medium">
-        <input type="checkbox" name="isPublic" defaultChecked={v?.is_public ?? true} className="size-5 accent-forest" /> Show on the website
-      </label>
     </div>
   );
 }

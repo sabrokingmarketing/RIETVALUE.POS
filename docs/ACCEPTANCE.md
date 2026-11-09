@@ -6,10 +6,10 @@ Date: ____________  Owner: ____________  Cashier: ____________  Installer: _____
 
 ## A. Before you start
 
-- [ ] Settings hold the real business name, address, hours, WhatsApp, and VAT status/number (the dashboard shows no "placeholder" warning).
+- [ ] Settings hold the real business name, address, phone and VAT status/number (the dashboard shows no "placeholder" warning).
 - [ ] No demo accounts are active (the dashboard shows no red "Demo accounts" warning).
 - [ ] The owner and at least one cashier can sign in.
-- [ ] HTTPS padlock is shown. The public website opens on a phone.
+- [ ] HTTPS padlock is shown. Opening the root address goes to staff sign-in.
 
 ## B. Print a sticker at actual size
 

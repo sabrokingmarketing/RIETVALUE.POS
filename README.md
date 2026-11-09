@@ -1,14 +1,13 @@
-# Nursery POS — website, owner workspace and till
+# Nursery POS — owner workspace and till
 
-A single deployable web app for one independent plant nursery in South Africa:
+A single deployable web app for one independent plant nursery in South Africa. There is no public website: the root URL goes straight to staff sign-in and the till.
 
-- **Public website** – Home, Plants (catalogue), plant detail, About, Visit & contact, with plant-specific WhatsApp enquiries.
 - **Owner workspace** (`/admin`) – plants and sizes, receiving stock, label printing, stock and adjustments, day report and CSV, staff, settings.
 - **Cashier till** (`/till`) – scan and sell, cash and card (separate terminal), receipts and reprints, returns, till float and cash-up.
 
-The public catalogue and the till use the same product records. Money is integer cents (ZAR), formatting is `en-ZA`, and business dates are `Africa/Johannesburg`. No AI API key is needed.
+Money is integer cents (ZAR), formatting is `en-ZA`, and business dates are `Africa/Johannesburg`. No AI API key is needed.
 
-**Out of scope:** online ordering, delivery, card-terminal integration, multi-branch and offline payment capture.
+**Out of scope:** a public website/catalogue (removed; migration `0002` drops its view), online ordering, delivery, card-terminal integration, multi-branch and offline payment capture.
 
 ## Assumptions
 
@@ -152,7 +151,7 @@ Run the last command under systemd or pm2 so it restarts automatically. `UPLOAD_
 ### First launch
 
 1. Open `https://your-domain/setup`, enter the `SETUP_TOKEN` and create the owner account. Then remove or rotate `SETUP_TOKEN`.
-2. Go to **Settings** and enter the real business details, VAT status and VAT number, address, opening hours and WhatsApp number. Check them with the owner (and their accountant for VAT).
+2. Go to **Settings** and enter the real business details, VAT status and VAT number, address, phone and receipt footer. Check them with the owner (and their accountant for VAT).
 3. Go to **Staff** and add each cashier with a temporary password.
 4. Go to **Print labels → Edit label sizes** and measure the real label stock. Print a test label.
 5. Never run `db:seed` against the live database. The owner dashboard shows a red warning if any `@demo.test` account is active.
@@ -204,7 +203,6 @@ This round trip was tested on the development database: 2 sales and 154 units on
 ## Security summary
 
 - **Permissions** are enforced on the server for every read and write. Each service function checks the actor's role (`assertRole`), and every page, route handler and server action resolves the signed-in staff member from the database. Deactivation and role changes therefore apply immediately.
-- **Public catalogue:** the website reads only the `public_catalogue` SQL view. It contains published, active sizes with a coarse availability label: no stock counts, SKUs, barcodes, costs, staff or transactions.
 - **Sessions:** HttpOnly, SameSite=Lax cookies, `Secure` when `APP_URL` is https, 14-hour lifetime. Sign-in is rate-limited in production. Owner authorisation for returns is throttled.
 - **CSRF:** server actions use Next.js's built-in origin check, and route handlers that change data reject cross-site origins (tested).
 - **Inputs** are validated with Zod. Uploaded photos are checked by their magic bytes and stored under random names. CSV export guards against spreadsheet formula injection.
@@ -223,7 +221,6 @@ This round trip was tested on the development database: 2 sales and 154 units on
 migrations/            versioned SQL
 scripts/               migrate, seed (dev only), backup/restore, owner password reset
 src/server/            domain services (catalog, stock, checkout, returns, till, labels, reports, users, auth)
-src/app/(site)/        public website
 src/app/till/          cashier till, receipts, returns, cash-up
 src/app/admin/         owner workspace
 src/app/api/           till lookup/search, checkout, label PDFs, CSV, health

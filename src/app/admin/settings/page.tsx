@@ -12,7 +12,7 @@ export default async function SettingsPage() {
   const s = await getSettings();
   return (
     <div className="mx-auto max-w-4xl">
-      <PageHeader title="Business settings" description={<>Shown on receipts and the website. Label sizes are under <Link className="underline" href="/admin/labels/presets">Print labels → label sizes</Link>.</>} />
+      <PageHeader title="Business settings" description={<>Shown on receipts. Label sizes are under <Link className="underline" href="/admin/labels/presets">Print labels → label sizes</Link>.</>} />
       {s.is_fixture && <Alert tone="warn" className="mb-4" title="These are development placeholders">Replace every field with the nursery&apos;s real details before going live. Saving this form clears the placeholder flag.</Alert>}
       <SettingsForm s={s} />
     </div>

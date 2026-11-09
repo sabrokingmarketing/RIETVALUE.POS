@@ -4,24 +4,8 @@ import { signIn, sql } from "./fixtures";
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const { defaultBrowserType, ...phone } = devices["Pixel 7"];
 
-test.describe("public website on a phone", () => {
+test.describe("owner screens on a phone", () => {
   test.use(phone);
-
-  test("home, plants, plant detail, about and visit render without horizontal scroll", async ({ page }) => {
-    for (const path of ["/", "/plants", "/plants/lavender", "/about", "/visit"]) {
-      const res = await page.goto(path);
-      expect(res?.status(), path).toBe(200);
-      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-      expect(overflow, `${path} scrolls sideways`).toBeLessThanOrEqual(0);
-    }
-    await page.goto("/plants/lavender");
-    await expect(page.getByRole("heading", { level: 1, name: "Lavender" })).toBeVisible();
-    await expect(page.getByText("R89.90")).toBeVisible();
-    const wa = page.getByRole("link", { name: /Ask about this plant/ });
-    await expect(wa).toHaveAttribute("href", /^https:\/\/wa\.me\/27000000000\?text=.*Lavender.*15%20cm%20pot/);
-    await page.getByRole("button", { name: "Menu" }).or(page.locator("summary[aria-label=Menu]")).first().click();
-    await expect(page.getByRole("link", { name: "Visit & contact" }).first()).toBeVisible();
-  });
 
   test("owner workspace is usable on a phone", async ({ page }) => {
     await signIn(page, "owner", "/admin");
@@ -33,16 +17,11 @@ test.describe("public website on a phone", () => {
   });
 });
 
-test("public pages never expose stock counts, SKUs, barcodes or staff", async ({ page }) => {
-  const [v] = await sql<{ sku: string; barcode: string; on_hand: number }>(`SELECT sku, barcode, on_hand FROM variants WHERE sku = 'LAV-15'`);
+test("the public website is gone: the root goes to sign-in", async ({ request }) => {
   for (const path of ["/", "/plants", "/plants/lavender", "/visit"]) {
-    await page.goto(path);
-    const html = await page.content();
-    expect(html).not.toContain(v.sku);
-    expect(html).not.toContain(v.barcode);
-    expect(html).not.toContain("owner@e2e.test");
-    expect(html).not.toContain("Olivia Owner");
-    expect(html).not.toMatch(/\b11 in stock\b/);
+    const r = await request.get(path, { maxRedirects: 0 });
+    expect([307, 404], path).toContain(r.status());
+    if (r.status() === 307) expect(r.headers()["location"]).toMatch(/\/(till|login)/);
   }
 });
 

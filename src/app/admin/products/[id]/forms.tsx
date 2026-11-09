@@ -30,7 +30,7 @@ export function ArchiveProductButton({ id, archived }: { id: number; archived: b
   return (
     <div className="flex flex-col items-end gap-1">
       <Button variant={archived ? "secondary" : "danger"} busy={pending} onClick={() => {
-        if (!archived && !confirm("Archive this product? It disappears from the till and website. Sales history is kept.")) return;
+        if (!archived && !confirm("Archive this product? It disappears from the till. Sales history is kept.")) return;
         start(async () => setMsg(await setProductArchivedAction(id, !archived)));
       }}>{archived ? "Restore product" : "Archive product"}</Button>
       {msg && !msg.ok && <p className="text-sm text-danger">{msg.error}</p>}
@@ -52,7 +52,6 @@ export function VariantCard({ v }: { v: ProductDetail["variants"][number] }) {
         </div>
         <div className="flex flex-wrap gap-1">
           {v.archived && <Badge tone="warn">Archived</Badge>}
-          {v.is_public ? <Badge tone="green">On website</Badge> : <Badge>Staff only</Badge>}
           {v.relabel_needed && <Badge tone="warn">Replace shelf labels</Badge>}
         </div>
       </div>

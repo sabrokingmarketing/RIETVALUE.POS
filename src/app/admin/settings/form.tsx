@@ -20,15 +20,13 @@ export function SettingsForm({ s }: { s: Settings }) {
         {t("businessName", "Trading name", s.business_name)}
         {t("legalName", "Registered name (optional)", s.legal_name)}
         {t("registrationNo", "Company registration no. (optional)", s.registration_no)}
-        {t("tagline", "Website tagline", s.tagline)}
         {t("addressLines", "Street address", s.address_lines, { rows: 3 })}
-        {t("openingHours", "Opening hours (one line each)", s.opening_hours, { rows: 3 })}
         {t("phone", "Phone", s.phone, { type: "tel" })}
-        {t("whatsappNumber", "WhatsApp number", s.whatsapp_number, { hint: "International format, e.g. 27 82 123 4567", type: "tel" })}
         {t("email", "E-mail", s.email, { type: "email" })}
-        {t("mapUrl", "Map link (Google Maps share link)", s.map_url, { type: "url", hint: "Starts with https://" })}
-        {t("directions", "Directions", s.directions, { rows: 3, full: true })}
-        {t("aboutText", "About us (website)", s.about_text, { rows: 6, full: true })}
+        {/* Former website-only fields are kept unchanged */}
+        <input type="hidden" name="tagline" value={s.tagline} /><input type="hidden" name="openingHours" value={s.opening_hours} />
+        <input type="hidden" name="whatsappNumber" value={s.whatsapp_number} /><input type="hidden" name="mapUrl" value={s.map_url} />
+        <input type="hidden" name="directions" value={s.directions} /><input type="hidden" name="aboutText" value={s.about_text} />
         {t("receiptFooter", "Receipt footer", s.receipt_footer, { rows: 2, full: true, hint: "e.g. your returns policy" })}
       </Card>
       <Card className="grid gap-4 p-5 sm:grid-cols-2">

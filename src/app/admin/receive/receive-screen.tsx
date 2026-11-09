@@ -199,7 +199,7 @@ function QuickCreate({ categories, onCreated }: { categories: Category[]; onCrea
       const f = new FormData(e.currentTarget);
       setBusy(true); setError(null);
       const res = await quickCreateAction({ commonName: String(f.get("commonName")), botanicalName: String(f.get("botanicalName")), categoryId: Number(f.get("categoryId")),
-        sizeLabel: String(f.get("sizeLabel")), price: String(f.get("price")), isPublic: f.get("isPublic") === "on" }).catch(() => null);
+        sizeLabel: String(f.get("sizeLabel")), price: String(f.get("price")) }).catch(() => null);
       setBusy(false);
       if (res?.ok && res.data) onCreated(res.data); else setError(res && !res.ok ? res.error : "Could not save. Check the connection.");
     }}>
@@ -212,7 +212,6 @@ function QuickCreate({ categories, onCreated }: { categories: Category[]; onCrea
         </Field>
         <Field label="Pot or pack size" htmlFor="ns"><input id="ns" name="sizeLabel" required maxLength={40} placeholder="15 cm pot" className={inputClass} /></Field>
         <Field label="Selling price (R)" htmlFor="np"><input id="np" name="price" required inputMode="decimal" placeholder="89.90" className={cx(inputClass, "tabular")} /></Field>
-        <label className="flex min-h-11 items-center gap-3 self-end text-sm"><input type="checkbox" name="isPublic" defaultChecked className="size-5 accent-forest" /> Show on website</label>
       </div>
       {error && <Alert tone="error" className="mt-3">{error}</Alert>}
       <Button type="submit" className="mt-3" busy={busy}>Create and add to delivery</Button>
@@ -228,7 +227,7 @@ function QuickSize({ base, onCreated, onCancel }: { base: VariantRow; onCreated:
       e.preventDefault();
       const f = new FormData(e.currentTarget);
       setBusy(true); setError(null);
-      const res = await addSizeQuickAction({ productId: base.product_id, sizeLabel: String(f.get("sizeLabel")), price: String(f.get("price")), isPublic: f.get("isPublic") === "on" }).catch(() => null);
+      const res = await addSizeQuickAction({ productId: base.product_id, sizeLabel: String(f.get("sizeLabel")), price: String(f.get("price")) }).catch(() => null);
       setBusy(false);
       if (res?.ok && res.data) onCreated(res.data); else setError(res && !res.ok ? res.error : "Could not save. Check the connection.");
     }}>
@@ -236,7 +235,6 @@ function QuickSize({ base, onCreated, onCancel }: { base: VariantRow; onCreated:
       <div className="grid gap-3 sm:grid-cols-3">
         <Field label="Pot or pack size" htmlFor="qs"><input id="qs" name="sizeLabel" required maxLength={40} placeholder="20 cm pot" className={inputClass} /></Field>
         <Field label="Selling price (R)" htmlFor="qp"><input id="qp" name="price" required inputMode="decimal" className={cx(inputClass, "tabular")} /></Field>
-        <label className="flex min-h-11 items-center gap-3 self-end text-sm"><input type="checkbox" name="isPublic" defaultChecked className="size-5 accent-forest" /> Show on website</label>
       </div>
       {error && <Alert tone="error" className="mt-3">{error}</Alert>}
       <div className="mt-3 flex gap-2"><Button type="submit" busy={busy}>Create and add</Button><Button type="button" variant="ghost" onClick={onCancel}>Cancel</Button></div>

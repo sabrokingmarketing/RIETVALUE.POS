@@ -11,43 +11,41 @@ The results are split into two groups:
 
 `npm run typecheck` reported no errors.
 
-## 2. Integration tests: 30 passed
+## 2. Integration tests: 29 passed
 
 Command: `npm test`. These run against a real PostgreSQL test database, which is reset for every file.
 
 ```
-✓ tests/integration/labels-public.test.ts > label PDF > A4 sheet: exact page size, start position, long names, and every barcode decodes 1098ms
-✓ tests/integration/labels-public.test.ts > label PDF > 50 × 30 mm roll bars are pure black vector rectangles at the configured module width 54ms
-✓ tests/integration/labels-public.test.ts > money > parses and formats ZAR without floating-point drift 1ms
-✓ tests/integration/labels-public.test.ts > public catalogue > only shows published active variants and never exposes stock counts 38ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > duplicate checkout (double-click) creates one sale and moves stock once 40ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > lost response after commit: retrying the same checkout reference returns the original sale 29ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > two sessions attempting the final pot: exactly one succeeds, the other is told which line 112ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > rejected card payment records nothing but an audit row; basket can then be paid in cash 21ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > unknown barcode resolves to nothing and changes nothing 3ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > stale price: checkout is refused until the cashier accepts the new price 27ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > insufficient cash is refused and nothing is recorded 11ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > archived products cannot be sold 12ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > checkout needs an open till 14ms
-✓ tests/integration/edge-cases.test.ts > checkout safety > sales are immutable at the database level 5ms
-✓ tests/integration/edge-cases.test.ts > returns > damaged return refunds but does not restock 57ms
-✓ tests/integration/edge-cases.test.ts > returns > caps returns at the unreturned quantity and is idempotent 20ms
-✓ tests/integration/edge-cases.test.ts > returns > cashier needs owner authorisation; a wrong password is refused 212ms
-✓ tests/integration/edge-cases.test.ts > permissions > blocks cashier price editing, receiving, adjustments and reports 15ms
-✓ tests/integration/edge-cases.test.ts > permissions > a deactivated cashier cannot complete a sale 102ms
-✓ tests/integration/edge-cases.test.ts > stock and barcodes > receiving retries are safe 9ms
-✓ tests/integration/edge-cases.test.ts > stock and barcodes > adjustments need a reason and can never make stock negative 20ms
-✓ tests/integration/edge-cases.test.ts > stock and barcodes > supplier aliases keep leading zeros, are unique across all codes and are never reused 26ms
-✓ tests/integration/edge-cases.test.ts > stock and barcodes > scans, label printing and abandoned baskets leave stock untouched 21ms
+✓ tests/integration/labels.test.ts > label PDF > A4 sheet: exact page size, start position, long names, and every barcode decodes 992ms
+✓ tests/integration/labels.test.ts > label PDF > 50 × 30 mm roll bars are pure black vector rectangles at the configured module width 75ms
+✓ tests/integration/labels.test.ts > money > parses and formats ZAR without floating-point drift 2ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > duplicate checkout (double-click) creates one sale and moves stock once 35ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > lost response after commit: retrying the same checkout reference returns the original sale 21ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > two sessions attempting the final pot: exactly one succeeds, the other is told which line 109ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > rejected card payment records nothing but an audit row; basket can then be paid in cash 20ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > unknown barcode resolves to nothing and changes nothing 2ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > stale price: checkout is refused until the cashier accepts the new price 25ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > insufficient cash is refused and nothing is recorded 10ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > archived products cannot be sold 11ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > checkout needs an open till 19ms
+✓ tests/integration/edge-cases.test.ts > checkout safety > sales are immutable at the database level 6ms
+✓ tests/integration/edge-cases.test.ts > returns > damaged return refunds but does not restock 55ms
+✓ tests/integration/edge-cases.test.ts > returns > caps returns at the unreturned quantity and is idempotent 22ms
+✓ tests/integration/edge-cases.test.ts > returns > cashier needs owner authorisation; a wrong password is refused 245ms
+✓ tests/integration/edge-cases.test.ts > permissions > blocks cashier price editing, receiving, adjustments and reports 10ms
+✓ tests/integration/edge-cases.test.ts > permissions > a deactivated cashier cannot complete a sale 114ms
+✓ tests/integration/edge-cases.test.ts > stock and barcodes > receiving retries are safe 10ms
+✓ tests/integration/edge-cases.test.ts > stock and barcodes > adjustments need a reason and can never make stock negative 24ms
+✓ tests/integration/edge-cases.test.ts > stock and barcodes > supplier aliases keep leading zeros, are unique across all codes and are never reused 37ms
+✓ tests/integration/edge-cases.test.ts > stock and barcodes > scans, label printing and abandoned baskets leave stock untouched 20ms
 ✓ tests/integration/edge-cases.test.ts > label layouts > rejects a layout too small for the code 4ms
-✓ tests/integration/journey.test.ts > lavender journey > creates the plant and receives 12 at R89.90 31ms
-✓ tests/integration/journey.test.ts > lavender journey > prints 12 stickers without touching stock, and the barcodes decode 298ms
-✓ tests/integration/journey.test.ts > lavender journey > scans two, takes R200 cash, gives R20.20 change and issues one R179.80 receipt 19ms
-✓ tests/integration/journey.test.ts > lavender journey > reprints the receipt and stock stays at 10 8ms
-✓ tests/integration/journey.test.ts > lavender journey > returns one resellable plant for R89.90: 11 in stock and R89.90 net sales 132ms
-✓ tests/integration/journey.test.ts > lavender journey > reconciles the till and the stock ledger 8ms
-Test Files  3 passed (3)
-Tests  30 passed (30)
+✓ tests/integration/journey.test.ts > lavender journey > creates the plant and receives 12 at R89.90 27ms
+✓ tests/integration/journey.test.ts > lavender journey > prints 12 stickers without touching stock, and the barcodes decode 257ms
+✓ tests/integration/journey.test.ts > lavender journey > scans two, takes R200 cash, gives R20.20 change and issues one R179.80 receipt 16ms
+✓ tests/integration/journey.test.ts > lavender journey > reprints the receipt and stock stays at 10 9ms
+✓ tests/integration/journey.test.ts > lavender journey > returns one resellable plant for R89.90: 11 in stock and R89.90 net sales 147ms
+✓ tests/integration/journey.test.ts > lavender journey > reconciles the till and the stock ledger 9ms
+Tests  29 passed (29)
 ```
 
 These tests cover:
@@ -75,9 +73,8 @@ These tests cover:
   - A4 sheet start position and page overflow work. A long name wraps.
   - A supplier-style code with leading zeros decodes.
   - The PDF contains vector bars only (no raster images).
-- **Public catalogue:** only published sizes are shown, with an availability label. The view columns are exactly the safe set.
 
-## 3. Browser tests: 17 passed
+## 3. Browser tests: 16 passed
 
 Command: `npm run test:e2e`. These use Playwright and Chromium against the production build.
 
@@ -118,10 +115,9 @@ These tests cover:
   - Offline disables checkout. The stale-price dialog must be accepted.
   - Two browser sessions racing for the last pot.
   - Duplicate POST with the same key, and a cross-site POST that is refused with 403.
-- **Public site and privacy:**
-  - Home, Plants, the plant page, About and Visit render on a Pixel 7-sized phone with no sideways scroll. The plant page has a plant-specific WhatsApp link.
-  - Owner workspace pages fit a phone.
-  - Public HTML contains no SKU, barcode, stock count or staff identity.
+- **Privacy and permissions:**
+  - The former website paths redirect to sign-in or return 404.
+  - Owner workspace pages fit a Pixel 7-sized phone with no sideways scroll.
   - Anonymous API calls get 401.
   - A cashier is sent to "Owner access only", gets 403 on reports and cannot edit prices.
   - A deactivated cashier is signed out and cannot sign in again.
@@ -141,3 +137,5 @@ These cannot be automated here. Use [ACCEPTANCE.md](ACCEPTANCE.md) on site.
 | Docker image build (`docker compose up --build`) | No Docker daemon in this build environment. The same `npm run build && npm start` path is what the browser tests run. |
 | Password-reset e-mail delivery | Needs SMTP credentials (`SMTP_URL`). Without them, links go to the server log, and `npm run owner:reset-password` is available. |
 | Backup restore on the production host | The backup/restore round trip was run on the development database (counts matched). Repeat it once on the live host. |
+
+Note: the public website was removed after this run's first version; the browser list above predates that change. The re-run after removal passed 16/16 browser tests (website tests replaced by a "website is gone" check) and 29/29 integration tests.

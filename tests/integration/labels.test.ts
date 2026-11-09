@@ -1,11 +1,6 @@
-import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { closePool, makeCategory, makeUser, resetDatabase } from "../support/db";
-import { createProduct, createVariant, getVariant } from "@/server/catalog";
-import { receiveDelivery } from "@/server/stock";
+import { closePool, makeUser, resetDatabase } from "../support/db";
 import { getPreset, renderLabelsPdf } from "@/server/labels";
-import { publicCatalogue, publicPlant } from "@/server/public";
-import { q } from "@/server/db";
 import { decodePdfBarcodes, pdfPageSizesMm } from "../support/pdf";
 import { formatZAR, parseRandToCents, vatIncluded } from "@/lib/money";
 import type { Actor } from "@/server/session-types";
@@ -50,26 +45,5 @@ describe("money", () => {
     expect(formatZAR(2020)).toBe("R 20,20");
     expect(vatIncluded(17980, 1500)).toBe(2345);
     expect(vatIncluded(8990, 0)).toBe(0);
-  });
-});
-
-describe("public catalogue", () => {
-  it("only shows published active variants and never exposes stock counts", async () => {
-    const cat = await makeCategory();
-    const pid = await createProduct(owner, { commonName: "Public Plant", categoryId: cat });
-    const pub = await createVariant(owner, pid, { sizeLabel: "15 cm pot", priceCents: 5000, isPublic: true, lowStockThreshold: 3 });
-    await createVariant(owner, pid, { sizeLabel: "Staff only", priceCents: 1000, isPublic: false });
-    await receiveDelivery(owner, { idempotencyKey: randomUUID(), lines: [{ variantId: pub, quantity: 2, priceCents: 5000 }] });
-    const plant = await publicPlant("public-plant");
-    expect(plant?.variants).toHaveLength(1);
-    expect(plant?.variants[0]).toEqual({ variant_id: pub, size_label: "15 cm pot", price_cents: 5000, availability: "limited" });
-    const json = JSON.stringify(await publicCatalogue());
-    expect(json).not.toMatch(/on_hand|sku|barcode|cost|cashier|email/);
-    const cols = await q<{ column_name: string }>(`SELECT column_name FROM information_schema.columns WHERE table_name = 'public_catalogue'`);
-    expect(cols.map((c) => c.column_name).sort()).toEqual([
-      "availability", "botanical_name", "care_notes", "category_name", "category_slug", "category_sort", "common_name", "description",
-      "photo_is_fixture", "photo_path", "price_cents", "product_id", "size_label", "slug", "variant_id",
-    ]);
-    expect((await getVariant(pub))!.on_hand).toBe(2);
   });
 });
