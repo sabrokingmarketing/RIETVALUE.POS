@@ -1,0 +1,990 @@
+<title>Nursery Till</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<style>
+/* Counter tool: brand-committed single light palette (the nursery's own colours), scan left / basket right. */
+:root{
+  --surface:#FFFFFF; --leaf:#EAF5E7; --leaf-2:#CFE8C8; --forest:#215C39; --forest-2:#184A2D;
+  --mist:#F4F6F4; --ink:#203028; --muted:#4F5F56; --line:#D5DDD7; --danger:#B42318; --danger-bg:#FDECEA;
+  --warn:#8A5A00; --warn-bg:#FFF4DC;
+  --font:"Poppins",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:light;
+}
+html,body{height:100%}
+body{background:var(--mist);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45}
+*{box-sizing:border-box}
+:focus-visible{outline:3px solid var(--forest);outline-offset:2px;border-radius:6px}
+.on-dark :focus-visible{outline-color:#fff}
+.tab{font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{text-wrap:balance;margin:0}
+h1{font-size:1.5rem;font-weight:600} h2{font-size:1.15rem;font-weight:600} h3{font-size:1rem;font-weight:600}
+p{margin:0}
+.muted{color:var(--muted)} .small{font-size:.82rem}
+.app{min-height:100%;display:flex;flex-direction:column}
+header.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--forest);color:#fff;
+  padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));padding-block:6px;
+  display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--forest)}
+.brand{font-weight:600;margin-right:auto;display:flex;align-items:center;gap:8px;min-height:44px;max-width:16rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+nav.tabs{order:9;width:100%;display:flex;gap:4px;overflow-x:auto}
+@media(min-width:1100px){nav.tabs{order:0;width:auto;flex:1}.brand{margin-right:8px}}
+nav.tabs button{background:transparent;border:0;color:#fff;min-height:44px;padding:0 12px;border-radius:8px;white-space:nowrap;font-weight:500;cursor:pointer}
+nav.tabs button[aria-current=page]{background:#fff;color:var(--forest)}
+nav.tabs button:hover:not([aria-current=page]){background:rgba(255,255,255,.12)}
+.pill{display:inline-flex;align-items:center;border-radius:999px;padding:2px 10px;font-size:.75rem;font-weight:600;white-space:nowrap;border:1px solid transparent}
+.pill.green{background:var(--leaf);color:var(--forest);border-color:rgba(33,92,57,.25)}
+.pill.warn{background:var(--warn-bg);color:var(--warn);border-color:rgba(138,90,0,.25)}
+.pill.danger{background:var(--danger-bg);color:var(--danger);border-color:rgba(180,35,24,.25)}
+.pill.grey{background:var(--mist);color:var(--ink);border-color:var(--line)}
+main{flex:1;min-height:0}
+.page{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px;max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.grid2{display:grid;gap:16px;grid-template-columns:1fr} @media(min-width:900px){.grid2{grid-template-columns:1fr 1fr}}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.stack{display:flex;flex-direction:column;gap:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 16px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-weight:600;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--leaf);border-color:rgba(33,92,57,.4)}
+.btn.primary{background:var(--forest);border-color:var(--forest);color:#fff}.btn.primary:hover{background:var(--forest-2)}
+.btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--forest)}.btn.ghost:hover{background:var(--leaf)}
+.btn.lg{min-height:56px;font-size:1.1rem}.btn.xl{min-height:64px;font-size:1.25rem;width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:.85rem;font-weight:500;min-width:0}
+input.i,select.i,textarea.i{width:100%;min-height:44px;border:1px solid var(--line);border-radius:9px;background:var(--surface);padding:8px 12px;font-size:1rem}
+textarea.i{min-height:72px}
+.fields{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr))}
+.alert{border-radius:10px;padding:10px 12px;border:1px solid;font-size:.9rem}
+.alert.error{background:var(--danger-bg);border-color:var(--danger);color:var(--danger)}
+.alert.ok{background:var(--leaf);border-color:var(--forest)}
+.alert.warn{background:var(--warn-bg);border-color:rgba(138,90,0,.5)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th{text-align:left;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--mist);padding:9px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+.tiles{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr))}
+.tile .v{font-size:1.5rem;font-weight:600;font-variant-numeric:tabular-nums}
+/* Till */
+.till{display:grid;grid-template-columns:1fr;min-height:calc(100vh - 120px)}
+@media(min-width:768px){.till{grid-template-columns:minmax(0,1fr) minmax(320px,44%)}}
+.till .left{padding:16px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px;min-width:0}
+.till aside{background:var(--surface);border-left:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+.basket{flex:1;overflow-y:auto}
+.bline{padding:12px 16px;border-bottom:1px solid var(--line)}
+.bline.hl{background:rgba(234,245,231,.7)} .bline.bad{background:var(--danger-bg)}
+.qtybtn{width:48px;height:48px;border-radius:9px;border:1px solid var(--line);background:var(--surface);font-size:1.3rem;cursor:pointer}
+.qty{width:64px;height:48px;text-align:center;font-size:1.5rem;font-weight:700;border:1px solid var(--line);border-radius:9px}
+.due{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--line);padding:16px;padding-bottom:max(16px,env(safe-area-inset-bottom,0px))}
+.due .amt{font-size:2.6rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.scan{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:1.3rem;min-height:56px;letter-spacing:.06em}
+.last{background:var(--leaf);border-radius:10px;padding:8px 12px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.results{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(min(100%,200px),1fr))}
+.result{text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:8px 12px;min-height:64px;cursor:pointer}
+.result:hover{border-color:var(--forest);background:var(--leaf)}
+/* Dialog */
+.scrim{position:fixed;inset:0;background:rgba(32,48,40,.5);z-index:50;display:flex;align-items:flex-end;justify-content:center;padding:0}
+@media(min-width:640px){.scrim{align-items:center;padding:16px}}
+.dialog{background:var(--surface);width:100%;max-width:520px;max-height:100%;overflow-y:auto;border-radius:16px 16px 0 0;padding:20px;padding-bottom:max(20px,env(safe-area-inset-bottom,0px))}
+@media(min-width:640px){.dialog{border-radius:16px}}
+.dialog.wide{max-width:760px}
+.big{font-size:3rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{min-height:56px;border-radius:10px;border:2px solid var(--line);background:var(--surface);font-weight:600;font-size:1.1rem;cursor:pointer}
+.seg button[aria-checked=true]{border-color:var(--forest);background:var(--leaf);color:var(--forest)}
+/* Receipt + labels */
+.receipt{width:72mm;max-width:100%;background:#fff;color:#000;font-size:12px;line-height:1.35;padding:12px;border:1px solid var(--line);margin:0 auto;font-family:ui-monospace,Menlo,Consolas,monospace}
+.receipt .c{text-align:center}.receipt hr{border:0;border-top:1px dashed #000;margin:6px 0}
+.receipt .lr{display:flex;justify-content:space-between;gap:8px}
+.labels{display:flex;flex-wrap:wrap;gap:10px}
+.labels svg{background:#fff;border:1px solid var(--line);width:min(100%,250px);height:auto}
+.empty{border:1px dashed var(--line);border-radius:12px;padding:28px;text-align:center;background:var(--surface)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:max(16px,env(safe-area-inset-bottom,0px));background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;z-index:60;max-width:calc(100% - 32px)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="app" id="app">
+  <header class="bar on-dark">
+    <div class="brand" id="brand">Nursery Till</div>
+    <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+    <span class="pill green" id="tillPill" hidden>Till open</span>
+    <span class="small" id="who" style="opacity:.9"></span>
+  </header>
+  <main id="main"><div class="page"><div class="empty"><h2>Connecting to the shop database…</h2><p class="muted">Stock, prices and sales load in a moment.</p></div></div></main>
+</div>
+<div id="dlg"></div>
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script>
+"use strict";
+// ---------------------------------------------------------------- constants
+const C128 = ["212222", "222122", "222221", "121223", "121322", "131222", "122213", "122312", "132212", "221213", "221312", "231212", "112232", "122132", "122231", "113222", "123122", "123221", "223211", "221132", "221231", "213212", "223112", "312131", "311222", "321122", "321221", "312212", "322112", "322211", "212123", "212321", "232121", "111323", "131123", "131321", "112313", "132113", "132311", "211313", "231113", "231311", "112133", "112331", "132131", "113123", "113321", "133121", "313121", "211331", "231131", "213113", "213311", "213131", "311123", "311321", "331121", "312113", "312311", "332111", "314111", "221411", "431111", "111224", "111422", "121124", "121421", "141122", "141221", "112214", "112412", "122114", "122411", "142112", "142211", "241211", "221114", "413111", "241112", "134111", "111242", "121142", "121241", "114212", "124112", "124211", "411212", "421112", "421211", "212141", "214121", "412121", "111143", "111341", "131141", "114113", "114311", "411113", "411311", "113141", "114131", "311141", "411131", null, null, "211232", "2331112"]; // Code 128 bar/space module widths for values 0–106 (verified against bwip-js)
+const TZ = "Africa/Johannesburg";
+const $ = (s, r = document) => r.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const rand = (c) => { const n = c < 0 ? "-" : ""; c = Math.abs(Math.round(c)); return `${n}R${String(Math.floor(c / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, " ")}.${String(c % 100).padStart(2, "0")}`; };
+function parseRand(s) { s = String(s).replace(/[\sR ]/gi, "").replace(",", "."); if (!/^\d{1,7}(\.\d{0,2})?$/.test(s)) return null; const [w, f = ""] = s.split("."); return +w * 100 + +f.padEnd(2, "0"); }
+const centsIn = (c) => `${Math.floor(c / 100)}.${String(c % 100).padStart(2, "0")}`;
+const vatIn = (amt, bp) => { if (bp <= 0 || amt <= 0) return 0; const d = 10000 + bp; return Math.floor((2 * amt * bp + d) / (2 * d)); };
+const today = () => new Intl.DateTimeFormat("en-CA", { timeZone: TZ, year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+const dt = (iso) => new Intl.DateTimeFormat("en-ZA", { timeZone: TZ, day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+const longDate = (ymd) => { const [y, m, d] = ymd.split("-").map(Number); return new Intl.DateTimeFormat("en-ZA", { timeZone: "UTC", weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(new Date(Date.UTC(y, m - 1, d))); };
+const addDays = (ymd, n) => { const [y, m, d] = ymd.split("-").map(Number); return new Date(Date.UTC(y, m - 1, d + n)).toISOString().slice(0, 10); };
+function uuid() { const b = new Uint8Array(16); crypto.getRandomValues(b); b[6] = (b[6] & 15) | 64; b[8] = (b[8] & 63) | 128; const h = [...b].map((x) => x.toString(16).padStart(2, "0")).join(""); return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`; }
+const TAB_ID = uuid();
+const lsGet = (k, d) => { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } };
+const lsSet = (k, v) => { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, JSON.stringify(v)); } catch {} };
+
+/** Code 128 (set C) pattern for an even-length numeric code, or null. */
+function code128(text) {
+  if (!/^\d+$/.test(text) || text.length % 2) return null;
+  const vals = [105]; for (let i = 0; i < text.length; i += 2) vals.push(+text.slice(i, i + 2));
+  let c = 105; for (let i = 1; i < vals.length; i++) c += i * vals[i];
+  vals.push(c % 103, 106);
+  return vals.map((v) => C128[v]).join("").split("").map(Number);
+}
+
+// ---------------------------------------------------------------- state
+const S = {
+  db: null, user: null, role: "none", me: null, names: {},
+  settings: null, catalog: null, stock: null, counters: null, till: null, day: null, dayDate: today(),
+  loaded: {}, view: "till", online: navigator.onLine,
+  basket: lsGet("till.basket", []), pending: lsGet("till.pending", null), lastId: null, msg: null, issues: {},
+  done: null, checkoutKey: null, search: "", deliveryLines: [], lastDelivery: null, labelItems: [],
+};
+const isOwner = () => S.role === "owner";
+const canSell = () => S.role === "owner" || S.role === "cashier";
+const V = (id) => S.catalog?.variants?.[id];
+const onHand = (id) => S.stock?.levels?.[id] ?? 0;
+const vatBp = () => (S.settings?.vatRegistered ? S.settings.vatRateBp ?? 1500 : 0);
+const label = (v) => `${v.name} — ${v.size}`;
+function saveLocal() { lsSet("till.basket", S.basket); lsSet("till.pending", S.pending); }
+function toast(t) { const el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => (el.hidden = true), 3500); }
+class AppErr extends Error { constructor(code, msg, details) { super(msg); this.code = code; this.details = details; } }
+
+// ---------------------------------------------------------------- database
+const DOCS = { settings: "config/settings", catalog: "config/catalog", stock: "ops/stock", counters: "ops/counters", till: "ops/till" };
+const dayRef = (d) => S.db.doc(`days/${d}`);
+const emptyDay = (d) => ({ date: d, sales: [], returns: [], movements: [], deliveries: [], tills: [], declined: [] });
+async function get(path, fallback) { const s = await S.db.doc(path).get(); return s.exists ? structuredClone(s.data()) : fallback; }
+async function getDay(d) { const s = await dayRef(d).get(); return s.exists ? structuredClone(s.data()) : emptyDay(d); }
+
+/** Serialise stock-changing operations across tabs and devices (cooperative lease). */
+async function withLock(fn) {
+  const ref = S.db.doc("locks/ops");
+  for (let i = 0; i < 40; i++) {
+    const r = await ref.acquire({ holder: TAB_ID, ttlMs: 6000 });
+    if (r.acquired) return fn();
+    await new Promise((res) => setTimeout(res, 250 + Math.random() * 250));
+  }
+  throw new AppErr("BUSY", "Another till or the owner is saving right now. Try again in a few seconds.");
+}
+const mv = (variantId, qty, reason, ref, note, balance) => ({ at: new Date().toISOString(), variantId, qty, reason, ref, note: note || "", by: S.me?.id || null, balance });
+
+// ---------------------------------------------------------------- boot
+async function boot() {
+  const claude = window.claude;
+  const [db, user] = await Promise.all([claude?.use?.("db") ?? null, claude?.use?.("user") ?? null]);
+  S.db = db; S.user = user;
+  if (!db) { renderNoDb(); return; }
+  S.me = user ? await user.me() : null;
+  const edit = user ? await user.canEdit() : false;
+  const write = user ? await user.can("data.write") : null;
+  S.role = edit ? "owner" : write === false ? "viewer" : "cashier";
+  if (!isOwner() && S.view !== "till") S.view = "till";
+  const timer = setTimeout(() => { if (!S.loaded.catalog) { S.msg = { tone: "warn", text: "The shop database is slow to answer. Data may be out of date." }; render(); } }, 10000);
+  for (const [k, p] of Object.entries(DOCS)) {
+    S.db.doc(p).onSnapshot((s) => { S[k] = s.exists ? s.data() : null; S.loaded[k] = true; if (k === "catalog") clearTimeout(timer); render(); },
+      (e) => { S.msg = { tone: "error", text: `Lost connection to the shop database (${e.code}). Reload the page.` }; render(); });
+  }
+  subscribeDay();
+  setInterval(() => { if (today() !== S.dayDate) subscribeDay(); }, 60000);
+  window.addEventListener("online", () => { S.online = true; render(); });
+  window.addEventListener("offline", () => { S.online = false; render(); });
+  document.addEventListener("keydown", wedge, true);
+  render();
+}
+let unsubDay = null;
+function subscribeDay() {
+  unsubDay?.(); S.dayDate = today();
+  unsubDay = dayRef(S.dayDate).onSnapshot((s) => { S.day = s.exists ? s.data() : emptyDay(S.dayDate); render(); }, () => {});
+}
+function renderNoDb() {
+  $("#main").innerHTML = `<div class="page"><div class="empty stack"><h2>Sign in to use the till</h2><p class="muted">This till keeps stock, prices and sales in the shop's shared database. Open it in Claude while signed in with an account the owner shared it with.</p></div></div>`;
+}
+
+// ---------------------------------------------------------------- names
+async function nameOf(ids) {
+  const need = ids.filter((id) => id && !(id in S.names));
+  need.forEach((id) => (S.names[id] = "…"));
+  if (need.length && S.user) { const ps = await S.user.profiles(need); for (const id of need) S.names[id] = ps[id]?.name || "Staff member"; render(); }
+}
+const staff = (id) => (id ? S.names[id] ?? "…" : "—");
+
+// ---------------------------------------------------------------- nav + render
+const VIEWS = [
+  ["till", "Till", "sell"], ["receipts", "Receipts", "sell"], ["cash", "Cash up", "sell"],
+  ["receive", "Receive stock", "owner"], ["labels", "Print labels", "sell"], ["products", "Plants & prices", "owner"],
+  ["stock", "Stock", "owner"], ["report", "Day report", "owner"], ["settings", "Settings", "owner"],
+];
+function render() {
+  if (!S.db) return;
+  const ready = S.loaded.catalog && S.loaded.stock && S.loaded.settings && S.loaded.till;
+  $("#brand").textContent = S.settings?.businessName || "Nursery Till";
+  $("#tillPill").hidden = !S.till?.open;
+  $("#who").textContent = S.me?.name ? `${S.me.name} · ${isOwner() ? "Owner" : S.role === "cashier" ? "Cashier" : "View only"}` : "";
+  $("#tabs").innerHTML = VIEWS.filter(([, , who]) => who === "sell" ? canSell() || S.role === "viewer" : isOwner())
+    .map(([k, t]) => `<button data-nav="${k}" ${S.view === k ? 'aria-current="page"' : ""}>${t}</button>`).join("");
+  if (!ready) return;
+  const keep = captureFocus();
+  const fn = { till: viewTill, receipts: viewReceipts, cash: viewCash, receive: viewReceive, labels: viewLabels, products: viewProducts, stock: viewStock, report: viewReport, settings: viewSettings }[S.view] || viewTill;
+  $("#main").innerHTML = fn();
+  restoreFocus(keep);
+  afterRender();
+}
+function captureFocus() { const a = document.activeElement; return a && a.id ? { id: a.id, s: a.selectionStart, e: a.selectionEnd } : null; }
+function restoreFocus(k) { if (!k) return; const el = document.getElementById(k.id); if (el) { el.focus(); try { if (k.s != null) el.setSelectionRange(k.s, k.e); } catch {} } }
+let afterHooks = [];
+function afterRender() { const h = afterHooks; afterHooks = []; h.forEach((f) => f()); }
+
+// ---------------------------------------------------------------- TILL
+function basketTotal() { return S.basket.reduce((s, l) => s + l.unitPrice * l.qty, 0); }
+function viewTill() {
+  const total = basketTotal(); const items = S.basket.reduce((s, l) => s + l.qty, 0);
+  const last = S.basket.find((l) => l.id === S.lastId);
+  const readOnly = !canSell();
+  const res = S.search.trim().length >= 2 ? searchVariants(S.search) : null;
+  const blocked = !S.online || !S.till?.open || !!S.pending || readOnly;
+  return `<div class="till">
+  <div class="left">
+    ${readOnly ? `<div class="alert warn"><strong>View only.</strong> Ask the owner to give you Contributor access to sell.</div>` : ""}
+    ${!S.online ? `<div class="alert error"><strong>Offline — checkout is disabled.</strong> Keep the customer's plants aside and finish when the connection returns.</div>` : ""}
+    ${!S.till?.open && !readOnly ? `<div class="alert warn"><strong>The till is not open.</strong> Count the opening float first. <button class="btn ghost" data-nav="cash">Open the till</button></div>` : ""}
+    ${S.pending ? `<div class="alert warn stack"><p><strong>Connection lost while completing a sale.</strong> Checkout ${esc(S.pending.key.slice(0, 8).toUpperCase())} for <strong>${rand(S.pending.total)}</strong> (${S.pending.payment.method}). <strong>Do not take payment again.</strong></p>
+      <div class="row"><button class="btn primary" data-act="recover">Check and finish sale</button><button class="btn" data-act="abandon">Customer was not charged — back to basket</button></div></div>` : ""}
+    <form class="card stack" id="scanForm" autocomplete="off">
+      <label class="f" for="scan" style="font-size:.9rem;font-weight:600">Scan barcode</label>
+      <div class="row" style="flex-wrap:nowrap"><input id="scan" class="i scan" placeholder="Scan or type code" inputmode="text" spellcheck="false" ${S.pending || readOnly ? "disabled" : ""}><button class="btn lg" type="submit" ${S.pending || readOnly ? "disabled" : ""}>Add</button></div>
+      <p class="small muted">Each scan adds one item. Scan the same pot twice to sell two.</p>
+      <div aria-live="polite">${last ? `<div class="last"><div><p class="small muted" style="text-transform:uppercase;letter-spacing:.06em">Last item</p><p style="font-weight:600">${esc(last.name)} — ${esc(last.size)}</p></div><p style="text-align:right"><span class="small muted">Qty in basket</span><br><span class="tab" style="font-size:1.6rem;font-weight:700">${last.qty}</span></p></div>` : ""}</div>
+      ${S.msg ? `<div class="alert ${S.msg.tone === "error" ? "error" : S.msg.tone === "ok" ? "ok" : "warn"}" role="alert">${esc(S.msg.text)}</div>` : ""}
+    </form>
+    <section class="card stack">
+      <label class="f" for="tsearch" style="font-size:.9rem;font-weight:600">Find by name or SKU</label>
+      <input id="tsearch" class="i" type="search" placeholder="e.g. lavender" value="${esc(S.search)}" autocomplete="off">
+      ${res ? (res.length ? `<div class="results">${res.map((v) => `<button class="result" data-add="${v.id}" ${S.pending || readOnly ? "disabled" : ""}><strong>${esc(v.name)}</strong><span class="row small muted" style="justify-content:space-between"><span>${esc(v.size)}</span><span class="tab" style="color:var(--ink);font-weight:600">${rand(v.price)}</span></span><span class="small muted">${esc(v.sku)} · ${onHand(v.id)} in stock</span></button>`).join("")}</div>` : `<p class="muted small">Nothing matches “${esc(S.search)}”.</p>`) : ""}
+    </section>
+    ${S.done ? doneCard() : ""}
+  </div>
+  <aside aria-label="Basket">
+    <div class="row" style="justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)"><h2>Basket <span class="muted small" style="font-weight:400">(${items} item${items === 1 ? "" : "s"})</span></h2><button class="btn ghost" data-act="clear" ${!S.basket.length || S.pending ? "disabled" : ""}>Clear</button></div>
+    <div class="basket">${S.basket.length ? S.basket.map(lineHtml).join("") : `<div style="padding:32px;text-align:center"><p style="font-weight:600">The basket is empty</p><p class="muted small">Scan a label to start a sale.</p></div>`}</div>
+    <div class="due"><div class="row" style="justify-content:space-between;align-items:flex-end"><span class="small muted" style="font-weight:600;letter-spacing:.06em;text-transform:uppercase">Amount due</span><span class="amt" id="amountDue">${rand(total)}</span></div>
+      <button class="btn primary xl" style="margin-top:12px" data-act="pay" ${blocked || !S.basket.length ? "disabled" : ""}>${S.online ? "Take payment" : "Offline — checkout disabled"}</button></div>
+  </aside></div>`;
+}
+function lineHtml(l) {
+  const issue = S.issues[l.id]; const v = V(l.id);
+  return `<div class="bline ${issue ? "bad" : l.id === S.lastId ? "hl" : ""}">
+    <div class="row" style="justify-content:space-between;align-items:flex-start;flex-wrap:nowrap"><div style="min-width:0"><p style="font-weight:600">${esc(l.name)}</p><p class="small muted">${esc(l.size)} · <span class="tab">${rand(l.unitPrice)}</span> each</p></div><p class="tab" style="font-size:1.25rem;font-weight:700">${rand(l.unitPrice * l.qty)}</p></div>
+    <div class="row" style="justify-content:space-between;margin-top:8px">
+      <div class="row" style="gap:4px"><button class="qtybtn" data-dec="${l.id}" aria-label="One fewer ${esc(l.name)}" ${l.qty <= 1 || S.pending ? "disabled" : ""}>−</button>
+      <input class="qty tab" id="q-${l.id}" data-qty="${l.id}" type="number" inputmode="numeric" min="1" max="999" value="${l.qty}" aria-label="Quantity of ${esc(l.name)}" ${S.pending ? "disabled" : ""}>
+      <button class="qtybtn" data-inc="${l.id}" aria-label="One more ${esc(l.name)}" ${S.pending ? "disabled" : ""}>+</button></div>
+      <button class="btn ghost" style="color:var(--danger)" data-rm="${l.id}" ${S.pending ? "disabled" : ""}>Remove</button></div>
+    ${issue ? `<p class="small" style="color:var(--danger);font-weight:600;margin-top:6px">${esc(issue)}</p>` : v && l.qty > onHand(l.id) ? `<p class="small" style="color:var(--warn);margin-top:6px">Stock record shows ${onHand(l.id)}. Checkout will be refused unless the owner corrects the count.</p>` : ""}
+  </div>`;
+}
+function doneCard() {
+  const d = S.done;
+  return `<section class="card stack" style="border:2px solid var(--forest)" aria-live="assertive">
+    <p class="small" style="font-weight:600;color:var(--forest);text-transform:uppercase;letter-spacing:.06em">Sale complete${d.replayed ? " (already recorded)" : ""}</p>
+    <p>Receipt <strong>${esc(d.no)}</strong> · ${rand(d.total)} ${d.method === "card" ? "by card" : "cash"}</p>
+    ${d.method === "cash" ? `<p><span class="small muted">Change to give</span><br><span class="big">${rand(d.change)}</span></p>` : ""}
+    <div class="row"><button class="btn primary" data-receipt="${esc(d.date)}|${esc(d.key)}">Show receipt</button><button class="btn ghost" data-act="next">Next customer</button></div></section>`;
+}
+function searchVariants(term) {
+  const t = term.trim().toLowerCase();
+  return Object.values(S.catalog?.variants || {}).filter((v) => !v.archived && (v.name.toLowerCase().includes(t) || (v.botanical || "").toLowerCase().includes(t) || v.sku.toLowerCase().includes(t) || v.barcode === t || (v.aliases || []).includes(term.trim())))
+    .sort((a, b) => a.name.localeCompare(b.name) || a.size.localeCompare(b.size)).slice(0, 24);
+}
+function lookup(code) {
+  code = code.trim();
+  return Object.values(S.catalog?.variants || {}).find((v) => v.barcode === code || (v.aliases || []).includes(code)) || null;
+}
+function addToBasket(v) {
+  const l = S.basket.find((x) => x.id === v.id);
+  if (l) l.qty += 1; else S.basket.push({ id: v.id, name: v.name, size: v.size, sku: v.sku, unitPrice: v.price, qty: 1 });
+  S.lastId = v.id; delete S.issues[v.id]; S.done = null; S.msg = null; saveLocal();
+}
+let beepCtx;
+function beep(ok) { try { beepCtx ||= new AudioContext(); const o = beepCtx.createOscillator(), g = beepCtx.createGain(); o.frequency.value = ok ? 1320 : 220; o.type = ok ? "sine" : "square"; g.gain.value = 0.05; o.connect(g); g.connect(beepCtx.destination); o.start(); o.stop(beepCtx.currentTime + (ok ? 0.07 : 0.25)); } catch {} }
+function onScan(code) {
+  if (!code || S.pending || !canSell()) return;
+  const v = lookup(code);
+  if (!v) { S.msg = { tone: "error", text: `No item has the code ${code.slice(0, 48)}. The basket has not changed. Check the label or search by name.` }; beep(false); }
+  else if (v.archived) { S.msg = { tone: "error", text: `${label(v)} is archived and cannot be sold.` }; beep(false); }
+  else { addToBasket(v); beep(true); }
+  render(); refocusScan();
+}
+const isText = (el) => el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT");
+function refocusScan() {
+  requestAnimationFrame(() => { if (S.view !== "till" || $("#dlg").firstChild) return; const a = document.activeElement; if (a && a.id !== "scan" && isText(a)) return; $("#scan")?.focus(); });
+}
+function wedge(e) {
+  // A keyboard-mode scanner types wherever focus is: send stray keystrokes to the scan field.
+  if (S.view !== "till" || e.ctrlKey || e.metaKey || e.altKey || e.key.length !== 1 || $("#dlg").firstChild || isText(document.activeElement)) return;
+  $("#scan")?.focus();
+}
+
+// --- checkout
+function findIssues(lines) {
+  const out = [];
+  for (const l of lines) {
+    const v = V(l.id);
+    if (!v || v.archived) { out.push({ id: l.id, kind: "inactive", text: "No longer for sale — remove this line." }); continue; }
+    if (v.price !== l.unitPrice) out.push({ id: l.id, kind: "price", was: l.unitPrice, now: v.price, desc: label(v) });
+    if (onHand(l.id) < l.qty) out.push({ id: l.id, kind: "stock", text: `Only ${onHand(l.id)} in stock — basket has ${l.qty}. Reduce the quantity or ask the owner to correct the count.` });
+  }
+  return out;
+}
+function applyIssues(issues) {
+  S.issues = {}; for (const i of issues) if (i.kind !== "price") S.issues[i.id] = i.text;
+  const prices = issues.filter((i) => i.kind === "price");
+  if (prices.length) openPriceReview(prices);
+  else if (issues.length) S.msg = { tone: "error", text: "Some lines need attention before taking payment (marked in red)." };
+  render();
+}
+function takePayment() {
+  if (!S.basket.length || !S.online || !S.till?.open) return;
+  const issues = findIssues(S.basket);
+  if (issues.length) return applyIssues(issues);
+  S.issues = {}; S.checkoutKey ||= uuid();
+  openPay();
+}
+function openPriceReview(prices) {
+  dialog("Prices have changed", `<p class="muted small">The owner changed these prices after they were scanned. Tell the customer, then accept the new prices.</p>
+    <div class="tablewrap" style="margin-top:12px"><table><tbody>${prices.map((p) => `<tr><td>${esc(p.desc)}</td><td class="r tab"><s class="muted">${rand(p.was)}</s> → <strong>${rand(p.now)}</strong><br><span class="small" style="color:${p.now > p.was ? "var(--warn)" : "var(--forest)"}">${p.now > p.was ? "+" : "−"}${rand(Math.abs(p.now - p.was))} each</span></td></tr>`).join("")}</tbody></table></div>
+    <div class="row" style="justify-content:flex-end;margin-top:16px"><button class="btn" data-close>Back to basket</button><button class="btn primary" data-act="acceptPrices" autofocus>Accept new prices</button></div>`);
+  acceptPrices.list = prices;
+}
+function acceptPrices() { for (const p of acceptPrices.list || []) { const l = S.basket.find((x) => x.id === p.id); if (l) l.unitPrice = p.now; } saveLocal(); closeDialog(); S.msg = { tone: "ok", text: "New prices accepted. Check the total with the customer, then take payment." }; render(); }
+
+let payState = { method: "cash", tendered: "", ref: "", err: null, busy: false };
+function openPay() { payState = { method: "cash", tendered: "", ref: "", err: null, busy: false }; drawPay(); }
+function drawPay() {
+  const total = basketTotal(); const t = parseRand(payState.tendered); const ch = t === null ? null : t - total;
+  const quick = [...new Set([total, ...[1000, 2000, 5000, 10000, 20000].map((n) => Math.ceil(total / n) * n)])].filter((x) => x >= total).sort((a, b) => a - b).slice(0, 5);
+  dialog("Take payment", `<div style="background:var(--leaf);border-radius:12px;padding:14px;text-align:center"><p class="small muted" style="font-weight:600;text-transform:uppercase;letter-spacing:.06em">Amount due</p><p class="big">${rand(total)}</p><p class="small muted">Checkout ref ${esc(S.checkoutKey.slice(0, 8).toUpperCase())}</p></div>
+  <div class="seg" role="radiogroup" aria-label="Payment method" style="margin-top:12px"><button role="radio" aria-checked="${payState.method === "cash"}" data-pm="cash">Cash</button><button role="radio" aria-checked="${payState.method === "card"}" data-pm="card">Card</button></div>
+  ${payState.method === "cash" ? `<form id="cashForm" class="stack" style="margin-top:12px">
+    <label class="f" for="tendered">Cash received (R)</label><input id="tendered" class="i tab" style="font-size:2rem;font-weight:700;min-height:60px" inputmode="decimal" autocomplete="off" placeholder="0.00" value="${esc(payState.tendered)}">
+    <div class="row">${quick.map((c) => `<button type="button" class="btn tab" data-tender="${c}">${c === total ? "Exact " : ""}${rand(c)}</button>`).join("")}</div>
+    <div class="row" style="justify-content:space-between;border:1px solid var(--line);border-radius:10px;padding:10px 12px"><span class="small muted" style="font-weight:600;text-transform:uppercase">Change</span><span class="tab" id="changePreview" style="font-size:2rem;font-weight:700;${ch !== null && ch < 0 ? "color:var(--danger)" : ""}">${payState.tendered === "" ? "—" : t === null ? "Check amount" : ch < 0 ? `${rand(-ch)} short` : rand(ch)}</span></div>
+    ${payState.err ? `<div class="alert error">${esc(payState.err)}</div>` : ""}
+    <button class="btn primary xl" type="submit" ${!S.online || t === null || ch < 0 || payState.busy ? "disabled" : ""}>${payState.busy ? "Saving…" : "Complete cash sale"}</button></form>`
+  : `<div class="stack" style="margin-top:12px"><ol style="margin:0;padding-left:20px" class="small"><li>Key <strong>${rand(total)}</strong> into the card terminal.</li><li>The customer pays <em>on the terminal</em>. Never type card numbers here.</li><li>Wait for <strong>APPROVED</strong>.</li></ol>
+    <label class="f" for="cardRef">Terminal reference (optional)</label><input id="cardRef" class="i" maxlength="40" autocomplete="off" value="${esc(payState.ref)}">
+    ${payState.err ? `<div class="alert error">${esc(payState.err)}</div>` : ""}
+    <button class="btn primary xl" data-act="cardOk" ${!S.online || payState.busy ? "disabled" : ""}>${payState.busy ? "Saving…" : "Terminal shows APPROVED — complete sale"}</button>
+    <button class="btn danger lg" data-act="cardDeclined" ${payState.busy ? "disabled" : ""}>Terminal declined</button></div>`}
+  ${!S.online ? `<div class="alert error" style="margin-top:10px">Offline — completing the sale is disabled.</div>` : ""}`, { locked: payState.busy, keepFocus: true });
+}
+
+async function commitSale(key, lines, payment) {
+  return withLock(async () => {
+    const d = today();
+    for (const day of [d, addDays(d, -1)]) { const doc = await getDay(day); const s = doc.sales.find((x) => x.key === key); if (s) return { ...s, date: day, replayed: true }; }
+    const [catalog, stock, counters, till, settings] = await Promise.all([get(DOCS.catalog, null), get(DOCS.stock, { levels: {} }), get(DOCS.counters, { sale: 0, ret: 0, delivery: 0 }), get(DOCS.till, {}), get(DOCS.settings, {})]);
+    if (!till.open) throw new AppErr("TILL", "The till is not open. Open it with a cash float first.");
+    const merged = {}; for (const l of lines) merged[l.id] = merged[l.id] ? { ...merged[l.id], qty: merged[l.id].qty + l.qty } : { ...l };
+    const ml = Object.values(merged); const issues = [];
+    for (const l of ml) {
+      const v = catalog?.variants?.[l.id];
+      if (!v || v.archived) issues.push({ id: l.id, kind: "inactive", text: "No longer for sale — remove this line." });
+      else if (v.price !== l.unitPrice) issues.push({ id: l.id, kind: "price", was: l.unitPrice, now: v.price, desc: label(v) });
+      else if ((stock.levels[l.id] ?? 0) < l.qty) issues.push({ id: l.id, kind: "stock", text: `Only ${stock.levels[l.id] ?? 0} × ${label(v)} in stock (basket has ${l.qty}).` });
+    }
+    if (issues.length) throw new AppErr("ISSUES", issues[0].kind === "price" ? "A price changed. Accept the new price before taking payment." : issues[0].text, issues);
+    const bp = settings.vatRegistered ? settings.vatRateBp ?? 1500 : 0;
+    const sl = ml.map((l, i) => { const v = catalog.variants[l.id]; const tot = v.price * l.qty; return { n: i + 1, id: l.id, desc: label(v), sku: v.sku, qty: l.qty, unit: v.price, total: tot, vatBp: bp, vat: vatIn(tot, bp) }; });
+    const total = sl.reduce((s, x) => s + x.total, 0), vat = sl.reduce((s, x) => s + x.vat, 0);
+    let tendered = null, change = null;
+    if (payment.method === "cash") { if (payment.tendered < total) throw new AppErr("CASH", "Cash tendered is less than the amount due."); tendered = payment.tendered; change = tendered - total; }
+    counters.sale = (counters.sale || 0) + 1; await S.db.doc(DOCS.counters).set(counters);
+    const no = `S${String(counters.sale).padStart(6, "0")}`;
+    const sale = { key, no, at: new Date().toISOString(), by: S.me?.id || null, tillId: till.open.id, lines: sl, total, vat, vatRegistered: !!settings.vatRegistered,
+      payment: { method: payment.method, amount: total, tendered, change, ref: payment.ref || "" },
+      biz: { name: settings.businessName || "", legal: settings.legalName || "", vatNo: settings.vatRegistered ? settings.vatNumber || "" : "", address: settings.address || "", phone: settings.phone || "", footer: settings.footer || "", vatBp: bp } };
+    const day = await getDay(d);
+    day.sales.push(sale);
+    for (const l of sl) { stock.levels[l.id] = (stock.levels[l.id] ?? 0) - l.qty; day.movements.push(mv(l.id, -l.qty, "sale", no, "", stock.levels[l.id])); }
+    await dayRef(d).set(day);
+    await S.db.doc(DOCS.stock).set(stock);
+    return { ...sale, date: d, replayed: false };
+  });
+}
+async function submitSale(payment) {
+  const p = { key: S.checkoutKey, lines: structuredClone(S.basket), payment, total: basketTotal() };
+  S.pending = p; saveLocal(); payState.busy = true; payState.err = null; drawPay();
+  try {
+    const s = await commitSale(p.key, p.lines, p.payment);
+    finishSale(s);
+  } catch (e) {
+    payState.busy = false;
+    if (e instanceof AppErr) {
+      S.pending = null; saveLocal();
+      const card = payment.method === "card" ? " The terminal may already show APPROVED — reverse it on the terminal if the sale cannot be completed." : "";
+      if (e.code === "ISSUES") { closeDialog(); applyIssues(e.details); S.msg = { tone: "error", text: e.message + card }; render(); }
+      else { payState.err = e.message + card; drawPay(); }
+    } else { S.pending.status = "unknown"; saveLocal(); closeDialog(); render(); }
+  }
+}
+function finishSale(s) {
+  S.done = { key: s.key, no: s.no, total: s.total, change: s.payment.change ?? 0, method: s.payment.method, date: s.date, replayed: s.replayed };
+  S.pending = null; S.basket = []; S.lastId = null; S.checkoutKey = null; S.issues = {}; S.msg = null; saveLocal(); closeDialog(); render(); refocusScan();
+}
+async function recover() {
+  if (!S.pending) return;
+  try { const s = await commitSale(S.pending.key, S.pending.lines, S.pending.payment); finishSale(s); }
+  catch (e) { if (e instanceof AppErr) { S.msg = { tone: "error", text: e.message }; S.basket = S.pending.lines; S.pending = null; saveLocal(); } else S.msg = { tone: "error", text: "Still no connection. Try again shortly." }; render(); }
+}
+async function declined() {
+  try { await withLock(async () => { const d = today(); const day = await getDay(d); day.declined.push({ at: new Date().toISOString(), key: S.checkoutKey, amount: basketTotal(), by: S.me?.id || null }); await dayRef(d).set(day); }); } catch {}
+  payState.method = "cash"; payState.err = "Card declined by the terminal. Nothing was charged. Ask for another card or take cash."; drawPay();
+}
+
+// ---------------------------------------------------------------- RECEIPTS
+let rcp = { date: null, term: "", doc: null, open: null };
+function viewReceipts() {
+  const date = rcp.date || S.dayDate; const doc = date === S.dayDate ? S.day : rcp.doc;
+  if (date !== S.dayDate && !rcp.doc) loadReceiptDay(date);
+  const t = rcp.term.trim().toUpperCase();
+  const sales = (doc?.sales || []).filter((s) => !t || s.no === t || s.no === "S" + t.padStart(6, "0") || s.key.toUpperCase().startsWith(t) || (s.payment.ref || "").toUpperCase() === t).slice().reverse();
+  nameOf(sales.map((s) => s.by));
+  return `<div class="page"><div><h1>Receipts</h1><p class="muted small">Find a sale to show its receipt again or record a return.</p></div>
+  <div class="card row"><label class="f" style="flex:2 1 220px" for="rterm">Receipt no., checkout ref or card ref<input id="rterm" class="i" value="${esc(rcp.term)}" placeholder="S000123 or 123"></label>
+  <label class="f" style="flex:1 1 160px" for="rdate">Business date<input id="rdate" class="i" type="date" value="${date}" max="${S.dayDate}"></label></div>
+  ${!doc ? `<p class="muted">Loading…</p>` : sales.length === 0 ? `<div class="empty"><p style="font-weight:600">No receipts found</p><p class="muted small">${t ? "Check the receipt number printed at the top of the slip." : `No sales on ${longDate(date)}.`}</p></div>` :
+  `<div class="tablewrap"><table><thead><tr><th>Receipt</th><th>Time</th><th>Items</th><th>Payment</th><th class="r">Total</th></tr></thead><tbody>${sales.map((s) => {
+    const rets = (s.returnedQty && Object.values(s.returnedQty).some(Boolean));
+    return `<tr><td><button class="btn ghost" style="padding:0 6px" data-receipt="${date}|${s.key}">${s.no}</button>${rets ? ' <span class="pill warn">Returns</span>' : ""}</td><td>${dt(s.at)}<br><span class="small muted">${esc(staff(s.by))}</span></td><td>${s.lines.reduce((a, l) => a + l.qty, 0)}</td><td>${s.payment.method === "cash" ? "Cash" : "Card"}</td><td class="r tab" style="font-weight:600">${rand(s.total)}</td></tr>`; }).join("")}</tbody></table></div>`}
+  </div>`;
+}
+async function loadReceiptDay(d) { rcp.doc = await getDay(d); render(); }
+async function openReceipt(date, key) {
+  const doc = date === S.dayDate ? S.day : await getDay(date);
+  const s = doc.sales.find((x) => x.key === key); if (!s) return toast("Receipt not found");
+  nameOf([s.by]);
+  const returnable = isOwner() && s.lines.some((l) => l.qty - (s.returnedQty?.[l.n] || 0) > 0);
+  dialog(`Receipt ${s.no}`, `${receiptHtml(s)}
+    <div class="row" style="margin-top:12px"><button class="btn primary" data-pdf-receipt="${date}|${key}">Save receipt PDF (80 mm)</button>${returnable ? `<button class="btn" data-return="${date}|${key}">Return items</button>` : ""}<button class="btn ghost" data-close>Close</button></div>
+    ${!isOwner() ? `<p class="small muted" style="margin-top:8px">Returns are recorded by the owner.</p>` : ""}
+    <p class="small muted" style="margin-top:8px">Showing or saving a receipt again never changes the sale or the stock.</p>`, { wide: true });
+}
+function receiptHtml(s) {
+  const b = s.biz;
+  return `<div class="receipt"><div class="c"><strong>${esc(b.name)}</strong>${b.legal && b.legal !== b.name ? `<br>${esc(b.legal)}` : ""}${b.address ? `<br>${esc(b.address).replace(/\n/g, "<br>")}` : ""}${b.phone ? `<br>Tel ${esc(b.phone)}` : ""}${b.vatNo ? `<br>VAT no. ${esc(b.vatNo)}` : ""}<br><strong>${s.vatRegistered ? "TAX INVOICE" : "RECEIPT"}</strong></div>
+  <hr><div class="lr"><span>Receipt</span><span>${s.no}</span></div><div class="lr"><span>Date</span><span>${dt(s.at)}</span></div><div class="lr"><span>Served by</span><span>${esc(staff(s.by))}</span></div><hr>
+  ${s.lines.map((l) => `<div>${esc(l.desc)}</div><div class="lr"><span>${l.qty} × ${rand(l.unit)}</span><span>${rand(l.total)}</span></div>`).join("")}<hr>
+  <div class="lr" style="font-weight:700;font-size:14px"><span>TOTAL</span><span>${rand(s.total)}</span></div>
+  ${s.vatRegistered ? `<div class="lr"><span>VAT incl. (${b.vatBp / 100}%)</span><span>${rand(s.vat)}</span></div>` : ""}
+  ${s.payment.method === "cash" ? `<div class="lr"><span>Cash</span><span>${rand(s.payment.tendered)}</span></div><div class="lr"><span>Change</span><span>${rand(s.payment.change)}</span></div>` : `<div class="lr"><span>Card (terminal)</span><span>${rand(s.total)}</span></div>${s.payment.ref ? `<div class="lr"><span>Card ref.</span><span>${esc(s.payment.ref)}</span></div>` : ""}`}
+  ${s.returnedQty && Object.values(s.returnedQty).some(Boolean) ? `<hr><div>Items returned against this receipt: ${Object.values(s.returnedQty).reduce((a, b) => a + b, 0)}</div>` : ""}
+  ${b.footer ? `<hr><div class="c">${esc(b.footer)}</div>` : ""}</div>`;
+}
+async function openReturn(date, key) {
+  const doc = date === S.dayDate ? S.day : await getDay(date); const s = doc.sales.find((x) => x.key === key);
+  dialog(`Return items — ${s.no}`, `<p class="small muted">The original sale is never changed. Only resellable plants go back into stock.</p>
+  <form id="returnForm" class="stack" data-date="${date}" data-key="${key}" data-rkey="${uuid()}" style="margin-top:10px">
+  ${s.lines.map((l) => { const left = l.qty - (s.returnedQty?.[l.n] || 0); return `<div class="card stack" style="padding:10px"><p style="font-weight:600">${esc(l.desc)}</p><p class="small muted">${l.qty} sold at ${rand(l.unit)}${left < l.qty ? ` · ${l.qty - left} already returned` : ""}</p>
+    ${left > 0 ? `<div class="fields"><label class="f" for="rq-${l.n}">Quantity back (max ${left})<input id="rq-${l.n}" class="i" type="number" min="0" max="${left}" value="0" data-rq="${l.n}"></label><label class="f" for="rc-${l.n}">Condition<select id="rc-${l.n}" class="i" data-rc="${l.n}"><option value="resellable">Resellable — back to stock</option><option value="damaged">Damaged — do not restock</option></select></label></div>` : `<p class="small">Fully returned.</p>`}</div>`; }).join("")}
+  <label class="f" for="rreason">Reason<input id="rreason" class="i" required minlength="3" placeholder="e.g. wrong size"></label>
+  <label class="f" for="rmethod">Refund method<select id="rmethod" class="i"><option value="cash" ${s.payment.method === "cash" ? "selected" : ""}>Cash from the till</option><option value="card" ${s.payment.method === "card" ? "selected" : ""}>Card refund on the terminal</option></select></label>
+  <label class="f" for="rref">Refund reference (optional)<input id="rref" class="i" maxlength="40"></label>
+  <label class="row small" style="flex-wrap:nowrap;min-height:44px"><input type="checkbox" id="rconf" style="width:20px;height:20px;accent-color:var(--forest)"> The refund has been paid out (cash given, or the card terminal approved it).</label>
+  <div id="rerr"></div><button class="btn primary lg" type="submit">Record return</button></form>`, { wide: true });
+}
+async function processReturn(form) {
+  const date = form.dataset.date, key = form.dataset.key, rkey = form.dataset.rkey;
+  const lines = [...form.querySelectorAll("[data-rq]")].map((i) => ({ n: +i.dataset.rq, qty: Math.floor(+i.value || 0), cond: form.querySelector(`[data-rc="${i.dataset.rq}"]`).value })).filter((l) => l.qty > 0);
+  const reason = $("#rreason").value.trim(), method = $("#rmethod").value, ref = $("#rref").value.trim();
+  const err = (t) => ($("#rerr").innerHTML = `<div class="alert error">${esc(t)}</div>`);
+  if (!lines.length) return err("Choose how many of each item are coming back.");
+  if (reason.length < 3) return err("Enter the reason for the return.");
+  if (!$("#rconf").checked) return err("Confirm the refund has been paid out.");
+  try {
+    const r = await withLock(async () => {
+      const d = today();
+      const cur = await getDay(d); const prior = cur.returns.find((x) => x.key === rkey); if (prior) return prior;
+      const sd = date === d ? cur : await getDay(date); const sale = sd.sales.find((x) => x.key === key);
+      const till = await get(DOCS.till, {}); if (method === "cash" && !till.open) throw new AppErr("TILL", "Open the till before paying out a cash refund.");
+      sale.returnedQty ||= {}; sale.returnedVat ||= {};
+      const out = [];
+      for (const l of lines) {
+        const sl = sale.lines.find((x) => x.n === l.n); const prevQ = sale.returnedQty[l.n] || 0, prevV = sale.returnedVat[l.n] || 0;
+        if (l.qty > sl.qty - prevQ) throw new AppErr("LIMIT", `Only ${sl.qty - prevQ} × ${sl.desc} can still be returned.`);
+        const amount = sl.unit * l.qty; const newQ = prevQ + l.qty;
+        const vat = newQ === sl.qty ? sl.vat - prevV : Math.min(vatIn(amount, sl.vatBp), sl.vat - prevV); // reproduce original rounding
+        sale.returnedQty[l.n] = newQ; sale.returnedVat[l.n] = prevV + vat;
+        out.push({ n: l.n, id: sl.id, desc: sl.desc, qty: l.qty, cond: l.cond, amount, vat });
+      }
+      const counters = await get(DOCS.counters, { sale: 0, ret: 0, delivery: 0 }); counters.ret = (counters.ret || 0) + 1; await S.db.doc(DOCS.counters).set(counters);
+      const ret = { key: rkey, no: `R${String(counters.ret).padStart(6, "0")}`, at: new Date().toISOString(), saleKey: key, saleNo: sale.no, saleDate: date, by: S.me?.id || null, reason, method, ref, tillId: till.open?.id || null, lines: out, total: out.reduce((a, x) => a + x.amount, 0), vat: out.reduce((a, x) => a + x.vat, 0) };
+      const stock = await get(DOCS.stock, { levels: {} });
+      cur.returns.push(ret);
+      for (const l of out) if (l.cond === "resellable") { stock.levels[l.id] = (stock.levels[l.id] ?? 0) + l.qty; cur.movements.push(mv(l.id, l.qty, "return", ret.no, `Return of ${sale.no}: ${reason}`, stock.levels[l.id])); }
+      if (date === d) { const i = cur.sales.findIndex((x) => x.key === key); cur.sales[i] = sale; await dayRef(d).set(cur); }
+      else { await dayRef(date).set(sd); await dayRef(d).set(cur); }
+      await S.db.doc(DOCS.stock).set(stock);
+      return ret;
+    });
+    closeDialog(); toast(`Return ${r.no} recorded: refund ${rand(r.total)}.`); rcp.doc = null; render();
+  } catch (e) { err(e instanceof AppErr ? e.message : "Could not reach the shop database. Nothing was recorded — try again."); }
+}
+
+// ---------------------------------------------------------------- CASH UP
+function cashSummary(tillId, docs) {
+  let cashIn = 0, cashOut = 0, sales = 0, rets = 0;
+  for (const d of docs) { for (const s of d.sales) if (s.tillId === tillId) { sales++; if (s.payment.method === "cash") cashIn += s.total; } for (const r of d.returns) if (r.tillId === tillId) { rets++; if (r.method === "cash") cashOut += r.total; } }
+  return { cashIn, cashOut, sales, rets };
+}
+let cashResult = null;
+function viewCash() {
+  const t = S.till?.open;
+  if (!canSell()) return `<div class="page"><div class="alert warn">View only.</div></div>`;
+  if (!t) return `<div class="page" style="max-width:640px">${cashResult ? `<div class="alert ${cashResult.variance === 0 ? "ok" : "warn"}"><p style="font-weight:600">${cashResult.variance === 0 ? "The till balances" : cashResult.variance > 0 ? "Cash over" : "Cash short"}</p>
+    <div class="lr row tab" style="justify-content:space-between"><span>Expected cash</span><strong>${rand(cashResult.expected)}</strong></div><div class="row tab" style="justify-content:space-between"><span>Counted cash</span><strong>${rand(cashResult.counted)}</strong></div><div class="row tab" style="justify-content:space-between"><span>Variance</span><strong>${cashResult.variance > 0 ? "+" : ""}${rand(cashResult.variance)}</strong></div></div>` : ""}
+    <div><h1>Open the till</h1><p class="muted small">Count the notes and coins in the drawer before the first sale.</p></div>
+    <form id="openTill" class="card stack"><label class="f" for="float">Opening float (R)<input id="float" class="i tab" style="font-size:1.6rem;font-weight:700;min-height:56px" inputmode="decimal" placeholder="500.00" required></label><div id="cerr"></div><button class="btn primary lg">Open the till</button></form></div>`;
+  const s = cashSummary(t.id, [S.day]);
+  return `<div class="page" style="max-width:640px"><div><h1>Close the till</h1><p class="muted small">Opened ${dt(t.at)} by ${esc(staff(t.by))} with a float of ${rand(t.float)}.</p></div>
+  <form id="closeTill" class="card stack"><p class="small muted">${s.sales} sale${s.sales === 1 ? "" : "s"} and ${s.rets} return${s.rets === 1 ? "" : "s"} today on this till. Count all cash in the drawer (including the float). You see the expected amount after you submit.</p>
+  ${isOwner() ? `<p class="small muted">Owner view — expected cash right now: <strong class="tab">${rand(t.float + s.cashIn - s.cashOut)}</strong></p>` : ""}
+  <label class="f" for="counted">Counted cash in drawer (R)<input id="counted" class="i tab" style="font-size:1.6rem;font-weight:700;min-height:56px" inputmode="decimal" required></label>
+  <label class="f" for="cnote">Note (needed if the count does not match)<textarea id="cnote" class="i" maxlength="500"></textarea></label><div id="cerr"></div>
+  <button class="btn primary lg">Close the till</button></form></div>`;
+}
+async function openTill() {
+  const f = parseRand($("#float").value); if (f === null) return ($("#cerr").innerHTML = `<div class="alert error">Enter the float in rand, e.g. 500.00</div>`);
+  try { await withLock(async () => { const t = await get(DOCS.till, {}); if (t.open) throw new AppErr("OPEN", "The till is already open."); await S.db.doc(DOCS.till).set({ open: { id: uuid(), at: new Date().toISOString(), date: today(), by: S.me?.id || null, float: f } }); });
+    cashResult = null; S.view = "till"; toast("Till opened."); render(); refocusScan(); }
+  catch (e) { $("#cerr").innerHTML = `<div class="alert error">${esc(e.message)}</div>`; }
+}
+async function closeTill() {
+  const c = parseRand($("#counted").value), note = $("#cnote").value.trim();
+  if (c === null) return ($("#cerr").innerHTML = `<div class="alert error">Enter the counted cash in rand.</div>`);
+  try {
+    cashResult = await withLock(async () => {
+      const t = (await get(DOCS.till, {})).open; if (!t) throw new AppErr("CLOSED", "The till is not open.");
+      const docs = []; for (let d = t.date; d <= today(); d = addDays(d, 1)) docs.push(await getDay(d));
+      const s = cashSummary(t.id, docs); const expected = t.float + s.cashIn - s.cashOut; const variance = c - expected;
+      if (variance !== 0 && note.length < 3) throw new AppErr("NOTE", `The count does not match. Add a short note explaining the difference.`);
+      const day = docs[docs.length - 1]; day.tills.push({ ...t, closedAt: new Date().toISOString(), closedBy: S.me?.id || null, expected, counted: c, variance, note, cashIn: s.cashIn, cashOut: s.cashOut });
+      await dayRef(today()).set(day); await S.db.doc(DOCS.till).set({ open: null });
+      return { expected, counted: c, variance };
+    });
+    render();
+  } catch (e) { $("#cerr").innerHTML = `<div class="alert error">${esc(e.message)}</div>`; }
+}
+
+// ---------------------------------------------------------------- RECEIVE (owner)
+let recv = { term: "", key: uuid(), supplier: "", err: null, busy: false, newOpen: false };
+function viewReceive() {
+  if (S.lastDelivery) { const d = S.lastDelivery; return `<div class="page" style="max-width:800px"><div class="card stack" style="border:2px solid var(--forest)"><h2 style="color:var(--forest)">Stock saved as ${d.no}</h2>
+    <ul style="margin:0;padding-left:20px">${d.lines.map((l) => `<li><strong>${l.qty} ×</strong> ${esc(l.desc)} <span class="muted">(now ${l.onHand} in stock)</span>${l.priceChanged ? ` <span style="color:var(--warn)">· price updated, shelf labels flagged</span>` : ""}</li>`).join("")}</ul>
+    <div class="row"><button class="btn primary lg" data-act="labelsForDelivery">Print labels for this delivery (${d.lines.reduce((a, l) => a + l.qty, 0)})</button><button class="btn lg" data-act="newDelivery">Receive another delivery</button></div></div></div>`; }
+  const res = recv.term.trim().length >= 2 ? searchVariants(recv.term) : null;
+  const units = S.deliveryLines.reduce((a, l) => a + (+l.qty || 0), 0);
+  const valid = S.deliveryLines.length && S.deliveryLines.every((l) => Number.isInteger(+l.qty) && +l.qty > 0 && parseRand(l.price) > 0);
+  return `<div class="page" style="max-width:900px"><div><h1>Receive stock</h1><p class="muted small">Add each plant in the delivery, count it, confirm the selling price, then save. Labels print after the stock is saved.</p></div>
+  <section class="card stack"><label class="f" for="rfind" style="font-weight:600">Find the plant</label><div class="row" style="flex-wrap:nowrap"><input id="rfind" class="i" value="${esc(recv.term)}" placeholder="Name, SKU or scan an existing label" autocomplete="off"><button class="btn" data-act="toggleNew" aria-expanded="${recv.newOpen}">+ New plant</button></div>
+  ${res ? (res.length ? `<div class="tablewrap"><table><tbody>${res.map((v) => `<tr><td><strong>${esc(v.name)}</strong> — ${esc(v.size)} <span class="small muted tab">${rand(v.price)} · ${onHand(v.id)} in stock</span></td><td class="r"><button class="btn" data-dadd="${v.id}">Add to delivery</button></td></tr>`).join("")}</tbody></table></div>` : `<p class="small muted">No match. Use “New plant”.</p>`) : ""}
+  ${recv.newOpen ? newPlantForm("np", "Create and add to delivery") : ""}</section>
+  <section class="card stack"><h2>This delivery</h2>
+  ${S.deliveryLines.length ? S.deliveryLines.map((l, i) => { const v = V(l.id); const np = parseRand(l.price); return `<div class="stack" style="border-bottom:1px solid var(--line);padding-bottom:10px"><p style="font-weight:600">${esc(label(v))} <span class="small muted">· barcode ${v.barcode} · now ${onHand(v.id)} in stock</span></p>
+    <div class="fields"><label class="f" for="dq-${i}">Quantity<input id="dq-${i}" class="i tab" data-dq="${i}" type="number" min="1" value="${esc(l.qty)}"></label><label class="f" for="dp-${i}">Selling price (R)<input id="dp-${i}" class="i tab" data-dp="${i}" inputmode="decimal" value="${esc(l.price)}"></label><div style="align-self:end"><button class="btn ghost" style="color:var(--danger)" data-drm="${i}">Remove</button></div></div>
+    ${np !== null && np !== v.price ? `<p class="small" style="color:var(--warn)">Price will change from ${rand(v.price)} to ${rand(np)}. Shelf labels already on this size will be flagged for replacement.</p>` : ""}</div>`; }).join("") : `<p class="muted small">Nothing added yet.</p>`}
+  <label class="f" for="supplier">Supplier (optional)<input id="supplier" class="i" value="${esc(recv.supplier)}" maxlength="120"></label>
+  ${recv.err ? `<div class="alert error">${esc(recv.err)}</div>` : ""}
+  <div class="row"><button class="btn primary lg" data-act="saveDelivery" ${!valid || recv.busy ? "disabled" : ""}>${recv.busy ? "Saving…" : `Save receipt of stock${units ? ` (${units} units)` : ""}`}</button><span class="small muted">Saving adds the stock. Pressing it again after a dropped connection never counts twice.</span></div></section></div>`;
+}
+function newPlantForm(p, cta) {
+  const cats = S.catalog?.categories || [];
+  return `<form class="stack" id="${p}Form" style="border:1px solid rgba(33,92,57,.4);background:rgba(234,245,231,.4);border-radius:10px;padding:12px"><h3>New plant</h3><div class="fields">
+  <label class="f" for="${p}-name">Common name<input id="${p}-name" class="i" required maxlength="80"></label>
+  <label class="f" for="${p}-bot">Botanical name (optional)<input id="${p}-bot" class="i" maxlength="120" style="font-style:italic"></label>
+  <label class="f" for="${p}-cat">Category<input id="${p}-cat" class="i" list="${p}-cats" maxlength="40" placeholder="e.g. Indigenous" required><datalist id="${p}-cats">${cats.map((c) => `<option value="${esc(c)}">`).join("")}</datalist></label>
+  <label class="f" for="${p}-size">Pot or pack size<input id="${p}-size" class="i" required maxlength="40" placeholder="15 cm pot"></label>
+  <label class="f" for="${p}-price">Selling price (R, incl. VAT)<input id="${p}-price" class="i tab" required inputmode="decimal" placeholder="89.90"></label>
+  <label class="f" for="${p}-low">Low-stock warning at<input id="${p}-low" class="i" type="number" min="0" value="3"></label></div>
+  <div id="${p}-err"></div><div><button class="btn primary">${cta}</button></div></form>`;
+}
+async function createVariant(fields) {
+  const { name, botanical, category, size, price, low, productKey } = fields;
+  if (!name || !size || !category) throw new AppErr("V", "Enter the name, category and size.");
+  if (!(price > 0)) throw new AppErr("V", "Enter the selling price in rand, e.g. 89.90");
+  return withLock(async () => {
+    const cat = (await get(DOCS.catalog, null)) || { variants: {}, categories: [], nextCode: 1, nextId: 1, codesUsed: [] };
+    const pk = productKey || name.trim().toLowerCase();
+    if (Object.values(cat.variants).some((v) => v.product === pk && v.size.toLowerCase() === size.trim().toLowerCase())) throw new AppErr("V", `“${size}” already exists for ${name}.`);
+    const used = new Set([...(cat.codesUsed || []), ...Object.values(cat.variants).flatMap((v) => [v.barcode, ...(v.aliases || [])])]);
+    let n = cat.nextCode || 1, code; do { code = "21" + String(n++).padStart(6, "0"); } while (used.has(code));
+    const id = "v" + (cat.nextId || 1);
+    const base = (name.toUpperCase().replace(/[^A-Z0-9 ]/g, "").split(/\s+/).filter(Boolean).map((w) => w.slice(0, 3)).join("").slice(0, 8) || "ITEM") + "-" + (size.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 8) || "STD");
+    let sku = base, k = 2; while (Object.values(cat.variants).some((v) => v.sku === sku)) sku = `${base}-${k++}`;
+    cat.variants[id] = { id, product: pk, name: name.trim(), botanical: (botanical || "").trim(), category: category.trim(), size: size.trim(), sku, barcode: code, aliases: [], price, low: Math.max(0, +low || 0), archived: false, relabel: false, createdAt: new Date().toISOString() };
+    cat.nextCode = n; cat.nextId = (cat.nextId || 1) + 1; cat.codesUsed = [...(cat.codesUsed || []), code];
+    if (!cat.categories.includes(category.trim())) cat.categories.push(category.trim());
+    await S.db.doc(DOCS.catalog).set(cat);
+    return id;
+  });
+}
+function readPlantForm(p) { return { name: $(`#${p}-name`).value, botanical: $(`#${p}-bot`).value, category: $(`#${p}-cat`).value, size: $(`#${p}-size`).value, price: parseRand($(`#${p}-price`).value), low: $(`#${p}-low`).value }; }
+async function saveDelivery() {
+  recv.busy = true; recv.err = null; render();
+  try {
+    const lines = S.deliveryLines.map((l) => ({ id: l.id, qty: +l.qty, price: parseRand(l.price) }));
+    const r = await withLock(async () => {
+      const d = today(); const day = await getDay(d);
+      const prior = day.deliveries.find((x) => x.key === recv.key); if (prior) return prior;
+      const [cat, stock, counters] = await Promise.all([get(DOCS.catalog, null), get(DOCS.stock, { levels: {} }), get(DOCS.counters, { sale: 0, ret: 0, delivery: 0 })]);
+      counters.delivery = (counters.delivery || 0) + 1; await S.db.doc(DOCS.counters).set(counters);
+      const no = `D${String(counters.delivery).padStart(6, "0")}`; const out = [];
+      for (const l of lines) {
+        const v = cat.variants[l.id]; if (!v || v.archived) throw new AppErr("V", "An archived item cannot be received. Restore it first.");
+        const changed = v.price !== l.price; if (changed) { v.history = [...(v.history || []), { at: new Date().toISOString(), from: v.price, to: l.price, by: S.me?.id || null }]; v.oldPrice = v.price; v.price = l.price; v.relabel = true; }
+        stock.levels[l.id] = (stock.levels[l.id] ?? 0) + l.qty;
+        day.movements.push(mv(l.id, l.qty, "receive", no, recv.supplier ? `From ${recv.supplier}` : "", stock.levels[l.id]));
+        out.push({ id: l.id, desc: label(v), qty: l.qty, price: l.price, onHand: stock.levels[l.id], priceChanged: changed });
+      }
+      const del = { key: recv.key, no, at: new Date().toISOString(), by: S.me?.id || null, supplier: recv.supplier, lines: out };
+      day.deliveries.push(del);
+      await S.db.doc(DOCS.catalog).set(cat); await dayRef(d).set(day); await S.db.doc(DOCS.stock).set(stock);
+      return del;
+    });
+    S.lastDelivery = r; S.deliveryLines = []; recv = { term: "", key: uuid(), supplier: "", err: null, busy: false, newOpen: false };
+  } catch (e) { recv.busy = false; recv.err = e instanceof AppErr ? e.message : "No answer from the shop database. Press Save again — it is safe and will not count the stock twice."; }
+  render();
+}
+
+// ---------------------------------------------------------------- LABELS
+const PRESETS = {
+  roll: { name: "Roll 50 × 30 mm (thermal, 203 dpi)", kind: "roll", pw: 50, ph: 30, lw: 50, lh: 30, mt: 0, ml: 0, px: 50, py: 30, cols: 1, rows: 1, pad: 1.5, x: 0.375 },
+  a4: { name: "A4 sheet 3 × 8 (63.5 × 33.9 mm)", kind: "sheet", pw: 210, ph: 297, lw: 63.5, lh: 33.9, mt: 12.9, ml: 7.2, px: 66.04, py: 33.9, cols: 3, rows: 8, pad: 2, x: 0.33 },
+};
+let lbl = { preset: "roll", start: 1, term: "", err: null };
+function labelSvg(v) {
+  const p = PRESETS[lbl.preset]; const bars = code128(v.barcode); const mods = bars.reduce((a, b) => a + b, 0); const bw = mods * p.x; const bx = (p.lw - bw) / 2;
+  let x = bx, rects = ""; bars.forEach((w, i) => { if (i % 2 === 0) rects += `<rect x="${x.toFixed(3)}" y="${(p.lh - p.pad - 2.7 - 11).toFixed(2)}" width="${(w * p.x).toFixed(3)}" height="11" fill="#000"/>`; x += w * p.x; });
+  const name = v.name.length > 30 ? v.name.slice(0, 29) + "…" : v.name;
+  return `<svg viewBox="0 0 ${p.lw} ${p.lh}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Label: ${esc(label(v))}, ${rand(v.price)}, barcode ${v.barcode}"><rect width="${p.lw}" height="${p.lh}" fill="#fff"/>
+  <text x="${p.pad}" y="${p.pad + 3.3}" font-family="Poppins,Helvetica,Arial" font-weight="700" font-size="3.4" fill="#000">${esc(name)}</text>
+  <text x="${p.pad}" y="${p.pad + 9}" font-family="Poppins,Helvetica,Arial" font-size="2.6" fill="#000">${esc(v.size)}</text>
+  <text x="${p.lw - p.pad}" y="${p.pad + 9.3}" text-anchor="end" font-family="Poppins,Helvetica,Arial" font-weight="700" font-size="4.8" fill="#000">${rand(v.price)}</text>
+  ${rects}<text x="${p.lw / 2}" y="${p.lh - p.pad}" text-anchor="middle" font-family="Helvetica,Arial" font-size="2.3" fill="#000">${v.barcode}</text></svg>`;
+}
+function viewLabels() {
+  const res = lbl.term.trim().length >= 2 ? searchVariants(lbl.term) : null;
+  const relabel = Object.values(S.catalog?.variants || {}).filter((v) => v.relabel && !v.archived);
+  const count = S.labelItems.reduce((a, x) => a + x.qty, 0); const p = PRESETS[lbl.preset];
+  return `<div class="page"><div><h1>Print labels</h1><p class="muted small">Labels show the plant name, size, current price and a Code 128 barcode. Printing never changes stock.</p></div>
+  <div class="grid2"><div class="stack">
+    <section class="card stack"><div class="fields"><label class="f" for="preset">Label stock<select id="preset" class="i">${Object.entries(PRESETS).map(([k, x]) => `<option value="${k}" ${lbl.preset === k ? "selected" : ""}>${x.name}</option>`).join("")}</select></label>
+      ${p.kind === "sheet" ? `<label class="f" for="lstart">Start at label position (1–${p.cols * p.rows})<input id="lstart" class="i" type="number" min="1" max="${p.cols * p.rows}" value="${lbl.start}"></label>` : ""}</div>
+      <label class="f" for="lfind">Add items<input id="lfind" class="i" value="${esc(lbl.term)}" placeholder="Name, SKU or barcode" autocomplete="off"></label>
+      ${res ? `<div class="stack">${res.map((v) => `<button class="result" data-ladd="${v.id}">${esc(label(v))} <span class="muted tab">${rand(v.price)}</span></button>`).join("") || `<p class="small muted">No match.</p>`}</div>` : ""}
+      ${S.labelItems.length ? `<div class="tablewrap"><table><tbody>${S.labelItems.map((it, i) => { const v = V(it.id); return `<tr><td>${esc(label(v))} <span class="small muted tab">${rand(v.price)}</span></td><td class="r" style="width:120px"><input class="i tab" data-lq="${i}" id="lq-${i}" type="number" min="1" max="1000" value="${it.qty}" aria-label="Labels for ${esc(label(v))}"></td><td class="r"><button class="btn ghost" style="color:var(--danger)" data-lrm="${i}">Remove</button></td></tr>`; }).join("")}</tbody></table></div>` : `<p class="small muted">No items yet. Search above, or come here from a saved delivery.</p>`}
+      ${lbl.err ? `<div class="alert error">${esc(lbl.err)}</div>` : ""}
+      <div class="row"><button class="btn primary" data-act="labelPdf" ${!count ? "disabled" : ""}>Save ${count} label${count === 1 ? "" : "s"} as PDF</button><button class="btn" data-act="labelTest" ${!count ? "disabled" : ""}>Save one test label</button></div></section>
+    <section class="card stack"><h2>Shelf labels to replace</h2><p class="small muted">These prices changed. Print new labels, stick them on, then mark them done.</p>
+      ${relabel.length ? `<div class="tablewrap"><table><tbody>${relabel.map((v) => `<tr><td>${esc(label(v))}</td><td class="r tab">${v.oldPrice ? `<s class="muted">${rand(v.oldPrice)}</s> → ` : ""}<strong>${rand(v.price)}</strong></td><td class="r"><button class="btn ghost" data-ladd="${v.id}">Add</button>${isOwner() ? `<button class="btn ghost" data-relabelled="${v.id}">Done</button>` : ""}</td></tr>`).join("")}</tbody></table></div>` : `<p class="small">Nothing to replace.</p>`}</section>
+  </div>
+  <div class="stack"><section class="card stack"><h2>Preview <span class="pill grey">${p.lw} × ${p.lh} mm</span></h2>
+    ${S.labelItems.length ? `<div class="labels">${S.labelItems.slice(0, 6).map((it) => labelSvg(V(it.id))).join("")}</div>${S.labelItems.length > 6 ? `<p class="small muted">Showing 6 of ${S.labelItems.length} items.</p>` : ""}` : `<p class="small muted">Choose items to see the labels.</p>`}</section>
+    <div class="alert ok"><strong>Print at actual size</strong><ol style="margin:6px 0 0;padding-left:20px" class="small"><li>Save the PDF and open it.</li><li>Print to the label printer${p.kind === "sheet" ? " (or office printer for A4)" : ""}.</li><li>Set <strong>Scale 100% / Actual size</strong>. Never “Fit to page”.</li><li>${p.kind === "roll" ? "Paper size in the driver: 50 × 30 mm." : "Paper: A4, no extra margins."}</li><li>Print one test label first and scan it at the till.</li></ol></div></div></div></div>`;
+}
+let downloads = null;
+async function savePdf(filename, bytes) {
+  downloads ||= await window.claude?.use?.("downloads");
+  if (!downloads) { toast("Saving files isn't available in this view. Open the page in Claude to save PDFs."); return; }
+  try { await downloads.save({ filename, data: new Blob([bytes], { type: "application/pdf" }) }); } catch { toast("The file was not saved."); }
+}
+async function labelPdf(test) {
+  lbl.err = null;
+  if (!window.PDFLib) { lbl.err = "The PDF tool did not load. Check the connection and try again."; return render(); }
+  const p = PRESETS[lbl.preset]; const MM = 72 / 25.4; const { PDFDocument, StandardFonts, rgb } = PDFLib;
+  const items = test ? [{ id: S.labelItems[0].id, qty: 1 }] : S.labelItems;
+  const doc = await PDFDocument.create(); const bold = await doc.embedFont(StandardFonts.HelveticaBold); const reg = await doc.embedFont(StandardFonts.Helvetica);
+  const per = p.cols * p.rows; let slot = p.kind === "sheet" ? Math.min(Math.max(lbl.start - 1, 0), per - 1) : 0; let page = null;
+  const fit = (f, t, size, w) => { if (f.widthOfTextAtSize(t, size) <= w) return t; while (t.length > 1 && f.widthOfTextAtSize(t + "...", size) > w) t = t.slice(0, -1); return t + "..."; };
+  const clean = (t) => t.replace(/[‘’]/g, "'").replace(/[“”]/g, '"').replace(/[—–]/g, "-").replace(/[^\x20-\x7E\xA0-\xFF]/g, "?");
+  for (const it of items) { const v = V(it.id); const bars = code128(v.barcode); const mods = bars.reduce((a, b) => a + b, 0);
+    if ((mods + 20) * p.x > p.lw) { lbl.err = `Label too narrow for barcode ${v.barcode}.`; return render(); }
+    for (let n = 0; n < it.qty; n++) {
+      if (!page || slot >= per) { if (page) slot = 0; page = doc.addPage([p.pw * MM, p.ph * MM]); }
+      const col = slot % p.cols, row = Math.floor(slot / p.cols);
+      const L = p.kind === "roll" ? 0 : p.ml + col * p.px, T = p.kind === "roll" ? 0 : p.mt + row * p.py, B = p.ph - T - p.lh; const iw = (p.lw - 2 * p.pad) * MM;
+      let y = (B + p.lh - p.pad) * MM;
+      let ns = 9; const nm = clean(v.name); while (ns > 6.5 && bold.widthOfTextAtSize(nm, ns) > iw) ns -= 0.5;
+      y -= ns; page.drawText(fit(bold, nm, ns, iw), { x: (L + p.pad) * MM, y, size: ns, font: bold, color: rgb(0, 0, 0) });
+      const price = rand(v.price); const pw = bold.widthOfTextAtSize(price, 13); y -= 15;
+      page.drawText(price, { x: (L + p.lw - p.pad) * MM - pw, y, size: 13, font: bold, color: rgb(0, 0, 0) });
+      page.drawText(fit(reg, clean(v.size), 7, iw - pw - 6), { x: (L + p.pad) * MM, y, size: 7, font: reg, color: rgb(0, 0, 0) });
+      const barBottom = B + p.pad + 2.6; const barH = Math.min(12, y / MM - 1 - barBottom);
+      let bx = L + (p.lw - mods * p.x) / 2; bars.forEach((w, i) => { if (i % 2 === 0) page.drawRectangle({ x: bx * MM, y: barBottom * MM, width: w * p.x * MM, height: barH * MM, color: rgb(0, 0, 0) }); bx += w * p.x; });
+      const hw = reg.widthOfTextAtSize(v.barcode, 6.5); page.drawText(v.barcode, { x: (L + p.lw / 2) * MM - hw / 2, y: (B + p.pad) * MM, size: 6.5, font: reg, color: rgb(0, 0, 0) });
+      slot++;
+    } }
+  await savePdf(test ? "test-label.pdf" : `labels-${today()}.pdf`, await doc.save());
+}
+async function receiptPdf(date, key) {
+  if (!window.PDFLib) return toast("The PDF tool did not load.");
+  const doc = date === S.dayDate ? S.day : await getDay(date); const s = doc.sales.find((x) => x.key === key);
+  const { PDFDocument, StandardFonts, rgb } = PDFLib; const MM = 72 / 25.4; const pdf = await PDFDocument.create(); const f = await pdf.embedFont(StandardFonts.Courier), fb = await pdf.embedFont(StandardFonts.CourierBold);
+  const clean = (t) => String(t).replace(/[—–]/g, "-").replace(/[^\x20-\x7E\xA0-\xFF]/g, "?");
+  const rows = []; const W = 42; const lr = (a, b) => { a = clean(a); b = clean(b); return a.slice(0, W - b.length - 1).padEnd(W - b.length) + b; };
+  const b = s.biz; rows.push(["c", b.name, true]); if (b.address) b.address.split("\n").forEach((x) => rows.push(["c", x])); if (b.phone) rows.push(["c", "Tel " + b.phone]); if (b.vatNo) rows.push(["c", "VAT no. " + b.vatNo]);
+  rows.push(["c", s.vatRegistered ? "TAX INVOICE - COPY" : "RECEIPT - COPY", true], ["-"], ["l", lr("Receipt", s.no)], ["l", lr("Date", dt(s.at))], ["l", lr("Served by", staff(s.by))], ["-"]);
+  for (const l of s.lines) { rows.push(["l", clean(l.desc).slice(0, W)]); rows.push(["l", lr(`  ${l.qty} x ${rand(l.unit)}`, rand(l.total))]); }
+  rows.push(["-"], ["l", lr("TOTAL", rand(s.total)), true]); if (s.vatRegistered) rows.push(["l", lr(`VAT incl. (${b.vatBp / 100}%)`, rand(s.vat))]);
+  if (s.payment.method === "cash") rows.push(["l", lr("Cash", rand(s.payment.tendered))], ["l", lr("Change", rand(s.payment.change))]); else { rows.push(["l", lr("Card (terminal)", rand(s.total))]); if (s.payment.ref) rows.push(["l", lr("Card ref.", s.payment.ref)]); }
+  if (b.footer) rows.push(["-"], ["c", b.footer.slice(0, W)]);
+  const lh = 9.5, size = 7.6; const page = pdf.addPage([80 * MM, (12 + rows.length * 3.4) * MM]); let y = page.getHeight() - 5 * MM;
+  for (const [k, t, bold] of rows) { y -= lh; if (k === "-") { page.drawText("-".repeat(W), { x: 4 * MM, y, size, font: f }); continue; } const ff = bold ? fb : f; const tt = clean(t).slice(0, W); const x = k === "c" ? (80 * MM - ff.widthOfTextAtSize(tt, size)) / 2 : 4 * MM; page.drawText(tt, { x, y, size, font: ff, color: rgb(0, 0, 0) }); }
+  await savePdf(`receipt-${s.no}.pdf`, await pdf.save());
+}
+
+// ---------------------------------------------------------------- PRODUCTS (owner)
+let prod = { term: "", edit: null, err: null, newOpen: false };
+function viewProducts() {
+  const all = Object.values(S.catalog?.variants || {}).filter((v) => !prod.term || (v.name + v.sku + v.barcode + (v.botanical || "")).toLowerCase().includes(prod.term.toLowerCase()))
+    .sort((a, b) => a.archived - b.archived || a.name.localeCompare(b.name) || a.size.localeCompare(b.size));
+  return `<div class="page"><div class="row" style="justify-content:space-between"><div><h1>Plants & prices</h1><p class="muted small">Each pot size is its own item with its own price, SKU and barcode.</p></div><button class="btn primary" data-act="toggleProdNew">+ Add a plant or size</button></div>
+  ${prod.newOpen ? `<div class="card">${newPlantForm("pp", "Save plant")}</div>` : ""}
+  <label class="f" for="pfind">Search<input id="pfind" class="i" value="${esc(prod.term)}" placeholder="Name, SKU or barcode"></label>
+  ${all.length ? `<div class="tablewrap"><table><thead><tr><th>Plant</th><th>Size</th><th>Barcode / SKU</th><th class="r">Price</th><th class="r">On hand</th><th></th></tr></thead><tbody>${all.map((v) => prod.edit === v.id ? editRow(v) : `<tr ${v.archived ? 'style="opacity:.6"' : ""}><td><strong>${esc(v.name)}</strong>${v.botanical ? `<br><i class="small muted">${esc(v.botanical)}</i>` : ""}<br><span class="small muted">${esc(v.category)}</span></td><td>${esc(v.size)}</td><td class="small"><span class="tab">${v.barcode}</span><br><span class="muted">${esc(v.sku)}</span>${(v.aliases || []).length ? `<br><span class="muted">+ ${v.aliases.map(esc).join(", ")}</span>` : ""}</td><td class="r tab">${rand(v.price)}</td><td class="r tab">${onHand(v.id)}</td>
+    <td class="r"><div class="row" style="justify-content:flex-end">${v.archived ? `<span class="pill grey">Archived</span>` : v.relabel ? `<span class="pill warn">Relabel</span>` : ""}<button class="btn ghost" data-pedit="${v.id}">Edit</button></div></td></tr>`).join("")}</tbody></table></div>` : `<div class="empty"><p style="font-weight:600">No plants yet</p><p class="muted small">Add your first plant, receive its stock, print labels and sell it at the till.</p></div>`}</div>`;
+}
+function editRow(v) {
+  return `<tr><td colspan="6"><form id="editForm" data-id="${v.id}" class="stack"><p style="font-weight:600">${esc(v.name)} — ${esc(v.size)} <span class="small muted">barcode ${v.barcode}</span></p><div class="fields">
+  <label class="f" for="e-size">Size<input id="e-size" class="i" value="${esc(v.size)}" required></label><label class="f" for="e-price">Selling price (R)<input id="e-price" class="i tab" value="${centsIn(v.price)}" required inputmode="decimal"></label>
+  <label class="f" for="e-low">Low-stock warning at<input id="e-low" class="i" type="number" min="0" value="${v.low}"></label><label class="f" for="e-alias">Add supplier barcode (optional)<input id="e-alias" class="i" maxlength="48" placeholder="Leading zeros are kept"></label></div>
+  ${prod.err ? `<div class="alert error">${esc(prod.err)}</div>` : ""}
+  <div class="row"><button class="btn primary">Save</button><button type="button" class="btn ghost" data-act="cancelEdit">Cancel</button><button type="button" class="btn ghost" style="color:${v.archived ? "var(--forest)" : "var(--danger)"}" data-archive="${v.id}">${v.archived ? "Restore" : "Archive (barcode never reused)"}</button></div></form></td></tr>`;
+}
+async function saveEdit(form) {
+  const id = form.dataset.id; const price = parseRand($("#e-price").value); const size = $("#e-size").value.trim(); const alias = $("#e-alias").value.trim();
+  if (!(price > 0) || !size) { prod.err = "Enter a size and a selling price above R0."; return render(); }
+  try { await withLock(async () => {
+      const cat = await get(DOCS.catalog, null); const v = cat.variants[id];
+      if (alias) { if (!/^[\x21-\x7E]{1,48}$/.test(alias)) throw new AppErr("V", "Supplier barcode has invalid characters."); const used = new Set([...(cat.codesUsed || []), ...Object.values(cat.variants).flatMap((x) => [x.barcode, ...(x.aliases || [])])]); if (used.has(alias)) throw new AppErr("V", `Barcode ${alias} is already registered. Codes are never reused.`); v.aliases = [...(v.aliases || []), alias]; cat.codesUsed = [...(cat.codesUsed || []), alias]; }
+      if (v.price !== price || v.size !== size) { if (v.price !== price) { v.history = [...(v.history || []), { at: new Date().toISOString(), from: v.price, to: price, by: S.me?.id || null }]; v.oldPrice = v.price; } v.relabel = true; }
+      v.price = price; v.size = size; v.low = Math.max(0, +$("#e-low").value || 0);
+      await S.db.doc(DOCS.catalog).set(cat); });
+    prod.edit = null; prod.err = null; toast("Saved. The till uses the new price straight away."); render();
+  } catch (e) { prod.err = e instanceof AppErr ? e.message : "Could not save. Check the connection."; render(); }
+}
+
+// ---------------------------------------------------------------- STOCK (owner)
+let stk = { term: "", low: false, adj: null, hist: null };
+const REASON = { receive: "Received", sale: "Sold", return: "Returned to stock", damage: "Damaged", plant_loss: "Plant loss", count_correction: "Count correction" };
+function viewStock() {
+  const rows = Object.values(S.catalog?.variants || {}).filter((v) => !v.archived && (!stk.term || (v.name + v.sku).toLowerCase().includes(stk.term.toLowerCase())) && (!stk.low || onHand(v.id) <= v.low))
+    .sort((a, b) => (onHand(b.id) <= b.low) - (onHand(a.id) <= a.low) || a.name.localeCompare(b.name));
+  const mvs = (S.day?.movements || []).slice().reverse().slice(0, 25); nameOf(mvs.map((m) => m.by));
+  return `<div class="page"><div><h1>Stock</h1><p class="muted small">Every change is recorded with reason, time, staff member and reference.</p></div>
+  <div class="row"><label class="f" style="flex:1 1 240px" for="sfind">Search<input id="sfind" class="i" value="${esc(stk.term)}" placeholder="Name or SKU"></label><label class="row small" style="align-self:end;min-height:44px"><input type="checkbox" id="slow" ${stk.low ? "checked" : ""} style="width:20px;height:20px;accent-color:var(--forest)"> Low stock only</label></div>
+  ${rows.length ? `<div class="tablewrap"><table><thead><tr><th>Item</th><th>SKU</th><th class="r">On hand</th><th>Status</th><th></th></tr></thead><tbody>${rows.map((v) => { const n = onHand(v.id); return `<tr><td>${esc(v.name)}<br><span class="small muted">${esc(v.size)}</span></td><td class="small">${esc(v.sku)}</td><td class="r tab" style="font-size:1.1rem;font-weight:600">${n}</td><td>${n === 0 ? `<span class="pill danger">Sold out</span>` : n <= v.low ? `<span class="pill warn">Low (≤ ${v.low})</span>` : `<span class="pill green">OK</span>`}</td><td class="r"><button class="btn" data-adjust="${v.id}">Adjust</button></td></tr>`; }).join("")}</tbody></table></div>` : `<div class="empty">${stk.low ? "Nothing is low on stock." : "No items."}</div>`}
+  <h2>Today's stock movements</h2>
+  ${mvs.length ? `<div class="tablewrap"><table><thead><tr><th>Time</th><th>Item</th><th>Reason</th><th class="r">Change</th><th class="r">Balance</th><th>By</th><th>Ref</th></tr></thead><tbody>${mvs.map((m) => { const v = V(m.variantId); return `<tr><td>${dt(m.at)}</td><td>${esc(v ? label(v) : m.variantId)}</td><td>${REASON[m.reason] || m.reason}${m.note ? `<br><span class="small muted">${esc(m.note)}</span>` : ""}</td><td class="r tab" style="font-weight:600">${m.qty > 0 ? "+" : ""}${m.qty}</td><td class="r tab">${m.balance ?? ""}</td><td>${esc(staff(m.by))}</td><td class="small">${esc(m.ref)}</td></tr>`; }).join("")}</tbody></table></div>` : `<p class="muted small">No movements yet today.</p>`}</div>`;
+}
+function openAdjust(id) {
+  const v = V(id);
+  dialog("Adjust stock", `<p><strong>${esc(label(v))}</strong> · <span class="tab">${onHand(id)}</span> on record</p>
+  <form id="adjForm" data-id="${id}" class="stack" style="margin-top:12px"><label class="f" for="areason">Reason<select id="areason" class="i"><option value="count_correction">Count correction (I counted the actual number)</option><option value="damage">Damaged — remove from stock</option><option value="plant_loss">Plant loss (died, frost, pests)</option></select></label>
+  <label class="f" for="aqty"><span id="aqtyLabel">Actual number counted</span><input id="aqty" class="i tab" type="number" min="0" required></label>
+  <label class="f" for="anote">What happened<input id="anote" class="i" required minlength="3" maxlength="500"></label><div id="aerr"></div><button class="btn primary lg">Save adjustment</button></form>`);
+}
+async function saveAdjust(form) {
+  const id = form.dataset.id, reason = $("#areason").value, q = Math.floor(+$("#aqty").value), note = $("#anote").value.trim();
+  const err = (t) => ($("#aerr").innerHTML = `<div class="alert error">${esc(t)}</div>`);
+  if (!Number.isFinite(q) || q < 0 || $("#aqty").value === "") return err("Enter a number.");
+  if (note.length < 3) return err("Say what happened (at least 3 characters).");
+  try { const r = await withLock(async () => {
+      const stock = await get(DOCS.stock, { levels: {} }); const cur = stock.levels[id] ?? 0;
+      const delta = reason === "count_correction" ? q - cur : -q; if (delta === 0) return { onHand: cur, delta };
+      if (cur + delta < 0) throw new AppErr("STOCK", `Only ${cur} in stock — you cannot remove ${-delta}.`);
+      stock.levels[id] = cur + delta; const d = today(); const day = await getDay(d); day.movements.push(mv(id, delta, reason, "ADJ-" + Date.now().toString(36).toUpperCase(), note, stock.levels[id]));
+      await dayRef(d).set(day); await S.db.doc(DOCS.stock).set(stock); return { onHand: stock.levels[id], delta }; });
+    closeDialog(); toast(`Saved. Stock is now ${r.onHand} (${r.delta > 0 ? "+" : ""}${r.delta}).`); render();
+  } catch (e) { err(e instanceof AppErr ? e.message : "Could not save. Check the connection."); }
+}
+
+// ---------------------------------------------------------------- REPORT (owner)
+let rpt = { date: null, doc: null };
+function viewReport() {
+  const date = rpt.date || S.dayDate; const d = date === S.dayDate ? S.day : rpt.doc;
+  if (!d) { if (date !== S.dayDate) getDay(date).then((x) => { rpt.doc = x; render(); }); return `<div class="page"><p class="muted">Loading…</p></div>`; }
+  const gross = d.sales.reduce((a, s) => a + s.total, 0), rets = d.returns.reduce((a, r) => a + r.total, 0);
+  const vat = d.sales.reduce((a, s) => a + s.vat, 0) - d.returns.reduce((a, r) => a + r.vat, 0);
+  const sum = (arr, f) => arr.reduce((a, x) => a + f(x), 0);
+  const cashIn = sum(d.sales.filter((s) => s.payment.method === "cash"), (s) => s.total), cardIn = sum(d.sales.filter((s) => s.payment.method === "card"), (s) => s.total);
+  const cashOut = sum(d.returns.filter((r) => r.method === "cash"), (r) => r.total), cardOut = sum(d.returns.filter((r) => r.method === "card"), (r) => r.total);
+  const top = {}; for (const s of d.sales) for (const l of s.lines) { top[l.id] ||= { desc: l.desc, sold: 0, ret: 0, net: 0 }; top[l.id].sold += l.qty; top[l.id].net += l.total; }
+  for (const r of d.returns) for (const l of r.lines) { top[l.id] ||= { desc: l.desc, sold: 0, ret: 0, net: 0 }; top[l.id].ret += l.qty; top[l.id].net -= l.amount; }
+  const topRows = Object.values(top).sort((a, b) => b.sold - b.ret - (a.sold - a.ret) || b.net - a.net).slice(0, 10);
+  const low = Object.values(S.catalog?.variants || {}).filter((v) => !v.archived && onHand(v.id) <= v.low);
+  const tills = [...d.tills, ...(S.till?.open && S.till.open.date === date ? [{ ...S.till.open, open: true }] : [])];
+  nameOf(tills.flatMap((t) => [t.by, t.closedBy]));
+  const tile = (k, v, s) => `<div class="card tile"><p class="small muted">${k}</p><p class="v">${v}</p>${s ? `<p class="small muted">${s}</p>` : ""}</div>`;
+  return `<div class="page"><div class="row" style="justify-content:space-between"><div><h1>Day report</h1><p class="muted small">${longDate(date)} (South African business day)</p></div>
+  <div class="row"><label class="f" for="rpdate">Business date<input id="rpdate" class="i" type="date" value="${date}" max="${S.dayDate}"></label><button class="btn" data-act="csv" style="align-self:end">Show CSV</button></div></div>
+  <div class="tiles">${tile("Gross sales", rand(gross), `${d.sales.length} sale${d.sales.length === 1 ? "" : "s"}`)}${tile("Returns", rand(rets), `${d.returns.length} return${d.returns.length === 1 ? "" : "s"}`)}${tile("Net sales", rand(gross - rets), `VAT included ${rand(vat)}`)}${tile("Cash (net)", rand(cashIn - cashOut), `${rand(cashIn)} in · ${rand(cashOut)} refunded`)}${tile("Card (net)", rand(cardIn - cardOut), `${rand(cardIn)} in · ${rand(cardOut)} refunded`)}</div>
+  <h2>Till reconciliation</h2>
+  ${tills.length ? `<div class="tablewrap"><table><thead><tr><th>Opened</th><th>Closed</th><th class="r">Float</th><th class="r">Expected</th><th class="r">Counted</th><th class="r">Variance</th></tr></thead><tbody>${tills.map((t) => `<tr><td>${dt(t.at)}<br><span class="small muted">${esc(staff(t.by))}</span></td><td>${t.open ? `<span class="pill green">Still open</span>` : `${dt(t.closedAt)}<br><span class="small muted">${esc(staff(t.closedBy))}</span>`}</td><td class="r tab">${rand(t.float)}</td><td class="r tab">${t.open ? "—" : rand(t.expected)}</td><td class="r tab">${t.open ? "—" : rand(t.counted)}</td><td class="r tab" style="font-weight:600;color:${t.variance ? "var(--danger)" : "var(--forest)"}">${t.open ? "—" : (t.variance > 0 ? "+" : "") + rand(t.variance)}${t.note ? `<br><span class="small muted" style="font-weight:400">${esc(t.note)}</span>` : ""}</td></tr>`).join("")}</tbody></table></div>` : `<p class="muted small">The till was not opened on this day.</p>`}
+  <div class="grid2"><section class="stack"><h2>Top plants</h2>${topRows.length ? `<div class="tablewrap"><table><thead><tr><th>Plant</th><th class="r">Sold</th><th class="r">Returned</th><th class="r">Net</th></tr></thead><tbody>${topRows.map((t) => `<tr><td>${esc(t.desc)}</td><td class="r tab">${t.sold}</td><td class="r tab">${t.ret}</td><td class="r tab">${rand(t.net)}</td></tr>`).join("")}</tbody></table></div>` : `<p class="muted small">No sales on this day.</p>`}</section>
+  <section class="stack"><h2>Low stock now</h2>${low.length ? `<div class="tablewrap"><table><thead><tr><th>Item</th><th class="r">On hand</th><th class="r">Warn at</th></tr></thead><tbody>${low.map((v) => `<tr><td>${esc(label(v))}</td><td class="r tab">${onHand(v.id)}</td><td class="r tab">${v.low}</td></tr>`).join("")}</tbody></table></div>` : `<p class="muted small">Nothing is low.</p>`}</section></div></div>`;
+}
+function csvFor(d) {
+  const cell = (v) => { let s = v == null ? "" : String(v); if (/^[=+\-@\t\r]/.test(s)) s = "'" + s; return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  const r = (c) => (c / 100).toFixed(2);
+  const rows = [["type", "document", "original_receipt", "local_time", "sku_or_item", "description", "quantity", "unit_price_zar", "line_total_zar", "vat_zar", "payment_method", "condition", "reason"]];
+  for (const s of d.sales) for (const l of s.lines) rows.push(["sale", s.no, "", dt(s.at), l.sku, l.desc, l.qty, r(l.unit), r(l.total), r(l.vat), s.payment.method, "", ""]);
+  for (const x of d.returns) for (const l of x.lines) rows.push(["return", x.no, x.saleNo, dt(x.at), "", l.desc, -l.qty, r(l.amount / l.qty), r(-l.amount), r(-l.vat), x.method, l.cond, x.reason]);
+  return rows.map((row) => row.map(cell).join(",")).join("\r\n");
+}
+
+// ---------------------------------------------------------------- SETTINGS (owner)
+function viewSettings() {
+  const s = S.settings || {};
+  return `<div class="page" style="max-width:800px"><div><h1>Business settings</h1><p class="muted small">Shown on receipts. Each sale keeps the details it was made with.</p></div>
+  ${s.isFixture ? `<div class="alert warn"><strong>These are placeholder details.</strong> Replace them with the nursery's real details before trading. Saving clears this warning.</div>` : ""}
+  <form id="setForm" class="card stack"><div class="fields">
+  <label class="f" for="s-name">Trading name<input id="s-name" class="i" required maxlength="80" value="${esc(s.businessName)}"></label>
+  <label class="f" for="s-legal">Registered name (optional)<input id="s-legal" class="i" maxlength="120" value="${esc(s.legalName)}"></label>
+  <label class="f" for="s-phone">Phone<input id="s-phone" class="i" maxlength="30" value="${esc(s.phone)}"></label></div>
+  <label class="f" for="s-addr">Street address<textarea id="s-addr" class="i" maxlength="400">${esc(s.address)}</textarea></label>
+  <label class="f" for="s-foot">Receipt footer<input id="s-foot" class="i" maxlength="300" value="${esc(s.footer)}" placeholder="e.g. your returns policy"></label>
+  <label class="row small" style="min-height:44px;flex-wrap:nowrap"><input type="checkbox" id="s-vat" ${s.vatRegistered ? "checked" : ""} style="width:20px;height:20px;accent-color:var(--forest)"> Registered for VAT with SARS (receipts become tax invoices showing VAT included)</label>
+  <div class="fields"><label class="f" for="s-vatno">VAT number<input id="s-vatno" class="i" maxlength="10" value="${esc(s.vatNumber)}" placeholder="10 digits starting with 4"></label><label class="f" for="s-rate">VAT rate (%)<input id="s-rate" class="i" type="number" step="0.01" min="0" max="100" value="${(s.vatRateBp ?? 1500) / 100}"></label></div>
+  <p class="small muted">Prices are entered including VAT. Confirm your VAT treatment with your accountant.</p><div id="serr"></div><div><button class="btn primary lg">Save settings</button></div></form>
+  <section class="card stack"><h2>Staff access</h2><p class="small muted">Share this page from Claude's share menu. <strong>Editors</strong> are owners here (prices, receiving, stock, reports, settings). <strong>Contributors</strong> are cashiers (sell, receipts, cash up, labels). Viewers can only look.</p></section></div>`;
+}
+async function saveSettings() {
+  const vatOn = $("#s-vat").checked, vatNo = $("#s-vatno").value.replace(/\s/g, "");
+  const err = (t) => ($("#serr").innerHTML = `<div class="alert error">${esc(t)}</div>`);
+  if (!$("#s-name").value.trim()) return err("Enter the trading name.");
+  if (vatOn && !/^4\d{9}$/.test(vatNo)) return err("A South African VAT number has 10 digits and starts with 4.");
+  const rate = Math.round(+$("#s-rate").value * 100); if (!(rate >= 0 && rate <= 10000)) return err("Enter a VAT rate between 0 and 100.");
+  try { await S.db.doc(DOCS.settings).set({ businessName: $("#s-name").value.trim(), legalName: $("#s-legal").value.trim(), phone: $("#s-phone").value.trim(), address: $("#s-addr").value.trim(), footer: $("#s-foot").value.trim(), vatRegistered: vatOn, vatNumber: vatNo, vatRateBp: rate, isFixture: false });
+    toast("Settings saved. New sales use these details; past receipts keep theirs."); }
+  catch { err("Could not save. Check the connection."); }
+}
+
+// ---------------------------------------------------------------- dialog
+let dialogOpts = {};
+function dialog(title, body, opts = {}) {
+  dialogOpts = opts; const prev = captureFocus();
+  $("#dlg").innerHTML = `<div class="scrim" data-scrim><div class="dialog ${opts.wide ? "wide" : ""}" role="dialog" aria-modal="true" aria-labelledby="dlgTitle"><div class="row" style="justify-content:space-between;margin-bottom:12px;flex-wrap:nowrap"><h2 id="dlgTitle">${esc(title)}</h2>${opts.locked ? "" : `<button class="btn ghost" data-close aria-label="Close">✕</button>`}</div>${body}</div></div>`;
+  if (opts.keepFocus && prev && document.getElementById(prev.id)) restoreFocus(prev);
+  else ($("#dlg [autofocus]") || $("#dlg input:not([type=checkbox])") || $("#dlg button"))?.focus();
+}
+function closeDialog() { $("#dlg").innerHTML = ""; dialogOpts = {}; }
+document.addEventListener("keydown", (e) => { if (e.key === "Escape" && $("#dlg").firstChild && !dialogOpts.locked) { closeDialog(); refocusScan(); } });
+
+// ---------------------------------------------------------------- events
+document.addEventListener("click", async (e) => {
+  const t = e.target.closest("button,[data-scrim]"); if (!t) return;
+  const d = t.dataset;
+  if (d.scrim !== undefined && e.target === t && !dialogOpts.locked) { closeDialog(); return; }
+  if (d.nav) { S.view = d.nav; S.msg = null; render(); if (d.nav === "till") refocusScan(); return; }
+  if (d.close !== undefined) { closeDialog(); refocusScan(); return; }
+  if (d.add) { addToBasket(V(d.add)); render(); refocusScan(); return; }
+  if (d.inc) { const l = S.basket.find((x) => x.id === d.inc); l.qty = Math.min(999, l.qty + 1); delete S.issues[l.id]; saveLocal(); render(); refocusScan(); return; }
+  if (d.dec) { const l = S.basket.find((x) => x.id === d.dec); l.qty = Math.max(1, l.qty - 1); delete S.issues[l.id]; saveLocal(); render(); refocusScan(); return; }
+  if (d.rm) { S.basket = S.basket.filter((x) => x.id !== d.rm); delete S.issues[d.rm]; saveLocal(); render(); refocusScan(); return; }
+  if (d.pm) { payState.method = d.pm; payState.err = null; drawPay(); return; }
+  if (d.tender) { payState.tendered = centsIn(+d.tender); drawPay(); return; }
+  if (d.receipt) { const [dd, k] = d.receipt.split("|"); openReceipt(dd, k); return; }
+  if (d.pdfReceipt) { const [dd, k] = d.pdfReceipt.split("|"); receiptPdf(dd, k); return; }
+  if (d.return) { const [dd, k] = d.return.split("|"); openReturn(dd, k); return; }
+  if (d.dadd) { if (!S.deliveryLines.some((l) => l.id === d.dadd)) S.deliveryLines.push({ id: d.dadd, qty: "", price: centsIn(V(d.dadd).price) }); recv.term = ""; render(); setTimeout(() => $(`#dq-${S.deliveryLines.findIndex((l) => l.id === d.dadd)}`)?.focus()); return; }
+  if (d.drm) { S.deliveryLines.splice(+d.drm, 1); render(); return; }
+  if (d.ladd) { const it = S.labelItems.find((x) => x.id === d.ladd); if (it) it.qty++; else S.labelItems.push({ id: d.ladd, qty: 1 }); lbl.term = ""; render(); return; }
+  if (d.lrm) { S.labelItems.splice(+d.lrm, 1); render(); return; }
+  if (d.relabelled) { await withLock(async () => { const cat = await get(DOCS.catalog, null); cat.variants[d.relabelled].relabel = false; delete cat.variants[d.relabelled].oldPrice; await S.db.doc(DOCS.catalog).set(cat); }).catch(() => toast("Could not save.")); toast("Marked as relabelled."); return; }
+  if (d.pedit) { prod.edit = d.pedit; prod.err = null; render(); return; }
+  if (d.archive) { await withLock(async () => { const cat = await get(DOCS.catalog, null); cat.variants[d.archive].archived = !cat.variants[d.archive].archived; await S.db.doc(DOCS.catalog).set(cat); }).catch(() => toast("Could not save.")); prod.edit = null; return; }
+  if (d.adjust) { openAdjust(d.adjust); return; }
+  switch (d.act) {
+    case "pay": takePayment(); break;
+    case "clear": if (t.dataset.confirm) { S.basket = []; S.lastId = null; S.issues = {}; S.checkoutKey = null; saveLocal(); render(); refocusScan(); } else { t.dataset.confirm = "1"; t.textContent = "Tap again to clear"; setTimeout(() => render(), 3000); } break;
+    case "acceptPrices": acceptPrices(); break;
+    case "cardOk": submitSale({ method: "card", terminalApproved: true, ref: ($("#cardRef")?.value || "").trim() }); break;
+    case "cardDeclined": declined(); break;
+    case "recover": recover(); break;
+    case "abandon": if (t.dataset.confirm) { S.basket = S.pending.lines; S.pending = null; saveLocal(); render(); } else { t.dataset.confirm = "1"; t.textContent = "Only if no money changed hands — tap again"; } break;
+    case "next": S.done = null; render(); refocusScan(); break;
+    case "toggleNew": recv.newOpen = !recv.newOpen; render(); break;
+    case "toggleProdNew": prod.newOpen = !prod.newOpen; render(); break;
+    case "saveDelivery": saveDelivery(); break;
+    case "newDelivery": S.lastDelivery = null; render(); break;
+    case "labelsForDelivery": S.labelItems = S.lastDelivery.lines.map((l) => ({ id: l.id, qty: l.qty })); S.lastDelivery = null; S.view = "labels"; render(); break;
+    case "labelPdf": labelPdf(false); break;
+    case "labelTest": labelPdf(true); break;
+    case "cancelEdit": prod.edit = null; render(); break;
+    case "csv": { const date = rpt.date || S.dayDate; const doc = date === S.dayDate ? S.day : rpt.doc; const csv = csvFor(doc);
+      dialog(`Sales CSV — ${date}`, `<p class="small muted">One line per item sold or returned. Copy it into Excel or Google Sheets, or save it as a file.</p><textarea id="csvText" class="i" style="min-height:220px;font-family:ui-monospace,monospace;font-size:12px" readonly>${esc(csv)}</textarea><div class="row" style="margin-top:10px"><button class="btn primary" data-act="copyCsv">Copy</button><button class="btn" data-act="saveCsv">Save as file</button></div>`, { wide: true }); break; }
+    case "copyCsv": { const ta = $("#csvText"); try { await navigator.clipboard.writeText(ta.value); toast("Copied."); } catch { ta.select(); toast("Press Ctrl+C to copy."); } break; }
+    case "saveCsv": { downloads ||= await window.claude?.use?.("downloads"); if (!downloads) { toast("Saving files isn't available here — use Copy."); break; } try { await downloads.save({ filename: `sales-${rpt.date || S.dayDate}.csv`, data: new Blob(["﻿" + $("#csvText").value], { type: "text/csv" }) }); } catch { toast("The file was not saved."); } break; }
+  }
+});
+document.addEventListener("submit", async (e) => {
+  e.preventDefault(); const f = e.target;
+  if (f.id === "scanForm") { const i = $("#scan"); const code = i.value.trim(); i.value = ""; onScan(code); }
+  else if (f.id === "cashForm") { const t = parseRand(payState.tendered); if (t !== null && t >= basketTotal()) submitSale({ method: "cash", tendered: t }); }
+  else if (f.id === "openTill") openTill();
+  else if (f.id === "closeTill") closeTill();
+  else if (f.id === "returnForm") processReturn(f);
+  else if (f.id === "editForm") saveEdit(f);
+  else if (f.id === "adjForm") saveAdjust(f);
+  else if (f.id === "setForm") saveSettings();
+  else if (f.id === "npForm" || f.id === "ppForm") {
+    const p = f.id.slice(0, 2); const errEl = $(`#${p}-err`);
+    try { const id = await createVariant(readPlantForm(p)); if (p === "np") { recv.newOpen = false; S.deliveryLines.push({ id, qty: "", price: centsIn(V(id)?.price ?? parseRand($(`#np-price`).value)) }); } else { prod.newOpen = false; toast("Plant saved. Receive its stock and print labels next."); } render(); }
+    catch (er) { errEl.innerHTML = `<div class="alert error">${esc(er instanceof AppErr ? er.message : "Could not save. Check the connection.")}</div>`; }
+  }
+});
+document.addEventListener("input", (e) => {
+  const t = e.target;
+  if (t.id === "tsearch") { S.search = t.value; render(); }
+  else if (t.dataset.qty) { const l = S.basket.find((x) => x.id === t.dataset.qty); const n = Math.floor(+t.value); if (n >= 1 && n <= 999) { l.qty = n; delete S.issues[l.id]; saveLocal(); render(); } }
+  else if (t.id === "tendered") { payState.tendered = t.value; payState.err = null; drawPay(); }
+  else if (t.id === "cardRef") payState.ref = t.value;
+  else if (t.id === "rterm") { rcp.term = t.value; render(); }
+  else if (t.id === "rfind") { recv.term = t.value; render(); }
+  else if (t.dataset.dq) { S.deliveryLines[+t.dataset.dq].qty = t.value; render(); }
+  else if (t.dataset.dp) { S.deliveryLines[+t.dataset.dp].price = t.value; render(); }
+  else if (t.id === "supplier") recv.supplier = t.value;
+  else if (t.id === "lfind") { lbl.term = t.value; render(); }
+  else if (t.dataset.lq) { S.labelItems[+t.dataset.lq].qty = Math.max(1, Math.min(1000, Math.floor(+t.value) || 1)); }
+  else if (t.id === "pfind") { prod.term = t.value; render(); }
+  else if (t.id === "sfind") { stk.term = t.value; render(); }
+});
+document.addEventListener("change", (e) => {
+  const t = e.target;
+  if (t.id === "rdate") { rcp.date = t.value || null; rcp.doc = null; render(); }
+  else if (t.id === "rpdate") { rpt.date = t.value || null; rpt.doc = null; render(); }
+  else if (t.id === "preset") { lbl.preset = t.value; lbl.start = 1; render(); }
+  else if (t.id === "lstart") { lbl.start = Math.max(1, Math.floor(+t.value) || 1); }
+  else if (t.id === "slow") { stk.low = t.checked; render(); }
+  else if (t.id === "areason") $("#aqtyLabel").textContent = t.value === "count_correction" ? "Actual number counted" : "How many to remove";
+  else if (t.dataset.lq) render();
+});
+
+boot();
+</script>
