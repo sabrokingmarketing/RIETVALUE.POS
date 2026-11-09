@@ -131,6 +131,13 @@ async function allocateInternalCode(db: Db): Promise<string> {
 // ---------------------------------------------------------------------------
 // Queries
 // ---------------------------------------------------------------------------
+/** Categories that have sellable items, with counts, for the POS chips. */
+export async function posCategories(db?: Db) {
+  return q<{ slug: string; name: string; count: number }>(
+    `SELECT c.slug, c.name, count(v.id)::int AS count FROM categories c JOIN products p ON p.category_id = c.id AND p.archived_at IS NULL
+     JOIN variants v ON v.product_id = p.id AND v.archived_at IS NULL GROUP BY c.id ORDER BY c.sort_order, c.name`, [], db);
+}
+
 export async function listCategories(db?: Db): Promise<Category[]> {
   return q<Category>(`SELECT id, name, slug, kind, sort_order FROM categories ORDER BY sort_order, name`, [], db);
 }
@@ -157,21 +164,19 @@ export async function lookupCode(code: string, db?: Db): Promise<VariantRow | nu
   return row ?? null;
 }
 
-/** Search by name, botanical name, SKU or code. Active items only unless includeArchived. */
-export async function searchVariants(term: string, opts: { includeArchived?: boolean; limit?: number } = {}, db?: Db) {
+/** Search by name, botanical name, SKU or code, optionally within one category. Active items only unless includeArchived. */
+export async function searchVariants(term: string, opts: { includeArchived?: boolean; limit?: number; category?: string } = {}, db?: Db) {
   const t = term.trim();
   const limit = Math.min(opts.limit ?? 20, 100);
-  const where = opts.includeArchived ? "TRUE" : "v.archived_at IS NULL AND p.archived_at IS NULL";
-  if (!t) {
-    return q<VariantRow>(`${VARIANT_SELECT} WHERE ${where} ORDER BY p.common_name, v.size_label LIMIT $1`, [limit], db);
-  }
   const like = `%${t.replace(/[\\%_]/g, (m) => "\\" + m)}%`;
   return q<VariantRow>(
     `${VARIANT_SELECT}
-     WHERE ${where} AND (p.common_name ILIKE $1 OR p.botanical_name ILIKE $1 OR v.sku ILIKE $1 OR v.barcode = $2
+     WHERE ($4 OR (v.archived_at IS NULL AND p.archived_at IS NULL))
+       AND ($5::text IS NULL OR c.slug = $5)
+       AND ($2 = '' OR p.common_name ILIKE $1 OR p.botanical_name ILIKE $1 OR v.sku ILIKE $1 OR v.barcode = $2
             OR EXISTS (SELECT 1 FROM barcodes b WHERE b.variant_id = v.id AND b.code = $2))
      ORDER BY (v.sku = upper($2)) DESC, p.common_name, v.size_label LIMIT $3`,
-    [like, t, limit],
+    [like, t, limit, !!opts.includeArchived, opts.category || null],
     db,
   );
 }

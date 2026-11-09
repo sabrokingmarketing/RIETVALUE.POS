@@ -7,7 +7,7 @@ export default defineConfig({
   testDir: "tests/e2e",
   fullyParallel: false,
   workers: 1,
-  timeout: 60_000,
+  timeout: 90_000,
   expect: { timeout: 10_000 },
   reporter: [["list"]],
   globalSetup: "./tests/e2e/global-setup.ts",
@@ -17,10 +17,10 @@ export default defineConfig({
   ],
   webServer: {
     // Production build against the dedicated e2e database
-    command: `npm run build && npm run start`,
+    command: `npm run db:migrate && npm run build && npm run start`,
     url: `http://localhost:${PORT}/api/health`,
     reuseExistingServer: false,
-    timeout: 240_000,
+    timeout: 540_000,
     env: {
       PORT: String(PORT),
       DATABASE_URL: E2E_DB,

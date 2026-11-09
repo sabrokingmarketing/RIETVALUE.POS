@@ -6,6 +6,7 @@ import { formatRand } from "@/lib/money";
 import { Card, PageHeader } from "@/components/ui";
 import { OpenTillForm, CloseTillForm, TillResult } from "./forms";
 import { q1 } from "@/server/db";
+import { SectionTabs } from "@/components/section-tabs";
 
 export const metadata: Metadata = { title: "Cash up" };
 
@@ -18,6 +19,7 @@ export default async function CashPage({ searchParams }: { searchParams: Promise
   const summary = till ? await cashSummary(till.id) : null;
   return (
     <div className="mx-auto w-full max-w-2xl p-4">
+      <SectionTabs set="sales" active="/till/cash" />
       <PageHeader title={till ? "Close the till" : closed ? "Till closed" : "Open the till"}
         description={till ? `Opened ${formatDateTime(till.opened_at)} by ${till.opened_by_name} with a float of ${formatRand(till.opening_float_cents)}.`
           : "Count the notes and coins in the drawer before the first sale."} />

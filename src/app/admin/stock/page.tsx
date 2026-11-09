@@ -6,6 +6,7 @@ import { MovementTable } from "./movement-table";
 import { formatRand } from "@/lib/money";
 import { Badge, Button, EmptyState, PageHeader, Table, inputClass, td, th } from "@/components/ui";
 import { AdjustButton } from "./adjust";
+import { SectionTabs } from "@/components/section-tabs";
 
 export const metadata: Metadata = { title: "Stock" };
 
@@ -16,6 +17,7 @@ export default async function StockPage({ searchParams }: { searchParams: Promis
   const [rows, recent] = await Promise.all([stockList({ filter, term: sp.q?.slice(0, 60) }), movementHistory({ limit: 15 })]);
   return (
     <div className="mx-auto max-w-6xl">
+      <SectionTabs set="inventory" active="/admin/stock" />
       <PageHeader title="Stock" description="Current stock for every size. Adjust with a reason; every change is recorded." />
       <form className="mb-4 flex flex-col gap-2 sm:flex-row" role="search">
         <label htmlFor="q" className="sr-only">Search stock</label>

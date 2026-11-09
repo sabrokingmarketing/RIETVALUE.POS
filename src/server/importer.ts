@@ -397,7 +397,8 @@ export async function editRow(actor: Actor, id: string, rowNo: number, cells: Re
   for (const [h, v] of Object.entries(cells)) { if (!job.headers.includes(h)) throw new AppError("VALIDATION", `Unknown column ${h}`); raw[h] = String(v).slice(0, 4000); }
   await q(`UPDATE import_rows SET raw = $3 WHERE job_id = $1 AND row_no = $2`, [id, rowNo, JSON.stringify(raw)]);
   await audit(undefined, actor, "import.row_edit", "import_job", id, { rowNo, cells });
-  return revalidateFailed(actor, id, [rowNo], false);
+  // Before the import starts, a corrected row simply joins the preview; afterwards it is imported straight away.
+  return revalidateFailed(actor, id, [rowNo], job.status !== "validated");
 }
 
 /** Re-check failed rows (after corrections or catalogue changes) and queue the ones that now pass. */

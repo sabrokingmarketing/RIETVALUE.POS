@@ -4,6 +4,7 @@ import { listStaff } from "@/server/users";
 import { formatDateTime } from "@/lib/dates";
 import { Badge, Card, PageHeader } from "@/components/ui";
 import { AddStaffForm, StaffActions } from "./forms";
+import { SectionTabs } from "@/components/section-tabs";
 
 export const metadata: Metadata = { title: "Staff" };
 
@@ -12,6 +13,7 @@ export default async function StaffPage() {
   const staff = await listStaff(actor);
   return (
     <div className="mx-auto max-w-5xl">
+      <SectionTabs set="settings" active="/admin/staff" />
       <PageHeader title="Staff" description="Cashiers can sell, look up and reprint receipts, cash up and print labels. Only owners change prices, receive stock, adjust stock and authorise returns." />
       <ul className="flex flex-col gap-3">
         {staff.map((s) => (

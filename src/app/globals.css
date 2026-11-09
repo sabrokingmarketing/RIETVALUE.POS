@@ -1,31 +1,54 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens — light green identity.
+ * Contrast (WCAG): ink on white 16.5:1 · muted on white 5.2:1 · deep on soft 8.1:1 ·
+ * ink on primary 11.0:1 · white on deep 8.7:1. White text on the bright primary fails
+ * (1.5:1) and is never used. Focus rings use deep green (8.7:1 on white), not the primary.
+ */
 @theme {
   --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
-  --color-surface: #ffffff;   /* work surfaces */
-  --color-leaf: #eaf5e7;      /* selected rows, highlights */
-  --color-leaf-strong: #cfe8c8;
-  --color-forest: #215c39;    /* primary actions */
-  --color-forest-dark: #184a2d;
-  --color-mist: #f4f6f4;      /* workspace background */
-  --color-ink: #203028;       /* text */
-  --color-muted: #4f5f56;     /* secondary text, 6.6:1 on white */
-  --color-line: #d5ddd7;      /* restrained borders */
-  --color-danger: #b42318;    /* errors and destructive actions only */
+
+  --color-primary: #a3e635;        /* primary actions + active states (with dark text) */
+  --color-primary-hover: #84cc16;
+  --color-soft: #ecfccb;           /* soft green surfaces, selected rows */
+  --color-soft-strong: #d9f99d;
+  --color-deep: #365314;           /* readable green text, focus, sidebar */
+  --color-deep-hover: #2b4210;
+  --color-surface: #ffffff;
+  --color-mist: #f7f9f6;           /* workspace background */
+  --color-line: #e5e7eb;           /* card borders (decorative) */
+  --color-field: #879189;          /* form-field outlines (3.3:1 on white) */
+  --color-ink: #17211b;
+  --color-muted: #647067;
+  --color-danger: #b42318;
   --color-danger-bg: #fdecea;
   --color-warn: #8a5a00;
   --color-warn-bg: #fff4dc;
+  --color-info-bg: #eef6ff;
+
+  /* Legacy names kept so older screens follow the new palette */
+  --color-forest: #365314;
+  --color-forest-dark: #2b4210;
+  --color-leaf: #ecfccb;
+  --color-leaf-strong: #d9f99d;
+
+  --radius-card: 16px;
+  --shadow-card: 0 1px 2px rgb(23 33 27 / 0.04), 0 4px 16px rgb(23 33 27 / 0.04);
 }
 
 html { color: var(--color-ink); background: var(--color-mist); -webkit-text-size-adjust: 100%; }
 body { font-family: var(--font-sans); background: var(--color-mist); color: var(--color-ink); }
 
-/* Visible keyboard focus everywhere */
-:focus-visible { outline: 3px solid var(--color-forest); outline-offset: 2px; border-radius: 6px; }
-.on-dark :focus-visible, .btn-primary:focus-visible { outline-color: var(--color-ink); }
+/* Visible keyboard focus everywhere (deep green; on the dark sidebar, white). */
+:focus-visible { outline: 3px solid var(--color-deep); outline-offset: 2px; border-radius: 8px; }
+.on-dark :focus-visible { outline-color: #ffffff; }
 
-/* Numbers line up on the till */
 .tabular { font-variant-numeric: tabular-nums; }
+.card { background: var(--color-surface); border: 1px solid var(--color-line); border-radius: var(--radius-card); box-shadow: var(--shadow-card); }
+
+@keyframes shimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+.skeleton { background: linear-gradient(90deg, #eef1ed 25%, #f7f9f6 50%, #eef1ed 75%); background-size: 800px 100%; animation: shimmer 1.4s infinite linear; border-radius: 10px; }
 
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
 

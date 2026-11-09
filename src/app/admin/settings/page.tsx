@@ -4,6 +4,7 @@ import { pageActor } from "@/server/session";
 import { getSettings } from "@/server/settings";
 import { Alert, PageHeader } from "@/components/ui";
 import { SettingsForm } from "./form";
+import { SectionTabs } from "@/components/section-tabs";
 
 export const metadata: Metadata = { title: "Settings" };
 
@@ -12,6 +13,7 @@ export default async function SettingsPage() {
   const s = await getSettings();
   return (
     <div className="mx-auto max-w-4xl">
+      <SectionTabs set="settings" active="/admin/settings" />
       <PageHeader title="Business settings" description={<>Shown on receipts. Label sizes are under <Link className="underline" href="/admin/labels/presets">Print labels → label sizes</Link>.</>} />
       {s.is_fixture && <Alert tone="warn" className="mb-4" title="These are development placeholders">Replace every field with the nursery&apos;s real details before going live. Saving this form clears the placeholder flag.</Alert>}
       <SettingsForm s={s} />

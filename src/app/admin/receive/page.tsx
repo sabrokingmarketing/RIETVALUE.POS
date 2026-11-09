@@ -7,6 +7,7 @@ import { recentDeliveries } from "@/server/stock";
 import { formatDateTime } from "@/lib/dates";
 import { PageHeader } from "@/components/ui";
 import { ReceiveScreen } from "./receive-screen";
+import { SectionTabs } from "@/components/section-tabs";
 
 export const metadata: Metadata = { title: "Receive stock" };
 
@@ -15,6 +16,7 @@ export default async function ReceivePage() {
   const [categories, presets, recent] = await Promise.all([listCategories(), listPresets(), recentDeliveries(5)]);
   return (
     <div className="mx-auto max-w-5xl">
+      <SectionTabs set="inventory" active="/admin/receive" />
       <PageHeader title="Receive stock" description="Add each plant in the delivery, count it, confirm the selling price, then save. Labels print after the stock is saved." />
       <ReceiveScreen categories={categories} defaultPresetId={presets.find((p) => p.is_default)?.id ?? presets[0]?.id} />
       {recent.length > 0 && (

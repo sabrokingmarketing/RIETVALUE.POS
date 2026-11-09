@@ -2,13 +2,14 @@
 import { uuid } from "@/lib/uuid";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
-import { Banknote, CreditCard, Minus, Plus, Printer, ScanBarcode, Search, Trash2, Volume2, VolumeX, WifiOff, RotateCcw } from "lucide-react";
+import { Banknote, CreditCard, Leaf, Minus, Plus, Printer, ScanBarcode, Search, ShoppingBag, Trash2, Volume2, VolumeX, WifiOff, RotateCcw } from "lucide-react";
 import { Alert, Badge, Button, cx, inputClass } from "@/components/ui";
 import { Dialog } from "@/components/dialog";
 import { formatRand, parseRandToCents, centsToInput } from "@/lib/money";
-import type { TillItem } from "@/lib/till-types";
+import type { PosCategory, TillItem } from "@/lib/till-types";
+import { vatIncluded } from "@/lib/money";
 
-type Line = { variantId: number; name: string; size: string; sku: string; unitPriceCents: number; quantity: number; onHand: number };
+type Line = { variantId: number; name: string; size: string; sku: string; unitPriceCents: number; quantity: number; onHand: number; photo?: string | null };
 type Payment = { method: "cash"; tenderedCents: number } | { method: "card"; terminalApproved: true; reference: string };
 type Pending = { key: string; lines: Line[]; payment: Payment; totalCents: number; status: "sending" | "unknown"; startedAt: string };
 type Done = { saleId: string; receiptNo: string; totalCents: number; changeCents: number; method: "cash" | "card"; replayed: boolean };
@@ -55,7 +56,9 @@ function beep(ok: boolean) {
 const isTextField = (el: Element | null) =>
   !!el && (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement || (el as HTMLElement).isContentEditable);
 
-export function TillScreen({ tillOpen, staffName }: { tillOpen: boolean; staffName: string }) {
+export function TillScreen({ tillOpen, staffName, categories, vatRateBp, initialQuery = "" }: {
+  tillOpen: boolean; staffName: string; categories: PosCategory[]; vatRateBp: number; initialQuery?: string;
+}) {
   const [basket, setBasket] = useState<Line[]>([]);
   const [pending, setPending] = useState<Pending | null>(null);
   const [hydrated, setHydrated] = useState(false);
@@ -74,7 +77,9 @@ export function TillScreen({ tillOpen, staffName }: { tillOpen: boolean; staffNa
   const [priceReview, setPriceReview] = useState<Issue[] | null>(null);
   const [done, setDone] = useState<Done | null>(null);
   const [checkoutKey, setCheckoutKey] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialQuery);
+  const [category, setCategory] = useState<string | null>(null);
+  const [payPref, setPayPref] = useState<"cash" | "card">("cash");
   const [results, setResults] = useState<TillItem[] | null>(null);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
@@ -152,7 +157,7 @@ export function TillScreen({ tillOpen, staffName }: { tillOpen: boolean; staffNa
         next[i] = { ...next[i], quantity: next[i].quantity + qty, onHand: item.onHand };
         return next;
       }
-      return [...b, { variantId: item.variantId, name: item.name, size: item.size, sku: item.sku, unitPriceCents: item.priceCents, quantity: qty, onHand: item.onHand }];
+      return [...b, { variantId: item.variantId, name: item.name, size: item.size, sku: item.sku, unitPriceCents: item.priceCents, quantity: qty, onHand: item.onHand, photo: item.photo }];
     });
     setLastScanId(item.variantId);
     setLineIssues((li) => { const n = { ...li }; delete n[item.variantId]; return n; });
@@ -209,21 +214,22 @@ export function TillScreen({ tillOpen, staffName }: { tillOpen: boolean; staffNa
     setBasket([]); setLastScanId(null); setLineIssues({}); setCheckoutKey(null); setMsg(null); refocusScan();
   };
 
-  // ---- search ----------------------------------------------------------------
+  // ---- product grid / search -------------------------------------------------
   useEffect(() => {
     const term = search.trim();
-    if (term.length < 2) { setResults(null); setSearchError(null); return; }
+    if (term.length === 1) return;
     const t = setTimeout(async () => {
       setSearching(true);
       try {
-        const r = await call<{ items: TillItem[] }>(`/api/till/search?q=${encodeURIComponent(term)}`);
+        const qs = new URLSearchParams({ q: term, limit: "60", ...(category ? { category } : {}) });
+        const r = await call<{ items: TillItem[] }>(`/api/till/search?${qs}`);
         if (r.ok) { setResults(r.data.items); setSearchError(null); }
         else if (!handleApiFailure(r.status, r.error)) setSearchError(r.error.message);
-      } catch { setSearchError("No connection — search is unavailable."); setOnline(false); }
+      } catch { setSearchError("No connection — the product list cannot load. Scanning also needs the connection."); setOnline(false); }
       finally { setSearching(false); }
-    }, 200);
+    }, term ? 200 : 0);
     return () => clearTimeout(t);
-  }, [search, handleApiFailure]);
+  }, [search, category, handleApiFailure]);
 
   // ---- checkout ----------------------------------------------------------------
   const applyIssues = (issues: Issue[]) => {
@@ -249,7 +255,7 @@ export function TillScreen({ tillOpen, staffName }: { tillOpen: boolean; staffNa
       if (!r.data.ok) { applyIssues(r.data.issues); return; }
       setLineIssues({});
       setCheckoutKey((k) => k ?? uuid());
-      setPayError(null); setTendered(""); setCardRef(""); setMethod("cash");
+      setPayError(null); setTendered(""); setCardRef(""); setMethod(payPref);
       setPayOpen(true);
     } catch { setOnline(false); setMsg({ tone: "error", text: "No connection. Payment cannot be taken while offline." }); }
     finally { setBusy(null); }
@@ -344,12 +350,13 @@ export function TillScreen({ tillOpen, staffName }: { tillOpen: boolean; staffNa
   }, [totalCents]);
 
   const checkoutDisabled = !online || basket.length === 0 || !!pending || !tillOpen || busy === "validate";
+  const vatCents = useMemo(() => basket.reduce((s, l) => s + vatIncluded(l.unitPriceCents * l.quantity, vatRateBp), 0), [basket, vatRateBp]);
 
   // ---------------------------------------------------------------------------
   return (
-    <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-      {/* LEFT: scan & search */}
-      <div className="flex min-w-0 flex-1 flex-col gap-4 p-4 pb-4 md:overflow-y-auto">
+    <div className="flex min-h-0 flex-1 flex-col md:h-[calc(100dvh-61px)] md:flex-none md:flex-row md:overflow-hidden">
+      {/* LEFT: scan, categories, products */}
+      <div className="flex min-w-0 flex-1 flex-col gap-5 p-4 sm:p-5 md:overflow-y-auto">
         {!online && (
           <Alert tone="error" title="Offline — checkout is disabled">
             The till cannot reach the server. Keep the customer&apos;s items aside; you can finish the sale when the connection returns.
@@ -377,10 +384,30 @@ export function TillScreen({ tillOpen, staffName }: { tillOpen: boolean; staffNa
             </div>
           </Alert>
         )}
+        {done && (
+          <section className="card border-2 border-deep/50 bg-soft/60 p-5" aria-live="assertive" data-testid="sale-done">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-wide text-deep">Sale complete{done.replayed ? " (already recorded)" : ""}</p>
+                <p className="mt-1 text-lg">Receipt <span className="font-mono font-semibold" data-testid="receipt-no">{done.receiptNo}</span> · {formatRand(done.totalCents)} {done.method === "card" ? "by card" : "cash"}</p>
+              </div>
+              {done.method === "cash" && (
+                <p className="text-right"><span className="text-sm text-muted">Change to give</span><br />
+                  <span className="tabular text-5xl font-bold" data-testid="change-due">{formatRand(done.changeCents)}</span></p>
+              )}
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <Button onClick={() => printReceipt(done.saleId, "80mm")}><Printer className="size-4" aria-hidden /> Print receipt</Button>
+              <Button variant="secondary" onClick={() => printReceipt(done.saleId, "a4")}>A4 receipt</Button>
+              <Link className="inline-flex min-h-11 items-center px-3 text-sm font-semibold text-deep underline" href={`/till/receipts/${done.saleId}`}>View receipt</Link>
+              <Button variant="ghost" onClick={() => { setDone(null); refocusScan(); }}>Next customer</Button>
+            </div>
+          </section>
+        )}
 
-        <form onSubmit={onScanSubmit} className="rounded-xl border border-line bg-surface p-4" autoComplete="off">
+        <form onSubmit={onScanSubmit} className="card p-4" autoComplete="off">
           <label htmlFor="scan" className="flex items-center gap-2 text-sm font-semibold">
-            <ScanBarcode className="size-5 text-forest" aria-hidden /> Scan barcode
+            <ScanBarcode className="size-5 text-deep" aria-hidden /> Scan barcode
           </label>
           <div className="mt-2 flex gap-2">
             <input id="scan" ref={scanRef} name="scan" autoFocus inputMode="text" enterKeyHint="enter" spellCheck={false}
@@ -389,9 +416,9 @@ export function TillScreen({ tillOpen, staffName }: { tillOpen: boolean; staffNa
             <Button type="submit" size="lg" variant="secondary" disabled={!!pending}>Add</Button>
           </div>
           <p id="scan-help" className="mt-2 text-xs text-muted">Each scan adds one item. Scan the same pot twice to sell two.</p>
-          <div aria-live="polite" className="mt-3 min-h-12">
+          <div aria-live="polite" className="mt-3">
             {lastScan ? (
-              <div className="flex items-center justify-between gap-3 rounded-lg bg-leaf px-3 py-2" data-testid="last-scan">
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-soft px-3 py-2" data-testid="last-scan">
                 <div className="min-w-0">
                   <p className="text-xs font-medium uppercase tracking-wide text-muted">Last item</p>
                   <p className="truncate font-semibold">{lastScan.name} — {lastScan.size}</p>
@@ -403,101 +430,129 @@ export function TillScreen({ tillOpen, staffName }: { tillOpen: boolean; staffNa
           {msg && <Alert tone={msg.tone} className="mt-2">{msg.text}</Alert>}
         </form>
 
-        <section className="rounded-xl border border-line bg-surface p-4" aria-labelledby="search-label">
-          <label id="search-label" htmlFor="search" className="flex items-center gap-2 text-sm font-semibold">
-            <Search className="size-5 text-forest" aria-hidden /> Find by name or SKU
-          </label>
-          <input id="search" type="search" value={search} onChange={(e) => setSearch(e.target.value)} className={cx(inputClass, "mt-2")}
-            placeholder="e.g. lavender, LAV-15" autoComplete="off" />
-          <div className="mt-3" aria-live="polite">
-            {searching && <p className="text-sm text-muted">Searching…</p>}
+        <section aria-labelledby="cat-h">
+          <h2 id="cat-h" className="mb-2 text-lg font-semibold">Category</h2>
+          <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filter products by category">
+            {[{ slug: null as string | null, name: "All plants", count: categories.reduce((a, c) => a + c.count, 0) }, ...categories].map((c) => {
+              const on = category === c.slug;
+              return (
+                <button key={c.slug ?? "all"} type="button" aria-pressed={on} onClick={() => setCategory(c.slug)}
+                  className={cx("inline-flex min-h-12 shrink-0 items-center gap-2 rounded-2xl border px-3 pr-4 text-sm font-medium transition-colors",
+                    on ? "border-primary bg-primary text-ink" : "border-line bg-surface hover:border-deep/40 hover:bg-soft")}>
+                  <span className={cx("inline-flex size-8 items-center justify-center rounded-xl", on ? "bg-white/60" : "bg-soft text-deep")} aria-hidden><Leaf className="size-4" /></span>
+                  {c.name}<span className={cx("tabular text-xs", on ? "text-ink/70" : "text-muted")}>{c.count}</span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        <section aria-labelledby="prod-h" className="flex flex-col gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 id="prod-h" className="text-lg font-semibold">Products</h2>
+            <div className="relative w-full sm:w-72">
+              <label htmlFor="search" className="sr-only">Find by name or SKU</label>
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted" aria-hidden />
+              <input id="search" type="search" value={search} onChange={(e) => setSearch(e.target.value)} className={cx(inputClass, "pl-9")}
+                placeholder="Find by name or SKU" autoComplete="off" />
+            </div>
+          </div>
+          <div aria-live="polite" aria-busy={searching}>
             {searchError && <Alert tone="error">{searchError}</Alert>}
-            {results && !searching && results.length === 0 && <p className="text-sm text-muted">Nothing matches “{search}”.</p>}
+            {!results && !searchError && (
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3">{Array.from({ length: 8 }, (_, i) => <div key={i} className="skeleton h-56" />)}</div>
+            )}
+            {results && results.length === 0 && (
+              <div className="rounded-2xl border border-dashed border-field/50 bg-surface p-8 text-center">
+                <p className="font-semibold">{search.trim() ? `Nothing matches “${search.trim()}”` : "No products in this category yet"}</p>
+                <p className="mt-1 text-sm text-muted">Try another name or category, or scan the label.</p>
+              </div>
+            )}
             {results && results.length > 0 && (
-              <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                {results.map((r) => (
-                  <li key={r.variantId}>
-                    <button type="button" onClick={() => { addItem(r, 1); refocusScan(); }} disabled={!!pending}
-                      className="flex min-h-16 w-full flex-col items-start rounded-lg border border-line bg-surface px-3 py-2 text-left hover:border-forest hover:bg-leaf">
-                      <span className="font-semibold">{r.name}</span>
-                      <span className="flex w-full justify-between gap-2 text-sm text-muted">
-                        <span>{r.size}</span><span className="tabular font-semibold text-ink">{formatRand(r.priceCents)}</span>
-                      </span>
-                      <span className="text-xs text-muted">{r.sku} · {r.onHand} in stock</span>
-                    </button>
-                  </li>
-                ))}
+              <ul className={cx("grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-3", searching && "opacity-60")}>
+                {results.map((r) => {
+                  const inBasket = basket.find((l) => l.variantId === r.variantId)?.quantity ?? 0;
+                  return (
+                    <li key={r.variantId} className={cx("card flex flex-col overflow-hidden", inBasket > 0 && "ring-2 ring-primary")}>
+                      <div className="relative aspect-[4/3] bg-soft">
+                        {r.photo ? <img src={r.photo} alt="" loading="lazy" className="h-full w-full object-cover" />
+                          : <span className="flex h-full items-center justify-center text-deep/60" aria-hidden><Leaf className="size-10" /></span>}
+                        {r.onHand <= 0 ? <span className="absolute left-2 top-2 rounded-full bg-danger-bg px-2 py-0.5 text-xs font-semibold text-danger">Sold out</span>
+                          : r.onHand <= r.lowStock ? <span className="absolute left-2 top-2 rounded-full bg-warn-bg px-2 py-0.5 text-xs font-semibold text-warn">{r.onHand} left</span> : null}
+                        {inBasket > 0 && <span className="absolute right-2 top-2 rounded-full bg-primary px-2 py-0.5 text-xs font-bold text-ink">{inBasket} in order</span>}
+                      </div>
+                      <div className="flex flex-1 flex-col gap-1 p-3">
+                        <p className="line-clamp-2 font-semibold leading-snug">{r.name}</p>
+                        <p className="text-sm text-muted">{r.size}</p>
+                        <p className="tabular mt-auto pt-1 text-lg font-bold">{formatRand(r.priceCents)}</p>
+                        <button type="button" onClick={() => { addItem(r, 1); refocusScan(); }} disabled={!!pending}
+                          aria-label={`Add ${r.name} ${r.size} to order`}
+                          className="mt-1 inline-flex min-h-11 items-center justify-center gap-1 rounded-xl bg-primary px-3 text-sm font-semibold text-ink hover:bg-primary-hover disabled:opacity-50">
+                          <Plus className="size-4" aria-hidden /> Add
+                        </button>
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
         </section>
-
-        {done && (
-          <section className="rounded-xl border-2 border-forest bg-surface p-5" aria-live="assertive" data-testid="sale-done">
-            <p className="text-sm font-semibold uppercase tracking-wide text-forest">Sale complete{done.replayed ? " (already recorded)" : ""}</p>
-            <p className="mt-1 text-lg">Receipt <span className="font-mono font-semibold" data-testid="receipt-no">{done.receiptNo}</span> · {formatRand(done.totalCents)} {done.method === "card" ? "by card" : "cash"}</p>
-            {done.method === "cash" && (
-              <p className="mt-3"><span className="text-sm text-muted">Change to give</span><br />
-                <span className="tabular text-5xl font-bold" data-testid="change-due">{formatRand(done.changeCents)}</span></p>
-            )}
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button onClick={() => printReceipt(done.saleId, "80mm")}><Printer className="size-4" aria-hidden /> Print receipt</Button>
-              <Button variant="secondary" onClick={() => printReceipt(done.saleId, "a4")}>A4 receipt</Button>
-              <Link className="inline-flex min-h-11 items-center px-3 text-sm font-semibold text-forest underline" href={`/till/receipts/${done.saleId}`}>View receipt</Link>
-              <Button variant="ghost" onClick={() => { setDone(null); refocusScan(); }}>Next customer</Button>
-            </div>
-          </section>
-        )}
       </div>
 
-      {/* RIGHT: basket, total, payment */}
-      <aside className="flex w-full flex-col border-t border-line bg-surface pb-44 md:w-1/2 md:max-w-xl md:border-t-0 md:border-l md:pb-0 lg:w-[44%]" aria-label="Basket">
+      {/* RIGHT: order, total, payment */}
+      <aside className="flex w-full flex-col border-t border-line bg-surface pb-44 md:h-full md:w-[340px] md:shrink-0 md:border-l md:border-t-0 md:pb-0 lg:w-[400px]" aria-label="Order">
         <div className="flex items-center justify-between gap-2 border-b border-line px-4 py-3">
-          <h2 className="text-lg font-semibold">Basket <span className="text-sm font-normal text-muted">({itemCount} item{itemCount === 1 ? "" : "s"})</span></h2>
+          <h2 className="flex items-center gap-2 text-lg font-semibold"><ShoppingBag className="size-5 text-deep" aria-hidden /> Order
+            <span className="rounded-full bg-soft px-2 py-0.5 text-xs font-semibold text-deep">{itemCount} item{itemCount === 1 ? "" : "s"}</span></h2>
           <div className="flex gap-1">
-            <button type="button" onClick={() => setSound((s) => !s)} className="inline-flex size-11 items-center justify-center rounded-lg hover:bg-mist" aria-label={sound ? "Turn scan sounds off" : "Turn scan sounds on"} title={sound ? "Sound on" : "Sound off"}>
+            <button type="button" onClick={() => setSound((s) => !s)} className="inline-flex size-11 items-center justify-center rounded-xl hover:bg-mist" aria-label={sound ? "Turn scan sounds off" : "Turn scan sounds on"} title={sound ? "Sound on" : "Sound off"}>
               {sound ? <Volume2 className="size-5" aria-hidden /> : <VolumeX className="size-5" aria-hidden />}
             </button>
-            <Button variant="ghost" onClick={clearBasket} disabled={!basket.length || !!pending}>Clear</Button>
+            <Button variant="ghost" onClick={clearBasket} disabled={!basket.length || !!pending}>Clear all</Button>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto bg-mist/50 p-3">
           {basket.length === 0 ? (
-            <div className="p-8 text-center text-muted">
-              <p className="font-semibold text-ink">The basket is empty</p>
-              <p className="mt-1 text-sm">Scan a label to start a sale.</p>
+            <div className="flex h-full min-h-40 flex-col items-center justify-center gap-2 p-6 text-center text-muted">
+              <span className="inline-flex size-12 items-center justify-center rounded-2xl bg-soft text-deep" aria-hidden><ScanBarcode className="size-6" /></span>
+              <p className="font-semibold text-ink">The order is empty</p>
+              <p className="text-sm">Scan a label or tap a product to start a sale.</p>
             </div>
           ) : (
-            <ul className="divide-y divide-line" data-testid="basket">
+            <ul className="flex flex-col gap-2" data-testid="basket">
               {basket.map((l) => {
                 const issue = lineIssues[l.variantId];
                 const overStock = l.quantity > l.onHand;
                 return (
-                  <li key={l.variantId} className={cx("px-4 py-3", issue ? "bg-danger-bg" : lastScanId === l.variantId ? "bg-leaf/60" : "")} data-testid="basket-line">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
+                  <li key={l.variantId} className={cx("rounded-2xl border bg-surface p-3", issue ? "border-danger bg-danger-bg" : lastScanId === l.variantId ? "border-primary ring-1 ring-primary" : "border-line")} data-testid="basket-line">
+                    <div className="flex items-start gap-3">
+                      <span className="inline-flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-soft text-deep" aria-hidden>
+                        {l.photo ? <img src={l.photo} alt="" className="h-full w-full object-cover" /> : <Leaf className="size-5" />}
+                      </span>
+                      <div className="min-w-0 flex-1">
                         <p className="font-semibold leading-tight">{l.name}</p>
                         <p className="text-sm text-muted">{l.size} · <span className="tabular">{formatRand(l.unitPriceCents)}</span> each</p>
                       </div>
-                      <p className="tabular shrink-0 text-xl font-bold" data-testid="line-total">{formatRand(l.unitPriceCents * l.quantity)}</p>
+                      <p className="tabular shrink-0 text-lg font-bold" data-testid="line-total">{formatRand(l.unitPriceCents * l.quantity)}</p>
                     </div>
                     <div className="mt-2 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1">
-                        <button type="button" className="inline-flex size-12 items-center justify-center rounded-lg border border-line hover:bg-leaf disabled:opacity-40"
+                      <div className="flex items-center gap-1 rounded-xl border border-line p-0.5">
+                        <button type="button" className="inline-flex size-11 items-center justify-center rounded-lg hover:bg-soft disabled:opacity-40"
                           onClick={() => { setQty(l.variantId, l.quantity - 1); refocusScan(); }} disabled={l.quantity <= 1 || !!pending} aria-label={`One fewer ${l.name}`}>
                           <Minus className="size-5" aria-hidden />
                         </button>
                         <label className="sr-only" htmlFor={`qty-${l.variantId}`}>Quantity of {l.name} {l.size}</label>
                         <input id={`qty-${l.variantId}`} type="number" inputMode="numeric" min={1} max={999} value={l.quantity} disabled={!!pending}
                           onChange={(e) => setQty(l.variantId, Number(e.target.value))} data-testid="line-qty"
-                          className="tabular h-12 w-16 rounded-lg border border-line text-center text-2xl font-bold" />
-                        <button type="button" className="inline-flex size-12 items-center justify-center rounded-lg border border-line hover:bg-leaf disabled:opacity-40"
+                          className="tabular h-11 w-14 rounded-lg border border-field/60 text-center text-xl font-bold" />
+                        <button type="button" className="inline-flex size-11 items-center justify-center rounded-lg hover:bg-soft disabled:opacity-40"
                           onClick={() => { setQty(l.variantId, l.quantity + 1); refocusScan(); }} disabled={!!pending} aria-label={`One more ${l.name}`}>
                           <Plus className="size-5" aria-hidden />
                         </button>
                       </div>
                       <button type="button" onClick={() => removeLine(l.variantId)} disabled={!!pending}
-                        className="inline-flex min-h-11 items-center gap-1 rounded-lg px-3 text-sm font-medium text-danger hover:bg-danger-bg" aria-label={`Remove ${l.name} ${l.size}`}>
+                        className="inline-flex min-h-11 items-center gap-1 rounded-xl px-3 text-sm font-medium text-danger hover:bg-danger-bg" aria-label={`Remove ${l.name} ${l.size}`}>
                         <Trash2 className="size-4" aria-hidden /> Remove
                       </button>
                     </div>
@@ -509,16 +564,29 @@ export function TillScreen({ tillOpen, staffName }: { tillOpen: boolean; staffNa
             </ul>
           )}
         </div>
-        {/* Total + checkout: sticky at the bottom on tablet/phone so it is always visible */}
-        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface p-4 shadow-[0_-4px_16px_rgba(32,48,40,0.08)] md:sticky md:bottom-0 md:shadow-none">
-          <div className="flex items-end justify-between gap-4">
-            <span className="text-sm font-semibold uppercase tracking-wide text-muted">Amount due</span>
-            <span className="tabular text-4xl font-bold sm:text-5xl" data-testid="amount-due">{formatRand(totalCents)}</span>
+        {/* Summary + payment: pinned to the bottom of the screen on phones so the total and action stay visible */}
+        <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface p-4 shadow-[0_-4px_16px_rgba(23,33,27,0.08)] md:static md:shadow-none">
+          <dl className="hidden gap-y-1 text-sm sm:grid sm:grid-cols-2">
+            <dt className="text-muted">Items</dt><dd className="tabular text-right">{itemCount}</dd>
+            {vatRateBp > 0 && <><dt className="text-muted">VAT included ({vatRateBp / 100}%)</dt><dd className="tabular text-right">{formatRand(vatCents)}</dd></>}
+          </dl>
+          <div className="mt-1 flex items-end justify-between gap-4">
+            <span className="text-sm font-semibold uppercase tracking-wide text-muted">Total</span>
+            <span className="tabular text-4xl font-bold" data-testid="amount-due">{formatRand(totalCents)}</span>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2" role="group" aria-label="Payment method">
+            {(["cash", "card"] as const).map((m) => (
+              <button key={m} type="button" aria-pressed={payPref === m} onClick={() => setPayPref(m)}
+                className={cx("inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border text-sm font-semibold",
+                  payPref === m ? "border-deep bg-soft text-deep" : "border-line bg-surface hover:bg-soft")}>
+                {m === "cash" ? <Banknote className="size-4" aria-hidden /> : <CreditCard className="size-4" aria-hidden />}{m === "cash" ? "Pay by cash" : "Pay by card"}
+              </button>
+            ))}
           </div>
           <Button size="xl" className="mt-3 w-full" onClick={takePayment} disabled={checkoutDisabled} busy={busy === "validate"} data-testid="take-payment">
             {online ? "Take payment" : <><WifiOff className="size-5" aria-hidden /> Offline — checkout disabled</>}
           </Button>
-          <p className="mt-2 text-center text-xs text-muted">Signed in as {staffName}</p>
+          <p className="mt-2 hidden text-center text-xs text-muted sm:block">Signed in as {staffName}</p>
         </div>
       </aside>
 
@@ -547,7 +615,7 @@ export function TillScreen({ tillOpen, staffName }: { tillOpen: boolean; staffNa
 
       {/* Payment */}
       <Dialog open={payOpen} onClose={() => busy !== "submit" && setPayOpen(false)} title="Take payment" locked={busy === "submit"}>
-        <div className="rounded-lg bg-leaf p-4 text-center">
+        <div className="rounded-2xl bg-soft p-4 text-center">
           <p className="text-sm font-semibold uppercase tracking-wide text-muted">Amount due</p>
           <p className="tabular text-5xl font-bold" data-testid="pay-due">{formatRand(totalCents)}</p>
           {checkoutKey && <p className="mt-1 text-xs text-muted">Checkout ref <span className="font-mono">{checkoutKey.slice(0, 8).toUpperCase()}</span></p>}
@@ -555,8 +623,8 @@ export function TillScreen({ tillOpen, staffName }: { tillOpen: boolean; staffNa
         <div className="mt-4 grid grid-cols-2 gap-2" role="radiogroup" aria-label="Payment method">
           {(["cash", "card"] as const).map((m) => (
             <button key={m} type="button" role="radio" aria-checked={method === m} onClick={() => { setMethod(m); setPayError(null); }}
-              className={cx("flex min-h-14 items-center justify-center gap-2 rounded-lg border-2 text-lg font-semibold",
-                method === m ? "border-forest bg-leaf text-forest" : "border-line bg-surface")}>
+              className={cx("flex min-h-14 items-center justify-center gap-2 rounded-xl border-2 text-lg font-semibold",
+                method === m ? "border-deep bg-soft text-deep" : "border-line bg-surface")}>
               {m === "cash" ? <Banknote className="size-6" aria-hidden /> : <CreditCard className="size-6" aria-hidden />} {m === "cash" ? "Cash" : "Card"}
             </button>
           ))}

@@ -9,7 +9,7 @@ test.describe("owner screens on a phone", () => {
 
   test("owner workspace is usable on a phone", async ({ page }) => {
     await signIn(page, "owner", "/admin");
-    for (const path of ["/admin", "/admin/products", "/admin/receive", "/admin/stock", "/admin/reports", "/admin/settings"]) {
+    for (const path of ["/admin", "/till", "/admin/products", "/admin/receive", "/admin/stock", "/admin/labels", "/till/receipts", "/admin/reports", "/admin/import-export", "/admin/settings"]) {
       await page.goto(path);
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow, `${path} scrolls sideways`).toBeLessThanOrEqual(0);

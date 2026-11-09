@@ -5,6 +5,7 @@ import { findReceipts } from "@/server/receipts";
 import { formatDateTime, isYmd, todayBusinessDate } from "@/lib/dates";
 import { formatRand } from "@/lib/money";
 import { Badge, Button, EmptyState, PageHeader, Table, inputClass, td, th } from "@/components/ui";
+import { SectionTabs } from "@/components/section-tabs";
 
 export const metadata: Metadata = { title: "Receipts" };
 
@@ -16,6 +17,7 @@ export default async function ReceiptsPage({ searchParams }: { searchParams: Pro
   const rows = await findReceipts(actor, { term, date });
   return (
     <div className="mx-auto w-full max-w-5xl p-4">
+      <SectionTabs set="sales" active="/till/receipts" />
       <PageHeader title="Receipts" description="Find a sale to reprint its receipt or process a return." />
       <form className="mb-4 grid gap-2 rounded-xl border border-line bg-surface p-3 sm:grid-cols-[1fr_auto_auto]" role="search">
         <label className="sr-only" htmlFor="q">Receipt number, card reference, checkout reference or amount</label>
