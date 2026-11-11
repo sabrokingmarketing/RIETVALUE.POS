@@ -7,8 +7,7 @@ import type { Invoice } from "./invoices";
 import { invoiceBadge, invoiceTitle, PAID_METHODS, saDate, shortDate, type InvoiceBadge } from "@/lib/invoice-format";
 export { shortDate };
 import { formatRand } from "@/lib/money";
-import { LOGO_PARTS } from "@/lib/brand-logo";
-import { uploadDir } from "./uploads";
+import type { Logo } from "./logo";
 
 const MM = 72 / 25.4;
 const W = 210, H = 297, MX = 16;
@@ -28,16 +27,15 @@ async function loadFonts() {
   return fontCache;
 }
 
-async function loadLogo(doc: PDFDocument, logoFile: string): Promise<PDFImage | null> {
-  if (!/^[0-9a-f-]{36}\.(png|jpg)$/.test(logoFile)) return null;
+async function loadLogo(doc: PDFDocument, logo: Logo): Promise<PDFImage | null> {
   try {
-    const bytes = await fs.readFile(path.join(/*turbopackIgnore: true*/ uploadDir(), logoFile));
-    return logoFile.endsWith(".png") ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
+    const bytes = await fs.readFile(logo.file);
+    return logo.type === "png" ? await doc.embedPng(bytes) : await doc.embedJpg(bytes);
   } catch { return null; }
 }
 
 /** Renders the invoice as an A4 PDF. Everything shown comes from the invoice record and its snapshot. */
-export async function renderInvoicePdf(inv: Invoice, opts: { logoFile?: string } = {}): Promise<Uint8Array> {
+export async function renderInvoicePdf(inv: Invoice, opts: { logo?: Logo | null } = {}): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);
   const f = await loadFonts();
@@ -51,7 +49,7 @@ export async function renderInvoicePdf(inv: Invoice, opts: { logoFile?: string }
   doc.setTitle(`${invoiceTitle(inv)} ${number} — ${b.business_name}`);
   doc.setAuthor(b.business_name);
   doc.setCreator("Rietvalei POS");
-  const logo = opts.logoFile ? await loadLogo(doc, opts.logoFile) : null;
+  const logo = opts.logo ? await loadLogo(doc, opts.logo) : null;
 
   const charset = new Set(B.getCharacterSet());
   const clean = (t: string) => Array.from(t.replace(/\r/g, "")).map((ch) => (ch === "\n" || charset.has(ch.codePointAt(0)!) ? ch : "?")).join("");
@@ -116,20 +114,15 @@ export async function renderInvoicePdf(inv: Invoice, opts: { logoFile?: string }
     pill(badge.label, MX + M.widthOfTextAtSize(number, 11) / MM + 4, 27.6, badge.tone);
     // Brand block (right)
     if (logo) {
-      const box = { w: 62, h: 28 }; const s = Math.min((box.w * MM) / logo.width, (box.h * MM) / logo.height);
-      const w = logo.width * s, h = logo.height * s;
-      page.drawImage(logo, { x: (W - MX) * MM - w, y: (H - 13) * MM - h, width: w, height: h });
+      // The nursery's own logo, kept in proportion inside a 34 × 30 mm box at the top right.
+      const box = { w: 44, h: 30 }; const sc = Math.min((box.w * MM) / logo.width, (box.h * MM) / logo.height);
+      const w = logo.width * sc, h = logo.height * sc;
+      page.drawImage(logo, { x: (W - MX) * MM - w, y: (H - 10) * MM - h, width: w, height: h });
     } else {
-      const size = 26, x0 = W - MX - size, y0 = 12;
-      for (const p of LOGO_PARTS) {
-        page.drawSvgPath(p.d, { x: x0 * MM, y: (H - y0) * MM, scale: (size / 100) * MM, color: p.fill ? hex(p.fill) : undefined,
-          borderColor: p.stroke ? hex(p.stroke) : undefined, borderWidth: p.width ? p.width * (size / 100) * MM : undefined, borderLineCap: 1 } as never);
-      }
-      const nx = x0 - 4;
-      const nameLines = wrap(b.business_name, B, 13, 70).slice(0, 2);
+      const nameLines = wrap(b.business_name, B, 13, 80).slice(0, 2);
       let ny = 16 + (nameLines.length === 1 ? 2.5 : 0);
-      for (const l of nameLines) { text(l, nx, ny, B, 13, C.deep, "right"); ny += 6; }
-      if (b.legal_name && b.legal_name !== b.business_name) text(b.legal_name, nx, ny, R, 8, C.muted, "right");
+      for (const l of nameLines) { text(l, W - MX, ny, B, 13, C.deep, "right"); ny += 6; }
+      if (b.legal_name && b.legal_name !== b.business_name) text(b.legal_name, W - MX, ny, R, 8, C.muted, "right");
     }
     return 44;
   };

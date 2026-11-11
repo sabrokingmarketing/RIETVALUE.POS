@@ -45,8 +45,8 @@ function Step({ n, icon, title, sub, children, right }: { n: number; icon: React
 
 const lbl = "text-sm font-medium";
 
-export function InvoiceEditor({ initial, business, vatRegistered, vatRateBp, termsDays, logoFile, today }: {
-  initial: EditorInitial; business: DocBusiness; vatRegistered: boolean; vatRateBp: number; termsDays: number; logoFile: string; today: string;
+export function InvoiceEditor({ initial, business, vatRegistered, vatRateBp, termsDays, logoUrl, today }: {
+  initial: EditorInitial; business: DocBusiness; vatRegistered: boolean; vatRateBp: number; termsDays: number; logoUrl: string | null; today: string;
 }) {
   const router = useRouter();
   const uid = useId();
@@ -149,7 +149,7 @@ export function InvoiceEditor({ initial, business, vatRegistered, vatRateBp, ter
   };
 
   const preview = (
-    <InvoiceDocument logoFile={logoFile} inv={{
+    <InvoiceDocument logoUrl={logoUrl} inv={{
       invoice_no: null, status: "draft", source: "manual", bill_name: bill.name, bill_company: bill.company, bill_email: bill.email, bill_phone: bill.phone,
       bill_address: bill.address, bill_vat_number: bill.vatNumber, issue_date: issueDate, due_date: dueDate || null, reference, notes, payment_info: paymentInfo,
       subtotal_cents: total - vat, vat_cents: vat, total_cents: total, vat_registered: vatRegistered, business_snapshot: business, paid_at: null, paid_method: "", void_reason: "",

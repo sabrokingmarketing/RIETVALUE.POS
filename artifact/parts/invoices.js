@@ -1,16 +1,6 @@
 // ---------------------------------------------------------------- INVOICES
-const LOGO_PARTS = [
-  { d: "M50 3 A47 47 0 1 1 49.99 3 Z", stroke: "#0E4D2E", width: 3.2 },
-  { d: "M50 7.5 A42.5 42.5 0 1 1 49.99 7.5 Z", stroke: "#8DC63F", width: 1.6 },
-  { d: "M24 54 A26.5 26.5 0 1 1 76 54", stroke: "#8DC63F", width: 3.4 },
-  { d: "M23.6 54 Q50 41 76.4 54 A26.6 26.6 0 0 1 23.6 54 Z", fill: "#0E4D2E" },
-  { d: "M50 51 C49.4 45 50.6 40 50 34", stroke: "#0E4D2E", width: 2.2 },
-  { d: "M50 49 C52.5 55.5 58 58.5 58 64 A8 8 0 0 1 42 64 C42 58.5 47.5 55.5 50 49 Z", fill: "#FFFFFF" },
-  { d: "M50 34 C45.6 29 45.6 23 50 17.5 C54.4 23 54.4 29 50 34 Z", fill: "#8DC63F" },
-  { d: "M48.6 35 C43 36.4 36.6 34 34.6 27 C41.2 26 46.4 29 48.6 35 Z", fill: "#8DC63F" },
-  { d: "M51.4 35 C57 36.4 63.4 34 65.4 27 C58.8 26 53.6 29 51.4 35 Z", fill: "#8DC63F" },
-];
-const logoSvgEl = (size = 72) => `<svg viewBox="0 0 100 100" width="${size}" height="${size}" aria-hidden="true">${LOGO_PARTS.map((p) => `<path d="${p.d}" fill="${p.fill || "none"}"${p.stroke ? ` stroke="${p.stroke}" stroke-width="${p.width}" stroke-linecap="round"` : ""}/>`).join("")}</svg>`;
+/** The nursery's own logo, uploaded in Settings (stored as a PNG data URL). Nothing is drawn when there is none. */
+const shopLogo = () => (typeof S !== "undefined" && S.logo?.dataUrl && /^data:image\/png;base64,/.test(S.logo.dataUrl) ? S.logo.dataUrl : null);
 const PAID_M = { eft: "EFT / bank transfer", cash: "Cash", card: "Card", other: "Other" };
 const sDate = (ymd) => { if (!ymd) return "—"; const [y, m, d] = ymd.slice(0, 10).split("-").map(Number); return new Intl.DateTimeFormat("en-ZA", { timeZone: "UTC", day: "numeric", month: "short", year: "numeric" }).format(new Date(Date.UTC(y, m - 1, d))); };
 const saYmd = (iso) => new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date(iso));
@@ -95,7 +85,7 @@ function invDocHtml(inv) {
   return `<article class="idoc">${inv.status === "void" || inv.status === "draft" ? `<span class="iwm ${inv.status}">${inv.status === "void" ? "VOID" : "DRAFT"}</span>` : ""}
   <div class="ibar"></div><div class="ipad">
   <header class="ihead"><div><h2 class="ititle">${invTitle(inv).toUpperCase()}</h2><p class="row small muted" style="margin-top:4px"><span class="tab">${esc(inv.no || "Number given when issued")}</span><span class="pill ${bt}">${bl}</span></p></div>
-    <div class="ibrand"><div style="text-align:right"><p style="font-weight:700;color:var(--forest);font-size:1.05rem">${esc(b.name)}</p>${b.legal && b.legal !== b.name ? `<p class="small muted">${esc(b.legal)}</p>` : ""}</div>${logoSvgEl(76)}</div></header>
+    <div class="ibrand">${shopLogo() ? `<img src="${shopLogo()}" alt="${esc(b.name)}" style="height:112px;max-width:240px;object-fit:contain">` : `<div style="text-align:right"><p style="font-weight:700;color:var(--forest);font-size:1.05rem">${esc(b.name)}</p>${b.legal && b.legal !== b.name ? `<p class="small muted">${esc(b.legal)}</p>` : ""}</div>`}</div></header>
   <div class="iband"><section>${L("Bill from")}<p><strong>${esc(b.name)}</strong></p>${b.address ? `<p class="muted pre">${esc(b.address)}</p>` : ""}${b.phone ? `<p class="muted">Tel ${esc(b.phone)}</p>` : ""}${b.email ? `<p class="muted">${esc(b.email)}</p>` : ""}${b.vatNo ? `<p>VAT no. ${esc(b.vatNo)}</p>` : ""}</section>
     <section>${L("Bill to")}<p><strong>${esc(inv.bill.name) || '<span class="muted">Customer name</span>'}</strong></p>${inv.bill.company ? `<p>${esc(inv.bill.company)}</p>` : ""}${inv.bill.address ? `<p class="muted pre">${esc(inv.bill.address)}</p>` : ""}${inv.bill.email ? `<p class="muted" style="word-break:break-all">${esc(inv.bill.email)}</p>` : ""}${inv.bill.phone ? `<p class="muted">Tel ${esc(inv.bill.phone)}</p>` : ""}${inv.bill.vat ? `<p>VAT no. ${esc(inv.bill.vat)}</p>` : ""}</section>
     <section class="idates"><div>${L("Issue date")}<p><strong>${sDate(inv.issue)}</strong></p></div><div>${L(paid ? "Paid on" : "Due date")}<p><strong>${due}</strong></p></div>${inv.ref ? `<div>${L("Reference")}<p><strong>${esc(inv.ref)}</strong></p></div>` : ""}</section></div>
@@ -126,16 +116,16 @@ async function invoicePdf(inv) {
   const wrap = (t, f, size, maxMm) => { const out = []; for (const para of clean(t).split("\n")) { let cur = ""; for (const w of para.split(/\s+/).filter(Boolean)) { const n = cur ? cur + " " + w : w; if (f.widthOfTextAtSize(n, size) / MM <= maxMm) cur = n; else { if (cur) out.push(cur); cur = w; } } out.push(cur); } return out.filter((x, i, a) => x !== "" || i < a.length - 1); };
   const lbl = (t, x, y) => text(t.toUpperCase(), x, y, B, 6.6, C.muted);
   const title = invTitle(inv).toUpperCase(); const [badge] = invBadge(inv); const b = inv.biz;
-  const newPage = (first) => {
+  const newPage = async (first) => {
     page = doc.addPage([W * MM, H * MM]); pages.push(page); rect(0, 0, W, 3.2, C.deep); rect(0, 3.2, W, 1.2, C.lime);
     if (!first) { text(`${title}  ${inv.no || "DRAFT"}`, MX, 12, B, 9, C.muted); return 22; }
     text(title, MX, 15, B, 25, C.ink); text(`${inv.no || "DRAFT"}   ·   ${badge}`, MX, 27.5, R, 10.5, C.muted);
-    const size = 26, x0 = W - MX - size, y0 = 12;
-    for (const p of LOGO_PARTS) page.drawSvgPath(p.d, { x: x0 * MM, y: (H - y0) * MM, scale: (size / 100) * MM, color: p.fill ? hx(p.fill) : undefined, borderColor: p.stroke ? hx(p.stroke) : undefined, borderWidth: p.width ? p.width * (size / 100) * MM : undefined });
-    const nl = wrap(b.name, B, 12.5, 70).slice(0, 2); let ny = 17 + (nl.length === 1 ? 2.5 : 0); for (const l of nl) { text(l, x0 - 4, ny, B, 12.5, C.deep, "right"); ny += 6; }
+    const lg = shopLogo() ? await doc.embedPng(shopLogo()) : null;
+    if (lg) { const sc = Math.min((44 * MM) / lg.width, (30 * MM) / lg.height); const w = lg.width * sc, h = lg.height * sc; page.drawImage(lg, { x: (W - MX) * MM - w, y: (H - 10) * MM - h, width: w, height: h }); }
+    else { const nl = wrap(b.name, B, 12.5, 80).slice(0, 2); let ny = 17 + (nl.length === 1 ? 2.5 : 0); for (const l of nl) { text(l, W - MX, ny, B, 12.5, C.deep, "right"); ny += 6; } }
     return 44;
   };
-  let y = newPage(true);
+  let y = await newPage(true);
   const colW = (W - 2 * MX) / 3;
   const from = [[b.name, B, C.ink], ...(b.address ? b.address.split("\n").map((l) => [l, R, C.muted]) : []), ...(b.phone ? [[`Tel ${b.phone}`, R, C.muted]] : []), ...(b.email ? [[b.email, R, C.muted]] : []), ...(b.vatNo ? [[`VAT no. ${b.vatNo}`, R, C.ink]] : [])];
   const to = [[inv.bill.name || "-", B, C.ink], ...(inv.bill.company ? [[inv.bill.company, R, C.ink]] : []), ...(inv.bill.address ? inv.bill.address.split("\n").map((l) => [l, R, C.muted]) : []), ...(inv.bill.email ? [[inv.bill.email, R, C.muted]] : []), ...(inv.bill.phone ? [[`Tel ${inv.bill.phone}`, R, C.muted]] : []), ...(inv.bill.vat ? [[`VAT no. ${inv.bill.vat}`, R, C.ink]] : [])];
@@ -155,12 +145,12 @@ async function invoicePdf(inv) {
   head();
   for (const l of inv.lines) {
     const dl = wrap(l.desc, R, 9, X.p - 22 - X.d).slice(0, 3); const h = Math.max(10.5, dl.length * 4.4 + (l.sku ? 4 : 0) + 5);
-    if (y + h > H - 30) { y = newPage(false); head(); }
+    if (y + h > H - 30) { y = await newPage(false); head(); }
     let ly = y + 3.2; for (const t of dl) { text(t, X.d, ly, R, 9); ly += 4.4; } if (l.sku) text(l.sku, X.d, ly, R, 7, C.muted);
     text(rand(l.unit), X.p, y + 3.2, R, 9, C.ink, "right"); text(String(l.qty), X.q, y + 3.2, R, 9, C.ink, "center"); text(rand(l.total), X.t, y + 3.2, B, 9, C.ink, "right");
     y += h; hl(y);
   }
-  if (y + 60 > H - 26) y = newPage(false);
+  if (y + 60 > H - 26) y = await newPage(false);
   y += 6; const tW = 78, tX = W - MX - tW; let ty = y;
   const rows = inv.vatReg ? [["Subtotal (excl. VAT)", rand(inv.total - inv.vat)], [`VAT ${inv.vatBp / 100}%`, rand(inv.vat)]] : [["Subtotal", rand(inv.total)]];
   for (const [k, v] of rows) { text(k, tX + 4, ty + 2, R, 8.8, C.muted); text(v, W - MX - 4, ty + 2, R, 8.8, C.ink, "right"); ty += 8; hl(ty, tX); }

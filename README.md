@@ -196,7 +196,7 @@ Invoices live under **Invoices** in the owner's menu. Each invoice is saved, num
 
 **Rules.** Prices include VAT, like shelf prices. When the business is VAT registered the document is titled *Tax invoice* with both VAT numbers. Once issued, an invoice's lines, amounts and customer are fixed by database triggers; only payment status and voiding can change. Till invoices are refunded through a return on the receipt, not voided. Cashiers can e-mail invoices for till sales but cannot open the Invoices section.
 
-**Logo and payment details.** *Settings → Invoices & logo*: upload the nursery logo (PNG or JPG, up to 2 MB), enter bank details, default payment terms and the footer message. Until a logo is uploaded, a built-in vector version of the Rietvallei emblem is used.
+**Logo and payment details.** *Settings → Invoices & logo*: upload the nursery logo (PNG or JPG, up to 2 MB), enter bank details, default payment terms and the footer message. The invoice uses only the nursery's own logo file: the one uploaded there, or `public/brand/logo.png` committed with the app. With neither, the invoice shows the business name in text — the app never draws a logo of its own.
 
 **E-mail setup.** Set `SMTP_URL` and `MAIL_FROM` in `.env` (any SMTP provider: Google Workspace, Microsoft 365, Afrihost, Mailgun…) and restart. Without them, invoices are still saved and downloadable, and the app clearly says nothing was sent. For demos, `MAIL_CAPTURE_DIR=./mail-out` writes each message to a JSON file instead of sending it.
 

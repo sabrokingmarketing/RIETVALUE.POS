@@ -8,7 +8,7 @@ import { invoiceTitle } from "@/lib/invoice-format";
 import { renderInvoicePdf, shortDate } from "./invoice-pdf";
 import { deliver, type MailAttachment } from "./mail";
 import { getSettings } from "./settings";
-import { uploadDir } from "./uploads";
+import { currentLogo } from "./logo";
 import { formatRand } from "@/lib/money";
 import { log } from "./log";
 
@@ -41,7 +41,7 @@ export function invoiceEmailBody(inv: Invoice, message: string, hasLogo: boolean
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #E5E7EB;border-radius:16px;overflow:hidden">
 <tr><td style="background:#365314;height:6px;font-size:0;line-height:0">&nbsp;</td></tr>
 <tr><td style="padding:24px 28px 8px">
-  ${hasLogo ? `<img src="cid:logo" alt="${esc(b.business_name)}" height="64" style="display:block;height:64px;max-width:220px;margin-bottom:10px">` : ""}
+  ${hasLogo ? `<img src="cid:logo" alt="${esc(b.business_name)}" height="96" style="display:block;height:96px;max-width:240px;margin-bottom:10px">` : ""}
   <div style="font-size:18px;font-weight:700;color:#365314">${esc(b.business_name)}</div>
 </td></tr>
 <tr><td style="padding:8px 28px 0;font-size:15px;line-height:1.6">
@@ -82,20 +82,13 @@ export async function sendInvoiceEmail(actor: Actor, invoiceId: string, input: {
   if (inv.status === "draft") throw new AppError("CONFLICT", "Issue the invoice before e-mailing it.");
   if (inv.status === "void") throw new AppError("CONFLICT", "This invoice is void and can't be sent.");
   const settings = await getSettings();
-  const pdf = await renderInvoicePdf(inv, { logoFile: settings.logo_file });
+  const logo = await currentLogo(settings.logo_file);
+  const pdf = await renderInvoicePdf(inv, { logo });
   const attachments: MailAttachment[] = [{ filename: invoiceFileName(inv), content: pdf, contentType: "application/pdf" }];
   let hasLogo = false;
-  if (/^[0-9a-f-]{36}\.(png|jpg)$/.test(settings.logo_file)) {
+  if (logo) {
     try {
-      const content = await fs.readFile(path.join(/*turbopackIgnore: true*/ uploadDir(), settings.logo_file));
-      attachments.push({ filename: `logo.${settings.logo_file.split(".").pop()}`, content, contentType: settings.logo_file.endsWith(".png") ? "image/png" : "image/jpeg", cid: "logo" });
-      hasLogo = true;
-    } catch { /* fall back to the built-in emblem */ }
-  }
-  if (!hasLogo) {
-    try {
-      const content = await fs.readFile(path.join(process.cwd(), "public", "brand", "emblem.png"));
-      attachments.push({ filename: "logo.png", content, contentType: "image/png", cid: "logo" });
+      attachments.push({ filename: `logo.${logo.type}`, content: await fs.readFile(logo.file), contentType: logo.type === "png" ? "image/png" : "image/jpeg", cid: "logo" });
       hasLogo = true;
     } catch { /* text header only */ }
   }

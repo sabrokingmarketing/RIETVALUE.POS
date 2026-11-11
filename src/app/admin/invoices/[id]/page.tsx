@@ -6,6 +6,7 @@ import { pageActor } from "@/server/session";
 import { getInvoice } from "@/server/invoices";
 import { getSettings } from "@/server/settings";
 import { mailConfigured } from "@/server/mail";
+import { currentLogo } from "@/server/logo";
 import { formatDateTime, todayBusinessDate } from "@/lib/dates";
 import { formatRand } from "@/lib/money";
 import { invoiceBadge, invoiceTitle, PAID_METHODS, shortDate } from "@/lib/invoice-format";
@@ -65,7 +66,7 @@ export default async function InvoicePage({ params, searchParams }: { params: Pr
       {flash && <Alert tone={flash.tone} className="mb-5">{flash.text}</Alert>}
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <InvoiceDocument inv={inv} logoFile={settings.logo_file} />
+        <InvoiceDocument inv={inv} logoUrl={(await currentLogo(settings.logo_file))?.url ?? null} />
         <aside className="flex flex-col gap-4">
           <section className="card p-5">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Amount</h2>

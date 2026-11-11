@@ -6,7 +6,7 @@ import { Alert, Button, Card, cx, inputClass } from "@/components/ui";
 import { LogoMark } from "@/components/invoice/logo-mark";
 import { clearLogoAction, invoiceSettingsAction, uploadLogoAction } from "@/app/admin/invoices/actions";
 
-type S = { logoFile: string; paymentInfo: string; termsDays: number; thanks: string; businessName: string; email: string };
+type S = { logoFile: string; logoUrl: string | null; paymentInfo: string; termsDays: number; thanks: string; businessName: string; email: string };
 
 export function InvoiceSettingsForm({ s, mail }: { s: S; mail: { configured: boolean; from: string } }) {
   const router = useRouter();
@@ -30,10 +30,10 @@ export function InvoiceSettingsForm({ s, mail }: { s: S; mail: { configured: boo
     <div className="flex flex-col gap-6">
       <Card className="p-5 sm:p-6">
         <h2 className="font-semibold">Logo</h2>
-        <p className="text-sm text-muted">Shown at the top of every invoice and invoice e-mail. Use a PNG or JPG (up to 2 MB). A square logo on a white or clear background works best.</p>
+        <p className="text-sm text-muted">Your logo exactly as uploaded — shown at the top of every invoice PDF and invoice e-mail. Use the original PNG or JPG file (up to 2 MB).</p>
         <div className="mt-4 grid gap-4 sm:grid-cols-[180px_1fr] sm:items-center">
           <div className="flex aspect-square items-center justify-center rounded-3xl bg-mist p-4 ring-1 ring-line">
-            {preview ? <img src={preview} alt="New logo" className="size-full object-contain" /> : <LogoMark logoFile={s.logoFile} className="size-full" alt={`${s.businessName} logo`} />}
+            {preview ? <img src={preview} alt="New logo" className="size-full object-contain" /> : (s.logoUrl ? <LogoMark src={s.logoUrl} className="size-full" alt={`${s.businessName} logo`} /> : <span className="px-3 text-center text-sm text-muted">No logo yet</span>)}
           </div>
           <form ref={formRef} action={(f) => { logoAction(f); setTimeout(() => router.refresh(), 300); }}>
             <label onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)} onDrop={(e) => { e.preventDefault(); setDrag(false); choose(e.dataTransfer.files?.[0]); }}
@@ -46,8 +46,8 @@ export function InvoiceSettingsForm({ s, mail }: { s: S; mail: { configured: boo
           </form>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-3">
-          {s.logoFile ? <Button variant="ghost" onClick={() => startClear(async () => { await clearLogoAction(); setPreview(null); router.refresh(); })} busy={clearing}><RotateCcw className="size-4" aria-hidden /> Use the built-in emblem</Button>
-            : <p className="text-sm text-muted">Using the built-in Rietvalei emblem. Upload your full logo file to use it exactly.</p>}
+          {s.logoFile ? <Button variant="ghost" onClick={() => startClear(async () => { await clearLogoAction(); setPreview(null); router.refresh(); })} busy={clearing}><RotateCcw className="size-4" aria-hidden /> Remove uploaded logo</Button>
+            : <p className="text-sm text-muted">Upload your Rietvallei logo file here. Until then, invoices show the business name in text.</p>}
           {logoState && (logoState.ok ? <span className="inline-flex items-center gap-1.5 text-sm font-medium text-deep"><CheckCircle2 className="size-4" aria-hidden /> {logoState.message}</span> : <Alert tone="error">{logoState.error}</Alert>)}
         </div>
       </Card>

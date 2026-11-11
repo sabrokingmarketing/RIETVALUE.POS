@@ -19,7 +19,7 @@ export type DocInvoice = {
 const toneClass = { green: "bg-soft text-deep", warn: "bg-warn-bg text-warn", danger: "bg-danger-bg text-danger", neutral: "bg-mist text-muted ring-1 ring-line" };
 
 /** The invoice as a web page. Mirrors the PDF layout so the preview is what the customer receives. */
-export function InvoiceDocument({ inv, logoFile, className }: { inv: DocInvoice; logoFile?: string; className?: string }) {
+export function InvoiceDocument({ inv, logoUrl, className }: { inv: DocInvoice; logoUrl?: string | null; className?: string }) {
   const b = inv.business_snapshot;
   const badge = invoiceBadge(inv);
   const paid = inv.status === "paid";
@@ -43,8 +43,8 @@ export function InvoiceDocument({ inv, logoFile, className }: { inv: DocInvoice;
             </p>
           </div>
           <div className="ml-auto flex items-center gap-3">
-            {!logoFile && <div className="text-right"><p className="text-lg font-bold leading-tight text-deep">{b.business_name}</p>{b.legal_name && b.legal_name !== b.business_name && <p className="text-xs text-muted">{b.legal_name}</p>}</div>}
-            <LogoMark logoFile={logoFile} className={logoFile ? "h-20 max-w-56" : "size-20"} alt={b.business_name} />
+            {logoUrl ? <LogoMark src={logoUrl} className="h-28 max-w-60" alt={b.business_name} />
+              : <div className="text-right"><p className="text-lg font-bold leading-tight text-deep">{b.business_name}</p>{b.legal_name && b.legal_name !== b.business_name && <p className="text-xs text-muted">{b.legal_name}</p>}</div>}
           </div>
         </header>
 
