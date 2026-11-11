@@ -71,12 +71,13 @@ function mailtoFor(inv) {
 }
 async function sendInvoice(inv) {
   await invoicePdf(inv);
-  window.open(mailtoFor(inv), "_blank");
   inv.emails = [...(inv.emails || []), { to: inv.bill.email, at: new Date().toISOString(), by: S.me?.id || null }];
-  await putInvoice(inv).catch(() => {});
-  toast("PDF saved and your e-mail app opened — attach the PDF and press Send.");
+  putInvoice(inv).catch(() => {});
+  sendInvoice.text = decodeURIComponent(mailtoFor(inv).split("&body=")[1]);
+  dialog("E-mail the invoice", `<ol class="stack small" style="margin:0;padding-left:20px"><li><strong>The PDF is saved</strong> as ${esc(`${inv.vatReg ? "Tax-invoice" : "Invoice"}-${inv.no}.pdf`)}.</li><li>Tap <strong>Open my e-mail app</strong> — the customer, subject and message are filled in.</li><li>Attach the PDF and press Send.</li></ol>
+    <div class="alert ok small" style="margin-top:12px"><strong>To:</strong> ${esc(inv.bill.email)}<br><strong>Subject:</strong> ${esc(`${invTitle(inv)} ${inv.no} from ${inv.biz.name}`)}</div>`,
+    { icon: "receipts", sub: `${esc(inv.no)} · ${rand(inv.total)}`, foot: `<button class="btn ghost" data-act="invCopyMail">Copy message</button><button class="btn" data-invpdf2="${inv.id}">Save PDF again</button><a class="btn primary" href="${esc(mailtoFor(inv))}" target="_blank" rel="noopener">✉ Open my e-mail app</a>` });
 }
-
 // ---- the document (HTML) ---------------------------------------------------
 function invDocHtml(inv) {
   const b = inv.biz; const [bl, bt] = invBadge(inv); const paid = inv.status === "paid";
@@ -178,7 +179,7 @@ function invOptHtml() {
   const sugg = saleInv.on && (saleInv.email || saleInv.name).trim().length >= 2 ? custSearch(saleInv.email || saleInv.name).filter((c) => c.email !== saleInv.email.trim().toLowerCase()).slice(0, 3) : [];
   return `<div class="invopt ${saleInv.on ? "on" : ""}"><label class="invsw"><span class="dlg-ic" style="width:36px;height:36px;border-radius:12px">${icon("receipts")}</span><span style="flex:1"><strong style="display:block;font-size:.9rem">Make an invoice for the customer</strong><span class="small muted">Saved to Invoices as a PDF you can e-mail</span></span>
     <input type="checkbox" id="invOn" role="switch" ${saleInv.on ? "checked" : ""}><span class="sw" aria-hidden="true"></span></label>
-    ${saleInv.on ? `<div class="fields" style="margin-top:10px"><label class="f" for="invEmail">Customer e-mail<input id="invEmail" class="i" type="email" autocomplete="off" value="${esc(saleInv.email)}" placeholder="name@example.com"></label><label class="f" for="invName">Name (optional)<input id="invName" class="i" autocomplete="off" value="${esc(saleInv.name)}"></label></div>
+    ${saleInv.on ? `<div class="fields" style="margin-top:10px"><label class="f" for="invEmail">Customer e-mail<input id="invEmail" class="i" type="text" inputmode="email" autocapitalize="off" spellcheck="false" autocomplete="off" value="${esc(saleInv.email)}" placeholder="name@example.com"></label><label class="f" for="invName">Name (optional)<input id="invName" class="i" autocomplete="off" value="${esc(saleInv.name)}"></label></div>
     ${sugg.length ? `<div class="row" style="margin-top:6px">${sugg.map((c) => `<button type="button" class="btn ghost" style="min-height:36px;font-size:.8rem" data-invcust="${esc(custKey(c))}">${esc(c.name)} · ${esc(c.email || "")}</button>`).join("")}</div>` : ""}
     ${saleInv.email && !isMail(saleInv.email) ? `<p class="small" style="color:var(--danger);margin-top:6px">Check the e-mail address.</p>` : ""}` : ""}</div>`;
 }
@@ -200,7 +201,7 @@ function doneInvHtml() {
   return `<div class="invstat">${icon("check")}<span><strong>Invoice ${esc(d.no)}</strong> saved for ${esc(d.to)}</span><span style="margin-left:auto" class="row"><button class="btn" data-invsend="${d.id}">${icon("data")} PDF + e-mail</button>${isOwner() ? `<button class="btn ghost" data-invopen="${d.id}">Open</button>` : ""}</span></div>`;
 }
 function openSaleInvoiceDialog(date, key) {
-  dialog("Make an invoice", `<form id="saleInvForm" class="stack" data-date="${esc(date)}" data-key="${esc(key)}"><div class="fields"><label class="f" for="siEmail">Customer e-mail<input id="siEmail" class="i" type="email" required autocomplete="off" autofocus></label><label class="f" for="siName">Name (optional)<input id="siName" class="i" autocomplete="off"></label></div>
+  dialog("Make an invoice", `<form id="saleInvForm" class="stack" data-date="${esc(date)}" data-key="${esc(key)}"><div class="fields"><label class="f" for="siEmail">Customer e-mail<input id="siEmail" class="i" type="text" inputmode="email" autocapitalize="off" spellcheck="false" required autocomplete="off" autofocus></label><label class="f" for="siName">Name (optional)<input id="siName" class="i" autocomplete="off"></label></div>
     <div class="fields"><label class="f" for="siCo">Company (optional)<input id="siCo" class="i" maxlength="120"></label><label class="f" for="siVat">Their VAT number (optional)<input id="siVat" class="i" maxlength="20"></label></div><div id="siErr"></div></form>`,
     { icon: "receipts", sub: "A paid invoice for this sale, saved under Invoices.", foot: `<button class="btn ghost" data-close>Cancel</button><button class="btn primary" type="submit" form="saleInvForm">Save invoice</button>` });
 }
@@ -260,7 +261,7 @@ function viewInvEditor() {
   const form = `<div class="stack" style="gap:16px">
     ${step(1, "products", "Who is it for?", "Pick a saved customer or type new details.", `<div class="lsearch" style="margin-bottom:12px">${icon("scan")}<input id="edCustQ" value="${esc(invUI.custQ)}" placeholder="Search saved customers" autocomplete="off">
       ${custs ? `<div class="lres">${custs.length ? custs.map((c) => `<button data-edcust="${esc(custKey(c))}"><strong>${esc(c.name)}</strong><span class="small muted">${esc(c.company ? c.company + " · " : "")}${esc(c.email || c.phone || "")}</span></button>`).join("") : `<p class="small muted" style="padding:12px">No saved customer matches.</p>`}</div>` : ""}</div>
-      <div class="fields"><label class="f" for="edName">Customer name *<input id="edName" class="i" maxlength="120" value="${esc(ed.bill.name)}"></label><label class="f" for="edEmail">E-mail<input id="edEmail" class="i" type="email" maxlength="200" value="${esc(ed.bill.email)}"></label></div>
+      <div class="fields"><label class="f" for="edName">Customer name *<input id="edName" class="i" maxlength="120" value="${esc(ed.bill.name)}"></label><label class="f" for="edEmail">E-mail<input id="edEmail" class="i" type="text" inputmode="email" autocapitalize="off" spellcheck="false" maxlength="200" value="${esc(ed.bill.email)}"></label></div>
       <div class="fields" style="margin-top:10px"><label class="f" for="edCo">Company<input id="edCo" class="i" maxlength="120" value="${esc(ed.bill.company)}"></label><label class="f" for="edVat">Their VAT number<input id="edVat" class="i" maxlength="20" value="${esc(ed.bill.vat)}"></label></div>
       <label class="f" for="edAddr" style="margin-top:10px">Address<textarea id="edAddr" class="i" maxlength="400">${esc(ed.bill.address)}</textarea></label>`)}
     ${step(2, "report", "Dates and reference", "", `<div class="fields"><label class="f" for="edIssue">Invoice date<input id="edIssue" class="i" type="date" value="${ed.issue}"></label><label class="f" for="edRef">Reference (e.g. their order no.)<input id="edRef" class="i" maxlength="80" value="${esc(ed.ref)}"></label></div>
